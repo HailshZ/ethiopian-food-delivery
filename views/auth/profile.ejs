@@ -1,0 +1,111 @@
+<!-- Profile Header -->
+<div style="background: linear-gradient(135deg, #078930 0%, #056b24 100%); color: white; padding: 3rem 0; margin-bottom: 2rem; border-bottom: 5px solid #fcdd09;">
+  <div class="container text-center">
+    <img src="https://via.placeholder.com/120x120?text=User" class="rounded-circle border border-4" style="width: 120px; height: 120px; object-fit: cover; border-color: #fcdd09 !important; margin-bottom: 1rem;">
+    <h2 class="fw-bold"><%= user.name %></h2>
+    <p class="opacity-75"><i class="bi bi-envelope-fill me-2"></i><%= user.email %></p>
+    <div class="d-flex justify-content-center gap-4 mt-3">
+      <div>
+        <div class="fw-bold fs-3"><%= locals.orders ? orders.length : 0 %></div>
+        <div class="opacity-75"><%= t('orders') %></div>
+      </div>
+      <div>
+        <div class="fw-bold fs-3">$0</div>
+        <div class="opacity-75"><%= t('spent') %></div>
+      </div>
+      <div>
+        <div class="fw-bold fs-3">0</div>
+        <div class="opacity-75"><%= t('favorites') %></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container pb-5">
+  <div class="row g-4">
+    <!-- Personal Info Card -->
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-lg h-100" style="border-radius: 25px;">
+        <div class="card-body p-4">
+          <h5 class="fw-bold mb-4" style="color: #078930; border-bottom: 3px solid #fcdd09; padding-bottom: 0.75rem;">
+            <i class="bi bi-person-badge me-2"></i><%= t('personal_info') %>
+          </h5>
+          <div class="d-flex py-2 border-bottom">
+            <span class="fw-semibold text-secondary" style="width: 120px;"><%= t('full_name') %>:</span>
+            <span class="flex-grow-1"><%= user.name %></span>
+          </div>
+          <div class="d-flex py-2 border-bottom">
+            <span class="fw-semibold text-secondary" style="width: 120px;"><%= t('email') %>:</span>
+            <span class="flex-grow-1"><%= user.email %></span>
+          </div>
+          <div class="d-flex py-2 border-bottom">
+            <span class="fw-semibold text-secondary" style="width: 120px;"><%= t('phone') %>:</span>
+            <span class="flex-grow-1"><%= user.phone || t('not_provided') %></span>
+          </div>
+          <div class="d-flex py-2">
+            <span class="fw-semibold text-secondary" style="width: 120px;"><%= t('member_since') %>:</span>
+            <span class="flex-grow-1"><%= new Date(user.createdAt).toLocaleDateString() %></span>
+          </div>
+          <a href="#" class="btn w-100 mt-4" style="border: 2px solid #da121a; color: #da121a; border-radius: 50px; font-weight: 600;">
+            <i class="bi bi-pencil me-2"></i><%= t('edit_profile') %>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Orders Card -->
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-lg h-100" style="border-radius: 25px;">
+        <div class="card-body p-4">
+          <h5 class="fw-bold mb-4" style="color: #078930; border-bottom: 3px solid #fcdd09; padding-bottom: 0.75rem;">
+            <i class="bi bi-clock-history me-2"></i><%= t('recent_orders') %>
+          </h5>
+          <% if (locals.orders && orders.length > 0) { %>
+            <div class="table-responsive">
+              <table class="table align-middle">
+                <thead>
+                  <tr class="bg-light">
+                    <th><%= t('order') %></th>
+                    <th><%= t('date') %></th>
+                    <th class="text-end"><%= t('total') %></th>
+                    <th><%= t('status') %></th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% orders.slice(0,5).forEach(order => { %>
+                    <tr>
+                      <td class="fw-semibold">#<%= order._id.toString().slice(-6) %></td>
+                      <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
+                      <td class="text-end fw-bold" style="color: #078930;">$<%= order.totalAmount.toFixed(2) %></td>
+                      <td>
+                        <span class="badge rounded-pill px-3 py-2" style="background: <%= order.orderStatus === 'delivered' ? '#27ae60' : (order.orderStatus === 'cancelled' ? '#da121a' : '#f39c12') %>;">
+                          <%= order.orderStatus %>
+                        </span>
+                      </td>
+                      <td>
+                        <a href="/order-confirmation/<%= order._id %>" class="text-decoration-none" style="color: #078930;">
+                          <i class="bi bi-eye-fill fs-5"></i>
+                        </a>
+                      </td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+            <a href="/orders" class="btn btn-link float-end p-0 mt-3" style="color: #078930; font-weight: 600;">
+              <%= t('view_all') %> <i class="bi bi-arrow-right"></i>
+            </a>
+          <% } else { %>
+            <div class="text-center py-4">
+              <p class="text-secondary"><%= t('no_orders_yet') %></p>
+              <a href="/menu" class="btn btn-primary mt-3 px-5" style="background: linear-gradient(135deg, #078930, #056b24); border: none; border-radius: 50px;">
+                <i class="bi bi-cart me-2"></i><%= t('order_now') %>
+              </a>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

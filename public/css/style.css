@@ -1,0 +1,297 @@
+/* public/css/style.css – Complete Professional UI */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --ethio-green: #078930;
+  --ethio-yellow: #fcdd09;
+  --ethio-red: #da121a;
+  --primary: #078930;
+  --primary-dark: #056b24;
+  --secondary: #2c3e50;
+  --accent: #fcdd09;
+  --light: #f4f7fa;
+  --dark: #1e2b37;
+  --success: #27ae60;
+  --danger: #e74c3c;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #f0f2f5;
+  color: var(--dark);
+  line-height: 1.6;
+}
+
+/* Header */
+header {
+  background: linear-gradient(135deg, var(--ethio-green) 0%, #056b24 100%);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+header .nav-link {
+  color: white !important;
+  font-weight: 500;
+  padding: 0.5rem 1rem !important;
+  border-radius: 30px;
+  transition: all 0.3s ease;
+}
+header .nav-link:hover {
+  background-color: rgba(255,255,255,0.15);
+  transform: translateY(-2px);
+}
+header .badge {
+  background-color: var(--ethio-yellow) !important;
+  color: var(--dark);
+  font-weight: 600;
+}
+
+/* Language Switcher */
+.form-select-sm {
+  background-color: rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: white;
+  font-weight: 500;
+  border-radius: 20px;
+  padding: 0.25rem 1.5rem 0.25rem 0.75rem;
+}
+.form-select-sm option {
+  background-color: var(--secondary);
+  color: white;
+}
+
+/* Auth Cards */
+.auth-card {
+  max-width: 450px;
+  margin: 2rem auto;
+  border-radius: 24px;
+  background: white;
+  border: none;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+.auth-card .card-header {
+  background: linear-gradient(135deg, var(--ethio-green), #056b24);
+  color: white;
+  text-align: center;
+  padding: 2rem 1.5rem;
+  border-bottom: none;
+  border-radius: 24px 24px 0 0;
+}
+.auth-card .card-header h4 {
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+.auth-card .card-header p {
+  opacity: 0.9;
+  margin-bottom: 0;
+}
+.auth-card .card-body {
+  padding: 2rem;
+}
+.auth-card .form-label {
+  font-weight: 600;
+  color: var(--secondary);
+  margin-bottom: 0.3rem;
+}
+.auth-card .form-control {
+  border-radius: 12px;
+  border: 1.5px solid #e0e0e0;
+  padding: 0.75rem 1rem;
+  transition: all 0.2s;
+}
+.auth-card .form-control:focus {
+  border-color: var(--ethio-green);
+  box-shadow: 0 0 0 3px rgba(7,137,48,0.1);
+}
+.auth-card .input-group-text {
+  background: transparent;
+  border: 1.5px solid #e0e0e0;
+  border-right: none;
+  border-radius: 12px 0 0 12px;
+  color: var(--ethio-green);
+}
+.auth-card .input-group .form-control {
+  border-left: none;
+  border-radius: 0 12px 12px 0;
+}
+.auth-card .btn-primary {
+  background: linear-gradient(135deg, var(--ethio-green), #056b24);
+  border: none;
+  border-radius: 12px;
+  padding: 0.75rem;
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin-top: 1rem;
+  transition: all 0.3s;
+}
+.auth-card .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 15px rgba(7,137,48,0.3);
+}
+.auth-footer {
+  background-color: #f8f9fa;
+  padding: 1.5rem;
+  text-align: center;
+  border-top: 1px solid #eee;
+  border-radius: 0 0 24px 24px;
+}
+
+/* Profile Page */
+.profile-header {
+  background: linear-gradient(135deg, var(--ethio-green), #056b24);
+  color: white;
+  padding: 3rem 0;
+  margin-bottom: 2rem;
+  border-radius: 0 0 50px 50px;
+}
+.profile-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 4px solid var(--ethio-yellow);
+  object-fit: cover;
+  margin-bottom: 1rem;
+}
+.profile-stats {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 1rem;
+}
+.stat-item {
+  text-align: center;
+}
+.stat-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.stat-label {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+.profile-card {
+  background: white;
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+  margin-bottom: 1.5rem;
+}
+.profile-card h5 {
+  color: var(--ethio-green);
+  font-weight: 700;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid var(--ethio-yellow);
+  padding-bottom: 0.5rem;
+}
+.info-row {
+  display: flex;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.info-label {
+  width: 120px;
+  font-weight: 600;
+  color: var(--secondary);
+}
+.info-value {
+  flex: 1;
+  color: var(--dark);
+}
+.btn-outline-red {
+  border: 2px solid var(--ethio-red);
+  color: var(--ethio-red);
+  border-radius: 30px;
+  font-weight: 600;
+  padding: 0.5rem 1.5rem;
+  transition: all 0.3s;
+}
+.btn-outline-red:hover {
+  background-color: var(--ethio-red);
+  color: white;
+}
+
+/* Menu Cards */
+.card {
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  overflow: hidden;
+}
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+}
+.card-img-top {
+  height: 200px;
+  object-fit: cover;
+  border-bottom: 3px solid var(--ethio-yellow);
+}
+.card-title {
+  font-weight: 700;
+  color: var(--dark);
+  margin-bottom: 0.5rem;
+}
+.price {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--ethio-green);
+}
+
+/* Cart Table */
+.table {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+.table thead th {
+  background-color: var(--ethio-green);
+  color: white;
+  font-weight: 600;
+  border: none;
+  padding: 1rem;
+}
+.table tbody tr:hover {
+  background-color: rgba(252,221,9,0.05);
+}
+.table td {
+  vertical-align: middle;
+  padding: 1rem;
+}
+.cart-item-image {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid var(--ethio-yellow);
+}
+
+/* Order Summary Card */
+.summary-card {
+  background: white;
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+.summary-card h5 {
+  color: var(--ethio-green);
+  font-weight: 700;
+  border-bottom: 2px solid var(--ethio-yellow);
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Footer */
+footer {
+  background-color: var(--secondary) !important;
+  color: white;
+  margin-top: 4rem;
+  padding: 2rem 0;
+}
+footer a {
+  color: var(--ethio-yellow);
+  text-decoration: none;
+}
+footer a:hover {
+  text-decoration: underline;
+}

@@ -1,0 +1,138 @@
+<div class="container py-5">
+  <h1 class="fw-bold mb-5 text-center" style="color: #078930;"><%= t('checkout') %></h1>
+
+  <div class="row g-4">
+    <!-- Shipping Form -->
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-lg" style="border-radius: 30px;">
+        <div class="card-header text-white py-3 px-4" style="background: linear-gradient(135deg, #078930 0%, #056b24 100%); border-radius: 30px 30px 0 0;">
+          <h5 class="mb-0"><i class="bi bi-truck me-2"></i><%= t('shipping_address') %></h5>
+        </div>
+        <div class="card-body p-5">
+          <form id="payment-form">
+            <!-- Street -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold text-secondary"><%= t('street_address') %></label>
+              <div class="input-group">
+                <span class="input-group-text bg-white border-end-0" style="border-color: #ced4da;"><i class="bi bi-house-door-fill" style="color: #078930;"></i></span>
+                <input type="text" class="form-control border-start-0 ps-0" id="street" name="street" required style="border-color: #ced4da; box-shadow: none;">
+              </div>
+            </div>
+
+            <!-- City & Zip -->
+            <div class="row">
+              <div class="col-md-6 mb-4">
+                <label class="form-label fw-semibold text-secondary"><%= t('city') %></label>
+                <div class="input-group">
+                  <span class="input-group-text bg-white border-end-0" style="border-color: #ced4da;"><i class="bi bi-building" style="color: #078930;"></i></span>
+                  <input type="text" class="form-control border-start-0 ps-0" id="city" name="city" required style="border-color: #ced4da; box-shadow: none;">
+                </div>
+              </div>
+              <div class="col-md-6 mb-4">
+                <label class="form-label fw-semibold text-secondary"><%= t('zip_code') %></label>
+                <div class="input-group">
+                  <span class="input-group-text bg-white border-end-0" style="border-color: #ced4da;"><i class="bi bi-mailbox" style="color: #078930;"></i></span>
+                  <input type="text" class="form-control border-start-0 ps-0" id="zipCode" name="zipCode" required style="border-color: #ced4da; box-shadow: none;">
+                </div>
+              </div>
+            </div>
+
+            <hr class="my-4" style="border-top: 2px dashed #dee2e6;">
+
+            <!-- Payment -->
+            <h5 class="mb-3" style="color: #2c3e50;"><i class="bi bi-credit-card me-2" style="color: #078930;"></i><%= t('payment') %></h5>
+            <div class="mb-4">
+              <div id="card-element" class="form-control py-3" style="border-color: #ced4da; border-radius: 10px;"></div>
+              <div id="card-errors" class="text-danger small mt-2"></div>
+            </div>
+
+            <!-- Submit -->
+            <button id="submit-button" class="btn w-100 text-white py-3 fw-bold" style="background: linear-gradient(135deg, #078930, #056b24); border: none; border-radius: 50px; transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+              <i class="bi bi-lock-fill me-2"></i><%= t('pay_now') %> $<%= cart.totalPrice.toFixed(2) %>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Order Summary -->
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-lg" style="border-radius: 30px;">
+        <div class="card-header text-white py-3 px-4" style="background: linear-gradient(135deg, #2c3e50, #1a252f); border-radius: 30px 30px 0 0;">
+          <h5 class="mb-0"><i class="bi bi-receipt me-2"></i><%= t('order_summary') %></h5>
+        </div>
+        <div class="card-body p-4">
+          <% cart.items.forEach(item => { %>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div>
+                <span class="fw-semibold"><%= currentLanguage === 'en' ? item.name : (item.nameAm || item.name) %></span>
+                <span class="text-secondary small d-block">x<%= item.qty %></span>
+              </div>
+              <span class="fw-bold" style="color: #078930;">$<%= item.totalPrice.toFixed(2) %></span>
+            </div>
+          <% }) %>
+          <hr style="border-top: 2px solid #dee2e6;">
+          <div class="d-flex justify-content-between mb-2">
+            <span><%= t('subtotal') %>:</span>
+            <span class="fw-bold">$<%= cart.totalPrice.toFixed(2) %></span>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <span><%= t('delivery_fee') %>:</span>
+            <span class="fw-bold text-success">$0.00</span>
+          </div>
+          <hr style="border-top: 2px solid #dee2e6;">
+          <div class="d-flex justify-content-between">
+            <span class="h5"><%= t('total') %>:</span>
+            <span class="h5" style="color: #078930;">$<%= cart.totalPrice.toFixed(2) %></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Stripe JS (same as before) -->
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+  const stripe = Stripe('<%= stripePublicKey %>');
+  const elements = stripe.elements();
+  const cardElement = elements.create('card', { style: { base: { fontSize: '16px', fontFamily: 'Inter, sans-serif' } } });
+  cardElement.mount('#card-element');
+
+  const form = document.getElementById('payment-form');
+  const submitButton = document.getElementById('submit-button');
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    submitButton.disabled = true;
+
+    const { paymentMethod, error } = await stripe.createPaymentMethod({
+      type: 'card',
+      card: cardElement,
+    });
+
+    if (error) {
+      document.getElementById('card-errors').textContent = error.message;
+      submitButton.disabled = false;
+    } else {
+      const response = await fetch('/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paymentMethodId: paymentMethod.id,
+          street: document.getElementById('street').value,
+          city: document.getElementById('city').value,
+          zipCode: document.getElementById('zipCode').value
+        })
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        window.location.href = '/order-confirmation/' + result.orderId;
+      } else {
+        document.getElementById('card-errors').textContent = result.error;
+        submitButton.disabled = false;
+      }
+    }
+  });
+</script>

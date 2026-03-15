@@ -1,0 +1,61 @@
+<div class="container d-flex align-items-center justify-content-center" style="min-height: 80vh;">
+  <div class="col-md-6 col-lg-5">
+    <div class="card border-0 shadow-lg" style="border-radius: 30px; overflow: hidden;">
+      <!-- Header -->
+      <div class="card-header text-white text-center py-4" style="background: linear-gradient(135deg, #078930 0%, #056b24 100%); border-bottom: 5px solid #fcdd09;">
+        <i class="bi bi-box-arrow-in-right" style="font-size: 3rem;"></i>
+        <h3 class="mt-2 fw-bold"><%= t('login') %></h3>
+        <p class="mb-0" style="opacity: 0.9;"><%= t('welcome_back') %></p>
+      </div>
+
+      <!-- Body -->
+      <div class="card-body p-5" style="background: #f8fafc;">
+        <% if (locals.success_msg && success_msg.length > 0) { %>
+          <div class="alert alert-success border-0 rounded-3"><i class="bi bi-check-circle-fill me-2"></i><%= success_msg %></div>
+        <% } %>
+        <% if (locals.error_msg && error_msg.length > 0) { %>
+          <div class="alert alert-danger border-0 rounded-3"><i class="bi bi-exclamation-triangle-fill me-2"></i><%= error_msg %></div>
+        <% } %>
+
+        <form action="/login" method="post">
+          <!-- Email -->
+          <div class="mb-4">
+            <label class="form-label fw-semibold text-secondary"><%= t('email') %></label>
+            <div class="input-group">
+              <span class="input-group-text bg-white border-end-0" style="border-color: #ced4da;"><i class="bi bi-envelope-fill" style="color: #078930;"></i></span>
+              <input type="email" class="form-control border-start-0 ps-0" name="email" placeholder="<%= t('email_placeholder') %>" required style="border-color: #ced4da; box-shadow: none;">
+            </div>
+          </div>
+
+          <!-- Password -->
+          <div class="mb-4">
+            <label class="form-label fw-semibold text-secondary"><%= t('password') %></label>
+            <div class="input-group">
+              <span class="input-group-text bg-white border-end-0" style="border-color: #ced4da;"><i class="bi bi-lock-fill" style="color: #078930;"></i></span>
+              <input type="password" class="form-control border-start-0 ps-0" name="password" placeholder="<%= t('password_placeholder') %>" required style="border-color: #ced4da; box-shadow: none;">
+            </div>
+          </div>
+
+          <!-- Remember & Forgot -->
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="remember" style="border-color: #078930;">
+              <label class="form-check-label text-secondary" for="remember"><%= t('remember_me') %></label>
+            </div>
+            <a href="#" class="text-decoration-none" style="color: #078930;"><%= t('forgot_password') %></a>
+          </div>
+
+          <!-- Submit -->
+          <button type="submit" class="btn w-100 text-white py-3 fw-bold" style="background: linear-gradient(135deg, #078930, #056b24); border: none; border-radius: 50px; transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+            <i class="bi bi-box-arrow-in-right me-2"></i><%= t('login') %>
+          </button>
+        </form>
+      </div>
+
+      <!-- Footer -->
+      <div class="card-footer text-center py-4" style="background: #ffffff; border-top: 2px dashed #dee2e6;">
+        <p class="mb-0 text-secondary"><%= t('dont_have_account') %> <a href="/register" class="fw-bold text-decoration-none" style="color: #078930;"><%= t('register') %></a></p>
+      </div>
+    </div>
+  </div>
+</div>

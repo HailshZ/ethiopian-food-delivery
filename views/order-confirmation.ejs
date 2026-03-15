@@ -1,0 +1,27 @@
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="card border-0 shadow-lg text-center" style="border-radius: 30px;">
+        <div class="card-body p-5">
+          <div class="mb-4" style="background: #27ae60; width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+            <i class="bi bi-check-lg" style="font-size: 3rem; color: white;"></i>
+          </div>
+          <h2 class="fw-bold" style="color: #078930;"><%= t('order_placed') %></h2>
+          <p class="lead text-secondary mb-4"><%= t('thank_you_order') %></p>
+          <div class="bg-light p-4 rounded-4 mb-4">
+            <p class="mb-2"><span class="fw-semibold"><%= t('order_number') %>:</span> <span style="color: #078930;"><%= order._id %></span></p>
+            <p class="mb-0"><span class="fw-semibold"><%= t('total_paid') %>:</span> <span class="fs-3 fw-bold" style="color: #078930;">$<%= order.totalAmount.toFixed(2) %></span></p>
+          </div>
+          <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
+            <a href="/orders" class="btn btn-primary flex-fill py-3" style="background: linear-gradient(135deg, #078930, #056b24); border: none; border-radius: 50px;">
+              <i class="bi bi-list-check me-2"></i><%= t('view_orders') %>
+            </a>
+            <a href="/menu" class="btn btn-outline-secondary flex-fill py-3" style="border: 2px solid #2c3e50; color: #2c3e50; border-radius: 50px;">
+              <i class="bi bi-arrow-left me-2"></i><%= t('continue_shopping') %>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

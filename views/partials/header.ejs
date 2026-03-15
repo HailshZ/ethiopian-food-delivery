@@ -1,0 +1,35 @@
+<header class="py-3">
+  <div class="container d-flex flex-wrap align-items-center justify-content-between">
+    <h1 class="h4 mb-0">
+      <a href="/" class="text-white text-decoration-none">
+        <i class="bi bi-cup-hot-fill me-2"></i>EthioFood Delivery
+      </a>
+    </h1>
+
+    <nav class="nav">
+      <a class="nav-link" href="/menu"><i class="bi bi-grid"></i> <%= t('menu') %></a>
+      <a class="nav-link" href="/cart">
+        <i class="bi bi-cart"></i> <%= t('cart') %>
+        <% if (session.cart && session.cart.totalQty > 0) { %>
+          <span class="badge"><%= session.cart.totalQty %></span>
+        <% } %>
+      </a>
+      <% if (session && session.userId) { %>
+        <a class="nav-link" href="/profile"><i class="bi bi-person-circle"></i> <%= t('profile') %></a>
+        <span class="nav-link text-white-50"><i class="bi bi-person-check"></i> <%= session.userName %></span>
+        <a class="nav-link" href="/logout"><i class="bi bi-box-arrow-right"></i> <%= t('logout') %></a>
+      <% } else { %>
+        <a class="nav-link" href="/login"><i class="bi bi-box-arrow-in-right"></i> <%= t('login') %></a>
+        <a class="nav-link" href="/register"><i class="bi bi-person-plus"></i> <%= t('register') %></a>
+      <% } %>
+    </nav>
+
+    <!-- Language switcher -->
+    <form action="/language" method="post" class="d-flex">
+      <select name="language" class="form-select form-select-sm" onchange="this.form.submit()">
+        <option value="en" <%= currentLanguage === 'en' ? 'selected' : '' %>>English</option>
+        <option value="am" <%= currentLanguage === 'am' ? 'selected' : '' %>>አማርኛ</option>
+      </select>
+    </form>
+  </div>
+</header>
