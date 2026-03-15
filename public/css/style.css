@@ -294,4 +294,44 @@ footer a {
 }
 footer a:hover {
   text-decoration: underline;
+  /* Enhanced button styles */
+.btn-outline-success {
+  border: 2px solid #078930;
+  color: #078930;
+  transition: all 0.3s;
+}
+.btn-outline-success:hover {
+  background-color: #078930;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(7,137,48,0.3);
+}
+.btn-outline-secondary {
+  border: 2px solid #6c757d;
+  color: #6c757d;
+}
+.btn-outline-secondary:hover {
+  background-color: #6c757d;
+  color: white;
+  transform: translateY(-2px);
+}
+.btn-primary, .btn-success {
+  transition: all 0.3s;
+}
+.btn-primary:hover, .btn-success:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(7,137,48,0.4);
+}
+.card {
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important;
+}
+/* Input focus */
+.form-control:focus {
+  border-color: #078930;
+  box-shadow: 0 0 0 0.2rem rgba(7,137,48,0.25);
+}
 }

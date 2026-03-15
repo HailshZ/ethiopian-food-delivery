@@ -1,17 +1,22 @@
 <div class="container d-flex align-items-center justify-content-center" style="min-height: 80vh;">
   <div class="col-md-8 col-lg-6">
+    <!-- Home button at top -->
+    <div class="mb-3 text-center">
+      <a href="/" class="btn btn-outline-secondary rounded-pill px-4">
+        <i class="bi bi-house-door me-2"></i>Home
+      </a>
+    </div>
     <div class="card border-0 shadow-lg" style="border-radius: 30px; overflow: hidden;">
       <!-- Header -->
       <div class="card-header text-white text-center py-4" style="background: linear-gradient(135deg, #078930 0%, #056b24 100%); border-bottom: 5px solid #fcdd09;">
         <i class="bi bi-person-plus" style="font-size: 3rem;"></i>
         <h3 class="mt-2 fw-bold"><%= t('register') %></h3>
-        <p class="mb-0" style="opacity: 0.9;"><%= t('join_us') %></p>
+        <p class="mb-0 opacity-75"><%= t('join_us') %></p>
       </div>
-
       <!-- Body -->
-      <div class="card-body p-5" style="background: #f8fafc;">
+      <div class="card-body p-5 bg-light">
         <% if (locals.errors && errors.length > 0) { %>
-          <div class="alert alert-danger border-0 rounded-3">
+          <div class="alert alert-danger border-0 rounded-3 shadow-sm">
             <ul class="mb-0">
               <% errors.forEach(error => { %>
                 <li><%= error.msg %></li>
@@ -26,50 +31,45 @@
             <div class="col-md-6 mb-3">
               <label class="form-label fw-semibold text-secondary"><%= t('full_name') %></label>
               <div class="input-group">
-                <span class="input-group-text bg-white border-end-0" style="border-color: #ced4da;"><i class="bi bi-person-fill" style="color: #078930;"></i></span>
-                <input type="text" class="form-control border-start-0 ps-0" name="name" value="<%= typeof name !== 'undefined' ? name : '' %>" placeholder="<%= t('name_placeholder') %>" required style="border-color: #ced4da; box-shadow: none;">
+                <span class="input-group-text bg-white border-end-0"><i class="bi bi-person-fill" style="color: #078930;"></i></span>
+                <input type="text" class="form-control border-start-0 ps-0" name="name" value="<%= typeof name !== 'undefined' ? name : '' %>" placeholder="<%= t('name_placeholder') %>" required>
               </div>
             </div>
-
             <!-- Phone -->
             <div class="col-md-6 mb-3">
               <label class="form-label fw-semibold text-secondary"><%= t('phone') %></label>
               <div class="input-group">
-                <span class="input-group-text bg-white border-end-0" style="border-color: #ced4da;"><i class="bi bi-telephone-fill" style="color: #078930;"></i></span>
-                <input type="tel" class="form-control border-start-0 ps-0" name="phone" value="<%= typeof phone !== 'undefined' ? phone : '' %>" placeholder="<%= t('phone_placeholder') %>" style="border-color: #ced4da; box-shadow: none;">
+                <span class="input-group-text bg-white border-end-0"><i class="bi bi-telephone-fill" style="color: #078930;"></i></span>
+                <input type="tel" class="form-control border-start-0 ps-0" name="phone" value="<%= typeof phone !== 'undefined' ? phone : '' %>" placeholder="<%= t('phone_placeholder') %>">
               </div>
             </div>
           </div>
-
           <!-- Email -->
           <div class="mb-3">
             <label class="form-label fw-semibold text-secondary"><%= t('email') %></label>
             <div class="input-group">
-              <span class="input-group-text bg-white border-end-0" style="border-color: #ced4da;"><i class="bi bi-envelope-fill" style="color: #078930;"></i></span>
-              <input type="email" class="form-control border-start-0 ps-0" name="email" value="<%= typeof email !== 'undefined' ? email : '' %>" placeholder="<%= t('email_placeholder') %>" required style="border-color: #ced4da; box-shadow: none;">
+              <span class="input-group-text bg-white border-end-0"><i class="bi bi-envelope-fill" style="color: #078930;"></i></span>
+              <input type="email" class="form-control border-start-0 ps-0" name="email" value="<%= typeof email !== 'undefined' ? email : '' %>" placeholder="<%= t('email_placeholder') %>" required>
             </div>
           </div>
-
           <div class="row">
             <!-- Password -->
             <div class="col-md-6 mb-3">
               <label class="form-label fw-semibold text-secondary"><%= t('password') %></label>
               <div class="input-group">
-                <span class="input-group-text bg-white border-end-0" style="border-color: #ced4da;"><i class="bi bi-lock-fill" style="color: #078930;"></i></span>
-                <input type="password" class="form-control border-start-0 ps-0" name="password" placeholder="<%= t('password_placeholder') %>" required style="border-color: #ced4da; box-shadow: none;">
+                <span class="input-group-text bg-white border-end-0"><i class="bi bi-lock-fill" style="color: #078930;"></i></span>
+                <input type="password" class="form-control border-start-0 ps-0" name="password" placeholder="<%= t('password_placeholder') %>" required>
               </div>
             </div>
-
             <!-- Confirm Password -->
             <div class="col-md-6 mb-3">
               <label class="form-label fw-semibold text-secondary"><%= t('confirm_password') %></label>
               <div class="input-group">
-                <span class="input-group-text bg-white border-end-0" style="border-color: #ced4da;"><i class="bi bi-lock-fill" style="color: #078930;"></i></span>
-                <input type="password" class="form-control border-start-0 ps-0" name="password2" placeholder="<%= t('confirm_password_placeholder') %>" required style="border-color: #ced4da; box-shadow: none;">
+                <span class="input-group-text bg-white border-end-0"><i class="bi bi-lock-fill" style="color: #078930;"></i></span>
+                <input type="password" class="form-control border-start-0 ps-0" name="password2" placeholder="<%= t('confirm_password_placeholder') %>" required>
               </div>
             </div>
           </div>
-
           <!-- Terms -->
           <div class="form-check mb-4">
             <input class="form-check-input" type="checkbox" id="terms" required style="border-color: #078930;">
@@ -77,17 +77,21 @@
               <%= t('agree_terms') %> <a href="#" class="text-decoration-none" style="color: #078930;"><%= t('terms') %></a>
             </label>
           </div>
-
-          <!-- Submit -->
-          <button type="submit" class="btn w-100 text-white py-3 fw-bold" style="background: linear-gradient(135deg, #078930, #056b24); border: none; border-radius: 50px; transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+          <!-- Register button -->
+          <button type="submit" class="btn w-100 text-white py-3 fw-bold rounded-pill shadow" style="background: linear-gradient(135deg, #078930, #056b24); border: none;">
             <i class="bi bi-person-plus me-2"></i><%= t('register') %>
           </button>
         </form>
       </div>
-
-      <!-- Footer -->
-      <div class="card-footer text-center py-4" style="background: #ffffff; border-top: 2px dashed #dee2e6;">
-        <p class="mb-0 text-secondary"><%= t('already_have_account') %> <a href="/login" class="fw-bold text-decoration-none" style="color: #078930;"><%= t('login') %></a></p>
+      <!-- Footer with login and home buttons -->
+      <div class="card-footer bg-white py-4 text-center" style="border-top: 2px dashed #dee2e6;">
+        <p class="mb-2 text-secondary"><%= t('already_have_account') %></p>
+        <a href="/login" class="btn btn-outline-success rounded-pill px-4 me-2">
+          <i class="bi bi-box-arrow-in-right me-2"></i><%= t('login') %>
+        </a>
+        <a href="/" class="btn btn-outline-secondary rounded-pill px-4">
+          <i class="bi bi-house-door me-2"></i>Home
+        </a>
       </div>
     </div>
   </div>
