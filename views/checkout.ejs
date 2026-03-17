@@ -1,53 +1,72 @@
 <div class="container py-5">
   <h1 class="fw-bold mb-5 text-center" style="color: #078930;"><%= t('checkout') %></h1>
 
+  <!-- Hidden data container for cart items -->
+  <div id="cart-data" data-cart='<%- JSON.stringify(cart.items) %>' style="display: none;"></div>
+
   <div class="row g-4">
-    <!-- Shipping Form -->
+    <!-- Shipping Address Form -->
     <div class="col-lg-8">
       <div class="card border-0 shadow-lg" style="border-radius: 30px;">
         <div class="card-header text-white py-3 px-4" style="background: linear-gradient(135deg, #078930 0%, #056b24 100%); border-radius: 30px 30px 0 0;">
           <h5 class="mb-0"><i class="bi bi-truck me-2"></i><%= t('shipping_address') %></h5>
         </div>
         <div class="card-body p-5">
-          <form id="payment-form">
-            <!-- Street -->
+          <form id="shipping-form">
             <div class="mb-4">
               <label class="form-label fw-semibold text-secondary"><%= t('street_address') %></label>
               <div class="input-group">
                 <span class="input-group-text bg-white border-end-0" style="border-color: #ced4da;"><i class="bi bi-house-door-fill" style="color: #078930;"></i></span>
-                <input type="text" class="form-control border-start-0 ps-0" id="street" name="street" required style="border-color: #ced4da; box-shadow: none;">
+                <input type="text" class="form-control border-start-0 ps-0" id="street" name="street" required>
               </div>
             </div>
-
-            <!-- City & Zip -->
             <div class="row">
               <div class="col-md-6 mb-4">
                 <label class="form-label fw-semibold text-secondary"><%= t('city') %></label>
                 <div class="input-group">
-                  <span class="input-group-text bg-white border-end-0" style="border-color: #ced4da;"><i class="bi bi-building" style="color: #078930;"></i></span>
-                  <input type="text" class="form-control border-start-0 ps-0" id="city" name="city" required style="border-color: #ced4da; box-shadow: none;">
+                  <span class="input-group-text bg-white border-end-0"><i class="bi bi-building" style="color: #078930;"></i></span>
+                  <input type="text" class="form-control border-start-0 ps-0" id="city" name="city" required>
                 </div>
               </div>
               <div class="col-md-6 mb-4">
                 <label class="form-label fw-semibold text-secondary"><%= t('zip_code') %></label>
                 <div class="input-group">
-                  <span class="input-group-text bg-white border-end-0" style="border-color: #ced4da;"><i class="bi bi-mailbox" style="color: #078930;"></i></span>
-                  <input type="text" class="form-control border-start-0 ps-0" id="zipCode" name="zipCode" required style="border-color: #ced4da; box-shadow: none;">
+                  <span class="input-group-text bg-white border-end-0"><i class="bi bi-mailbox" style="color: #078930;"></i></span>
+                  <input type="text" class="form-control border-start-0 ps-0" id="zipCode" name="zipCode" required>
                 </div>
               </div>
             </div>
 
             <hr class="my-4" style="border-top: 2px dashed #dee2e6;">
 
-            <!-- Payment -->
-            <h5 class="mb-3" style="color: #2c3e50;"><i class="bi bi-credit-card me-2" style="color: #078930;"></i><%= t('payment') %></h5>
-            <div class="mb-4">
-              <div id="card-element" class="form-control py-3" style="border-color: #ced4da; border-radius: 10px;"></div>
-              <div id="card-errors" class="text-danger small mt-2"></div>
+            <h5 class="mb-3" style="color: #2c3e50;"><i class="bi bi-credit-card me-2" style="color: #078930;"></i>Payment Method</h5>
+            <div class="row g-3 mb-4">
+              <div class="col-md-6">
+                <div class="form-check card p-3 border" style="cursor: pointer;" onclick="document.getElementById('telebirr').checked = true; toggleForms();">
+                  <input class="form-check-input" type="radio" name="paymentMethod" id="telebirr" value="telebirr" checked>
+                  <label class="form-check-label" for="telebirr">
+                    <i class="bi bi-phone" style="color: #078930;"></i> Telebirr
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-check card p-3 border" style="cursor: pointer;" onclick="document.getElementById('cbe').checked = true; toggleForms();">
+                  <input class="form-check-input" type="radio" name="paymentMethod" id="cbe" value="cbe">
+                  <label class="form-check-label" for="cbe">
+                    <i class="bi bi-bank" style="color: #078930;"></i> CBE Birr
+                  </label>
+                </div>
+              </div>
             </div>
 
-            <!-- Submit -->
-            <button id="submit-button" class="btn w-100 text-white py-3 fw-bold" style="background: linear-gradient(135deg, #078930, #056b24); border: none; border-radius: 50px; transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+            <div id="telebirr-form" class="payment-info mb-4">
+              <p class="text-muted">You will be redirected to Telebirr to complete payment.</p>
+            </div>
+            <div id="cbe-form" class="payment-info mb-4" style="display: none;">
+              <p class="text-muted">You will be redirected to CBE Birr to complete payment.</p>
+            </div>
+
+            <button id="pay-button" class="btn w-100 text-white py-3 fw-bold rounded-pill shadow" style="background: linear-gradient(135deg, #078930, #056b24); border: none;">
               <i class="bi bi-lock-fill me-2"></i><%= t('pay_now') %> $<%= cart.totalPrice.toFixed(2) %>
             </button>
           </form>
@@ -71,7 +90,7 @@
               <span class="fw-bold" style="color: #078930;">$<%= item.totalPrice.toFixed(2) %></span>
             </div>
           <% }) %>
-          <hr style="border-top: 2px solid #dee2e6;">
+          <hr>
           <div class="d-flex justify-content-between mb-2">
             <span><%= t('subtotal') %>:</span>
             <span class="fw-bold">$<%= cart.totalPrice.toFixed(2) %></span>
@@ -80,7 +99,7 @@
             <span><%= t('delivery_fee') %>:</span>
             <span class="fw-bold text-success">$0.00</span>
           </div>
-          <hr style="border-top: 2px solid #dee2e6;">
+          <hr>
           <div class="d-flex justify-content-between">
             <span class="h5"><%= t('total') %>:</span>
             <span class="h5" style="color: #078930;">$<%= cart.totalPrice.toFixed(2) %></span>
@@ -91,48 +110,61 @@
   </div>
 </div>
 
-<!-- Stripe JS (same as before) -->
-<script src="https://js.stripe.com/v3/"></script>
 <script>
-  const stripe = Stripe('<%= stripePublicKey %>');
-  const elements = stripe.elements();
-  const cardElement = elements.create('card', { style: { base: { fontSize: '16px', fontFamily: 'Inter, sans-serif' } } });
-  cardElement.mount('#card-element');
+function toggleForms() {
+  const method = document.querySelector('input[name="paymentMethod"]:checked').value;
+  document.querySelectorAll('.payment-info').forEach(el => el.style.display = 'none');
+  document.getElementById(method + '-form').style.display = 'block';
+}
 
-  const form = document.getElementById('payment-form');
-  const submitButton = document.getElementById('submit-button');
+document.getElementById('pay-button').addEventListener('click', async function (e) {
+  e.preventDefault();
 
-  form.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    submitButton.disabled = true;
+  const method = document.querySelector('input[name="paymentMethod"]:checked').value;
+  const street = document.getElementById('street').value;
+  const city = document.getElementById('city').value;
+  const zipCode = document.getElementById('zipCode').value;
 
-    const { paymentMethod, error } = await stripe.createPaymentMethod({
-      type: 'card',
-      card: cardElement,
+  if (!street || !city || !zipCode) {
+    alert('Please fill in all shipping address fields.');
+    return;
+  }
+
+  // Retrieve cart items from hidden data attribute
+  const cartDataElement = document.getElementById('cart-data');
+  const cartItems = JSON.parse(cartDataElement.dataset.cart);
+
+  const button = this;
+  button.disabled = true;
+  button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+
+  try {
+    const response = await fetch('/api/initiate-payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        paymentMethod: method,
+        amount: <%= cart.totalPrice %>,
+        cart: cartItems,
+        shippingAddress: { street, city, zipCode }
+      })
     });
 
-    if (error) {
-      document.getElementById('card-errors').textContent = error.message;
-      submitButton.disabled = false;
-    } else {
-      const response = await fetch('/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          paymentMethodId: paymentMethod.id,
-          street: document.getElementById('street').value,
-          city: document.getElementById('city').value,
-          zipCode: document.getElementById('zipCode').value
-        })
-      });
+    const data = await response.json();
+    console.log('Payment initiation response:', data);
 
-      const result = await response.json();
-      if (result.success) {
-        window.location.href = '/order-confirmation/' + result.orderId;
-      } else {
-        document.getElementById('card-errors').textContent = result.error;
-        submitButton.disabled = false;
-      }
+    if (data.success && data.checkoutUrl) {
+      window.location.href = data.checkoutUrl;
+    } else {
+      alert('Payment initiation failed: ' + (data.error || 'Unknown error'));
+      button.disabled = false;
+      button.innerHTML = '<i class="bi bi-lock-fill me-2"></i><%= t('pay_now') %> $<%= cart.totalPrice.toFixed(2) %>';
     }
-  });
+  } catch (err) {
+    console.error('Fetch error:', err);
+    alert('Network error. Please try again. Check console for details.');
+    button.disabled = false;
+    button.innerHTML = '<i class="bi bi-lock-fill me-2"></i><%= t('pay_now') %> $<%= cart.totalPrice.toFixed(2) %>';
+  }
+});
 </script>

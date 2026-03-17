@@ -1,4 +1,4 @@
-// server.js – Full version with environment variable debugging
+// server.js – Full version with Chapa local payments and shipping address
 require('dotenv').config();
 
 // ========== DEBUGGING: Check environment variables ==========
@@ -9,6 +9,7 @@ console.log('MONGO_URI length:', process.env.MONGO_URI ? process.env.MONGO_URI.l
 console.log('SESSION_SECRET exists:', !!process.env.SESSION_SECRET);
 console.log('STRIPE_PUBLIC_KEY exists:', !!process.env.STRIPE_PUBLIC_KEY);
 console.log('STRIPE_SECRET_KEY exists:', !!process.env.STRIPE_SECRET_KEY);
+console.log('CHAPA_SECRET_KEY exists:', !!process.env.CHAPA_SECRET_KEY);
 // ============================================================
 
 const express = require('express');
@@ -21,6 +22,7 @@ const fs = require('fs');
 const flash = require('connect-flash');
 const cartHelper = require('./middleware/cart');
 const bcrypt = require('bcrypt');
+const Chapa = require('chapa-nodejs').Chapa;
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -104,6 +106,11 @@ mongoose.connect(process.env.MONGO_URI)
     const User = require('./models/User');
     const Order = require('./models/Order');
     const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
+    // Initialize Chapa
+    const chapa = new Chapa({
+      secretKey: process.env.CHAPA_SECRET_KEY
+    });
 
     // ==================== SEED ROUTE ====================
     app.get('/seed', async (req, res) => {
@@ -289,7 +296,7 @@ mongoose.connect(process.env.MONGO_URI)
       }
     });
 
-    // ==================== CHECKOUT & ORDERS ====================
+    // ==================== CHECKOUT & PAYMENT ====================
     app.get('/checkout', async (req, res) => {
       if (!req.session.userId) {
         req.flash('error', 'Please log in to checkout');
@@ -307,56 +314,136 @@ mongoose.connect(process.env.MONGO_URI)
       });
     });
 
-    app.post('/checkout', async (req, res) => {
-      if (!req.session.userId) return res.status(401).json({ error: 'Unauthorized' });
-      const cart = cartHelper.getCart(req.session);
-      if (cart.items.length === 0) return res.status(400).json({ error: 'Cart is empty' });
-      const { street, city, zipCode, paymentMethodId } = req.body;
+    // ==================== CHAPA PAYMENT INITIATION ====================
+    app.post('/api/initiate-payment', async (req, res) => {
+      if (!req.session.userId) {
+        return res.status(401).json({ error: 'Please log in first' });
+      }
+
+      const { paymentMethod, amount, cart, shippingAddress } = req.body;
+      const user = await User.findById(req.session.userId);
+
+      // Validate required fields
+      if (!shippingAddress || !shippingAddress.street || !shippingAddress.city || !shippingAddress.zipCode) {
+        return res.status(400).json({ error: 'Shipping address is required' });
+      }
+
+      // Generate unique transaction reference
+      const txRef = `${user._id}-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+
       try {
-        const paymentIntent = await stripe.paymentIntents.create({
-          amount: Math.round(cart.totalPrice * 100),
-          currency: 'usd',
-          payment_method: paymentMethodId,
-          confirmation_method: 'manual',
-          confirm: true,
-          description: `Order for ${req.session.userName}`,
-          shipping: {
-            name: req.session.userName,
-            address: { line1: street, city, postal_code: zipCode, country: 'US' }
-          }
+        // Prepare customer info
+        const customerInfo = {
+          email: user.email,
+          first_name: user.name.split(' ')[0],
+          last_name: user.name.split(' ').slice(1).join(' ') || 'Customer',
+          phone_number: user.phone || '0911000000'
+        };
+
+        // Prepare custom data
+        const customData = {
+          cart: cart.map(item => ({
+            name: item.name,
+            qty: item.qty,
+            price: item.price,
+            dishId: item.dishId
+          })),
+          userId: user._id.toString(),
+          shippingAddress
+        };
+
+        // Initialize transaction with Chapa
+        const response = await chapa.initialize({
+          amount: amount,
+          currency: 'ETB',
+          email: customerInfo.email,
+          first_name: customerInfo.first_name,
+          last_name: customerInfo.last_name,
+          phone_number: customerInfo.phone_number,
+          tx_ref: txRef,
+          callback_url: `${process.env.BASE_URL}/api/payment-callback`,
+          return_url: `${process.env.BASE_URL}/order-confirmation?tx_ref=${txRef}`,
+          customization: {
+            title: 'EthioFood Delivery',
+            description: 'Payment for your order'
+          },
+          meta: customData
         });
-        if (paymentIntent.status === 'succeeded') {
+
+        if (response.status === 'success') {
+          // Create order with pending payment status
           const order = new Order({
             user: req.session.userId,
-            items: cart.items,
-            totalAmount: cart.totalPrice,
-            shippingAddress: { street, city, zipCode },
-            paymentStatus: 'paid',
-            orderStatus: 'confirmed',
-            stripePaymentIntentId: paymentIntent.id
+            items: cart.map(item => ({
+              dishId: item.dishId,
+              name: item.name,
+              nameAm: item.nameAm,
+              price: item.price,
+              qty: item.qty,
+              totalPrice: item.totalPrice,
+              imageUrl: item.imageUrl
+            })),
+            totalAmount: amount,
+            shippingAddress: shippingAddress,
+            paymentMethod: paymentMethod,
+            chapaTxRef: txRef,
+            paymentStatus: 'pending',
+            orderStatus: 'pending'
           });
           await order.save();
-          cartHelper.clearCart(req.session);
-          req.flash('success', 'Payment successful! Your order has been placed.');
-          res.json({ success: true, orderId: order._id });
+
+          res.json({ 
+            success: true, 
+            checkoutUrl: response.data.checkout_url 
+          });
         } else {
-          res.status(400).json({ error: 'Payment failed' });
+          res.status(400).json({ error: 'Payment initiation failed' });
         }
-      } catch (err) {
-        console.error('Stripe error:', err);
-        res.status(500).json({ error: err.message });
+      } catch (error) {
+        console.error('Chapa error:', error);
+        res.status(500).json({ error: error.message });
       }
     });
 
-    app.get('/order-confirmation/:id', async (req, res) => {
-      if (!req.session.userId) return res.redirect('/login');
+    // ==================== CHAPA PAYMENT CALLBACK ====================
+    app.post('/api/payment-callback', async (req, res) => {
+      const { tx_ref, status, amount, currency, meta } = req.body;
+
       try {
-        const order = await Order.findById(req.params.id).populate('user', 'name email');
-        if (!order) return res.status(404).send('Order not found');
-        if (order.user._id.toString() !== req.session.userId) {
-          req.flash('error', 'Unauthorized');
-          return res.redirect('/');
+        // Verify the transaction with Chapa
+        const verification = await chapa.verify(tx_ref);
+
+        if (verification.status === 'success') {
+          const order = await Order.findOne({ chapaTxRef: tx_ref });
+          if (order) {
+            order.paymentStatus = 'paid';
+            order.orderStatus = 'confirmed';
+            await order.save();
+          }
         }
+        res.sendStatus(200);
+      } catch (error) {
+        console.error('Callback error:', error);
+        res.sendStatus(500);
+      }
+    });
+
+    // ==================== ORDER CONFIRMATION (after return from Chapa) ====================
+    app.get('/order-confirmation', async (req, res) => {
+      const { tx_ref } = req.query;
+      if (!tx_ref) {
+        return res.redirect('/');
+      }
+
+      try {
+        const order = await Order.findOne({ chapaTxRef: tx_ref }).populate('user', 'name email');
+        if (!order) {
+          return res.status(404).send('Order not found');
+        }
+
+        // Clear the cart after successful payment
+        cartHelper.clearCart(req.session);
+
         res.render('order-confirmation', { title: 'Order Confirmation', order });
       } catch (err) {
         console.error(err);
@@ -364,6 +451,7 @@ mongoose.connect(process.env.MONGO_URI)
       }
     });
 
+    // ==================== ORDERS HISTORY ====================
     app.get('/orders', async (req, res) => {
       if (!req.session.userId) {
         req.flash('error', 'Please log in to view your orders');
