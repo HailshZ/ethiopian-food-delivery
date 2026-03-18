@@ -1,0 +1,53 @@
+<div class="container-fluid py-4 px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold"><i class="bi bi-arrow-repeat me-2"></i>Subscriptions</h2>
+        <a href="/admin" class="btn btn-outline-secondary rounded-pill"><i
+                class="bi bi-arrow-left me-1"></i>Dashboard</a>
+    </div>
+
+    <div class="glass-card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Plan</th>
+                        <th>Status</th>
+                        <th>Payment</th>
+                        <th>Amount</th>
+                        <th>Start</th>
+                        <th>End</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% subscriptions.forEach(sub=> { %>
+                        <tr>
+                            <td>
+                                <%= sub.user ? sub.user.name : 'N/A' %>
+                            </td>
+                            <td class="fw-semibold">
+                                <%= sub.mealPlan ? sub.mealPlan.name : 'Unknown' %>
+                            </td>
+                            <td><span
+                                    class="badge bg-<%= sub.status==='active'?'success':sub.status==='cancelled'?'danger':'warning' %> rounded-pill">
+                                    <%= sub.status %>
+                                </span></td>
+                            <td><span
+                                    class="badge bg-<%= sub.paymentStatus==='paid'?'success':'warning' %> rounded-pill">
+                                    <%= sub.paymentStatus %>
+                                </span></td>
+                            <td class="fw-bold text-primary">$<%= sub.totalPaid.toFixed(2) %>
+                            </td>
+                            <td class="small">
+                                <%= new Date(sub.startDate).toLocaleDateString() %>
+                            </td>
+                            <td class="small">
+                                <%= sub.endDate ? new Date(sub.endDate).toLocaleDateString() : 'Ongoing' %>
+                            </td>
+                        </tr>
+                        <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

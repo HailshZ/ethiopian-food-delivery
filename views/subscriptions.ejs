@@ -1,0 +1,83 @@
+<div class="container py-5">
+    <h1 class="section-title text-center mb-5"><i class="bi bi-arrow-repeat me-2"></i>
+        <%= t('subscriptions') %>
+    </h1>
+
+    <% if (!subscriptions || subscriptions.length===0) { %>
+        <div class="empty-state">
+            <i class="bi bi-calendar-x"></i>
+            <h4>No subscriptions yet</h4>
+            <p>Subscribe to a meal plan to get started!</p>
+            <a href="/meal-plans" class="btn btn-primary rounded-pill px-5 mt-3">
+                <i class="bi bi-calendar-week me-2"></i>Browse Meal Plans
+            </a>
+        </div>
+        <% } else { %>
+            <div class="row g-4">
+                <% subscriptions.forEach(sub=> { %>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="glass-card h-100">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="mb-0">
+                                    <%= sub.mealPlan ? sub.mealPlan.name : 'Unknown Plan' %>
+                                </h5>
+                                <span
+                                    class="badge rounded-pill <%= sub.status === 'active' ? 'bg-success' : sub.status === 'cancelled' ? 'bg-danger' : 'bg-warning' %>">
+                                    <%= sub.status %>
+                                </span>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="text-muted">Start:</span>
+                                    <span>
+                                        <%= new Date(sub.startDate).toLocaleDateString() %>
+                                    </span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="text-muted">End:</span>
+                                    <span>
+                                        <%= sub.endDate ? new Date(sub.endDate).toLocaleDateString() : 'Ongoing' %>
+                                    </span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="text-muted">Payment:</span>
+                                    <span class="badge bg-<%= sub.paymentStatus === 'paid' ? 'success' : 'warning' %>">
+                                        <%= sub.paymentStatus %>
+                                    </span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-muted">Amount:</span>
+                                    <span class="fw-bold text-primary">$<%= sub.totalPaid.toFixed(2) %></span>
+                                </div>
+                            </div>
+                            <% if (sub.status==='active' ) { %>
+                                <button class="btn btn-outline-danger btn-sm w-100 rounded-pill cancel-sub-btn"
+                                    data-id="<%= sub._id %>">
+                                    <i class="bi bi-x-circle me-1"></i>Cancel Subscription
+                                </button>
+                                <% } %>
+                        </div>
+                    </div>
+                    <% }) %>
+            </div>
+            <% } %>
+</div>
+
+<script>
+    document.querySelectorAll('.cancel-sub-btn').forEach(btn => {
+        btn.addEventListener('click', async function () {
+            if (!confirm('Are you sure you want to cancel this subscription?')) return;
+            const id = this.dataset.id;
+            try {
+                const res = await fetch(`/api/subscription/${id}/cancel`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('Subscription cancelled', 'success');
+                    setTimeout(() => window.location.reload(), 1000);
+                }
+            } catch (err) {
+                showToast('Error cancelling subscription', 'error');
+            }
+        });
+    });
+</script>

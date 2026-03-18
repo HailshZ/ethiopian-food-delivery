@@ -1,97 +1,76 @@
-<div class="container d-flex align-items-center justify-content-center" style="min-height: 80vh;">
-  <div class="col-md-8 col-lg-6">
-    <!-- Home button at top -->
-    <div class="mb-3 text-center">
-      <a href="/" class="btn btn-outline-secondary rounded-pill px-4">
-        <i class="bi bi-house-door me-2"></i>Home
-      </a>
-    </div>
-    <div class="card border-0 shadow-lg" style="border-radius: 30px; overflow: hidden;">
-      <!-- Header -->
-      <div class="card-header text-white text-center py-4" style="background: linear-gradient(135deg, #078930 0%, #056b24 100%); border-bottom: 5px solid #fcdd09;">
-        <i class="bi bi-person-plus" style="font-size: 3rem;"></i>
-        <h3 class="mt-2 fw-bold"><%= t('register') %></h3>
-        <p class="mb-0 opacity-75"><%= t('join_us') %></p>
-      </div>
-      <!-- Body -->
-      <div class="card-body p-5 bg-light">
-        <% if (locals.errors && errors.length > 0) { %>
-          <div class="alert alert-danger border-0 rounded-3 shadow-sm">
-            <ul class="mb-0">
-              <% errors.forEach(error => { %>
-                <li><%= error.msg %></li>
-              <% }) %>
-            </ul>
-          </div>
-        <% } %>
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="glass-card auth-card">
+        <div class="text-center mb-4">
+          <div class="auth-icon"><i class="bi bi-person-plus-fill"></i></div>
+          <h3 class="fw-bold">
+            <%= t('register') %>
+          </h3>
+          <p class="text-muted">
+            <%= t('join_us') %>
+          </p>
+        </div>
 
-        <form action="/register" method="post">
-          <div class="row">
-            <!-- Full Name -->
-            <div class="col-md-6 mb-3">
-              <label class="form-label fw-semibold text-secondary"><%= t('full_name') %></label>
-              <div class="input-group">
-                <span class="input-group-text bg-white border-end-0"><i class="bi bi-person-fill" style="color: #078930;"></i></span>
-                <input type="text" class="form-control border-start-0 ps-0" name="name" value="<%= typeof name !== 'undefined' ? name : '' %>" placeholder="<%= t('name_placeholder') %>" required>
-              </div>
+        <% if (typeof errors !=='undefined' && errors && errors.length> 0) { %>
+          <% errors.forEach(err=> { %>
+            <div class="alert alert-danger rounded-3">
+              <%= err.msg %>
             </div>
-            <!-- Phone -->
-            <div class="col-md-6 mb-3">
-              <label class="form-label fw-semibold text-secondary"><%= t('phone') %></label>
-              <div class="input-group">
-                <span class="input-group-text bg-white border-end-0"><i class="bi bi-telephone-fill" style="color: #078930;"></i></span>
-                <input type="tel" class="form-control border-start-0 ps-0" name="phone" value="<%= typeof phone !== 'undefined' ? phone : '' %>" placeholder="<%= t('phone_placeholder') %>">
-              </div>
-            </div>
-          </div>
-          <!-- Email -->
-          <div class="mb-3">
-            <label class="form-label fw-semibold text-secondary"><%= t('email') %></label>
-            <div class="input-group">
-              <span class="input-group-text bg-white border-end-0"><i class="bi bi-envelope-fill" style="color: #078930;"></i></span>
-              <input type="email" class="form-control border-start-0 ps-0" name="email" value="<%= typeof email !== 'undefined' ? email : '' %>" placeholder="<%= t('email_placeholder') %>" required>
-            </div>
-          </div>
-          <div class="row">
-            <!-- Password -->
-            <div class="col-md-6 mb-3">
-              <label class="form-label fw-semibold text-secondary"><%= t('password') %></label>
-              <div class="input-group">
-                <span class="input-group-text bg-white border-end-0"><i class="bi bi-lock-fill" style="color: #078930;"></i></span>
-                <input type="password" class="form-control border-start-0 ps-0" name="password" placeholder="<%= t('password_placeholder') %>" required>
-              </div>
-            </div>
-            <!-- Confirm Password -->
-            <div class="col-md-6 mb-3">
-              <label class="form-label fw-semibold text-secondary"><%= t('confirm_password') %></label>
-              <div class="input-group">
-                <span class="input-group-text bg-white border-end-0"><i class="bi bi-lock-fill" style="color: #078930;"></i></span>
-                <input type="password" class="form-control border-start-0 ps-0" name="password2" placeholder="<%= t('confirm_password_placeholder') %>" required>
-              </div>
-            </div>
-          </div>
-          <!-- Terms -->
-          <div class="form-check mb-4">
-            <input class="form-check-input" type="checkbox" id="terms" required style="border-color: #078930;">
-            <label class="form-check-label text-secondary" for="terms">
-              <%= t('agree_terms') %> <a href="#" class="text-decoration-none" style="color: #078930;"><%= t('terms') %></a>
-            </label>
-          </div>
-          <!-- Register button -->
-          <button type="submit" class="btn w-100 text-white py-3 fw-bold rounded-pill shadow" style="background: linear-gradient(135deg, #078930, #056b24); border: none;">
-            <i class="bi bi-person-plus me-2"></i><%= t('register') %>
-          </button>
-        </form>
-      </div>
-      <!-- Footer with login and home buttons -->
-      <div class="card-footer bg-white py-4 text-center" style="border-top: 2px dashed #dee2e6;">
-        <p class="mb-2 text-secondary"><%= t('already_have_account') %></p>
-        <a href="/login" class="btn btn-outline-success rounded-pill px-4 me-2">
-          <i class="bi bi-box-arrow-in-right me-2"></i><%= t('login') %>
-        </a>
-        <a href="/" class="btn btn-outline-secondary rounded-pill px-4">
-          <i class="bi bi-house-door me-2"></i>Home
-        </a>
+            <% }) %>
+              <% } %>
+
+                <form action="/register" method="post">
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <label class="form-label fw-semibold"><i class="bi bi-person me-1"></i>
+                        <%= t('full_name') %>
+                      </label>
+                      <input type="text" name="name" class="form-control rounded-3 py-2"
+                        placeholder="<%= t('name_placeholder') %>"
+                        value="<%= typeof name !== 'undefined' ? name : '' %>" required>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label fw-semibold"><i class="bi bi-phone me-1"></i>
+                        <%= t('phone') %>
+                      </label>
+                      <input type="tel" name="phone" class="form-control rounded-3 py-2"
+                        placeholder="<%= t('phone_placeholder') %>"
+                        value="<%= typeof phone !== 'undefined' ? phone : '' %>">
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label fw-semibold"><i class="bi bi-envelope me-1"></i>
+                        <%= t('email') %>
+                      </label>
+                      <input type="email" name="email" class="form-control rounded-3 py-2"
+                        placeholder="<%= t('email_placeholder') %>"
+                        value="<%= typeof email !== 'undefined' ? email : '' %>" required>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label fw-semibold"><i class="bi bi-lock me-1"></i>
+                        <%= t('password') %>
+                      </label>
+                      <input type="password" name="password" class="form-control rounded-3 py-2"
+                        placeholder="<%= t('password_placeholder') %>" required>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label fw-semibold"><i class="bi bi-lock-fill me-1"></i>
+                        <%= t('confirm_password') %>
+                      </label>
+                      <input type="password" name="password2" class="form-control rounded-3 py-2"
+                        placeholder="<%= t('confirm_password_placeholder') %>" required>
+                    </div>
+                  </div>
+                  <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-bold mt-4 mb-3">
+                    <i class="bi bi-person-plus me-2"></i>
+                    <%= t('register') %>
+                  </button>
+                  <p class="text-center text-muted mb-0">
+                    <%= t('already_have_account') %> <a href="/login" class="text-primary fw-semibold">
+                        <%= t('login') %>
+                      </a>
+                  </p>
+                </form>
       </div>
     </div>
   </div>

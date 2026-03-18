@@ -42,7 +42,19 @@ const orderSchema = new mongoose.Schema({
     enum: ['pending', 'confirmed', 'preparing', 'delivered', 'cancelled'],
     default: 'pending'
   },
-  stripePaymentIntentId: String // to track Stripe payment
+  chapaTxRef: String,
+  stripePaymentIntentId: String,
+  deliveryLocation: {
+    lat: { type: Number, default: 9.0192 },  // Default: Addis Ababa
+    lng: { type: Number, default: 38.7525 }
+  },
+  estimatedDelivery: { type: Date },
+  deliveryUpdates: [{
+    status: String,
+    location: { lat: Number, lng: Number },
+    timestamp: { type: Date, default: Date.now },
+    note: String
+  }]
 }, {
   timestamps: true
 });

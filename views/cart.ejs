@@ -1,99 +1,96 @@
-<div class="container py-4">
-  <h1 class="mb-4" style="color: #078930; font-weight: 700;"><%= t('your_cart') %></h1>
+<div class="container py-5">
+  <h1 class="section-title text-center mb-5"><i class="bi bi-cart3 me-2"></i>
+    <%= t('your_cart') %>
+  </h1>
 
-  <% if (cart.items.length === 0) { %>
-    <div class="text-center py-5" style="background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
-      <i class="bi bi-cart-x" style="font-size: 4rem; color: #da121a;"></i>
-      <h4 class="mt-3" style="color: #2c3e50;"><%= t('cart_empty') %></h4>
-      <p class="mb-4" style="color: #5d6d7e;"><%= t('add_some_items') %></p>
-      <a href="/menu" class="btn btn-primary btn-lg" style="background: linear-gradient(135deg, #078930, #056b24); border: none; border-radius: 50px; padding: 0.75rem 2rem;">
-        <i class="bi bi-arrow-left me-2"></i><%= t('continue_shopping') %>
+  <% if (cart.items.length===0) { %>
+    <div class="empty-state">
+      <i class="bi bi-cart-x"></i>
+      <h4>
+        <%= t('cart_empty') %>
+      </h4>
+      <p>
+        <%= t('add_some_items') %>
+      </p>
+      <a href="/menu" class="btn btn-primary btn-lg rounded-pill px-5 mt-3">
+        <i class="bi bi-arrow-left me-2"></i>
+        <%= t('continue_shopping') %>
       </a>
     </div>
-  <% } else { %>
-    <div class="row">
-      <!-- Cart Items -->
-      <div class="col-lg-8 mb-4">
-        <div class="table-responsive">
-          <table class="table align-middle" style="background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
-            <thead>
-              <tr style="background: linear-gradient(135deg, #078930, #056b24); color: white;">
-                <th style="padding: 1rem;"><%= t('item') %></th>
-                <th class="text-end"><%= t('price') %></th>
-                <th class="text-center"><%= t('quantity') %></th>
-                <th class="text-end"><%= t('total') %></th>
-                <th class="text-center"><%= t('action') %></th>
-              </tr>
-            </thead>
-            <tbody>
-              <% cart.items.forEach(item => { %>
-                <tr>
-                  <td style="padding: 1rem;">
-                    <div class="d-flex align-items-center">
-                      <img src="<%= item.imageUrl || 'https://via.placeholder.com/60x60?text=Food' %>" 
-                           style="width: 60px; height: 60px; object-fit: cover; border-radius: 10px; border: 2px solid #fcdd09; margin-right: 1rem;">
-                      <div>
-                        <strong style="color: #2c3e50;"><%= currentLanguage === 'en' ? item.name : (item.nameAm || item.name) %></strong><br>
-                        <small style="color: #95a5a6;">ID: <%= item.dishId.toString().slice(-6) %></small>
-                      </div>
-                    </div>
-                  </td>
-                  <td class="text-end fw-bold" style="color: #078930;">$<%= item.price.toFixed(2) %></td>
-                  <td class="text-center">
-                    <form action="/cart/update/<%= item.dishId %>" method="post" class="d-flex justify-content-center">
-                      <input type="number" name="qty" value="<%= item.qty %>" min="1" 
-                             style="width: 70px; border: 2px solid #e0e0e0; border-radius: 10px; text-align: center; padding: 0.3rem;">
-                      <button type="submit" class="btn btn-sm ms-1" style="border: 2px solid #078930; color: #078930; border-radius: 10px;">
-                        <i class="bi bi-arrow-repeat"></i>
-                      </button>
-                    </form>
-                  </td>
-                  <td class="text-end fw-bold" style="color: #da121a;">$<%= item.totalPrice.toFixed(2) %></td>
-                  <td class="text-center">
-                    <form action="/cart/remove/<%= item.dishId %>" method="post">
-                      <button type="submit" class="btn btn-sm" style="border: 2px solid #da121a; color: #da121a; border-radius: 10px;">
-                        <i class="bi bi-trash"></i>
-                      </button>
-                    </form>
-                  </td>
-                </tr>
+    <% } else { %>
+      <div class="row g-4">
+        <!-- Cart Items -->
+        <div class="col-lg-8">
+          <div class="glass-card" id="cart-items-container">
+            <% cart.items.forEach(item=> { %>
+              <div class="cart-item" data-dish-id="<%= item.dishId %>">
+                <img src="<%= item.imageUrl || 'https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=400' %>"
+                  alt="<%= item.name %>" class="cart-item-img">
+                <div class="cart-item-info">
+                  <h6>
+                    <%= currentLanguage==='en' ? item.name : (item.nameAm || item.name) %>
+                  </h6>
+                  <span class="cart-item-price">$<%= item.price.toFixed(2) %> each</span>
+                </div>
+                <div class="cart-item-qty">
+                  <button class="qty-btn minus" onclick="updateCartQty('<%= item.dishId %>', <%= item.qty - 1 %>)">
+                    <i class="bi bi-dash"></i>
+                  </button>
+                  <span class="qty-display">
+                    <%= item.qty %>
+                  </span>
+                  <button class="qty-btn plus" onclick="updateCartQty('<%= item.dishId %>', <%= item.qty + 1 %>)">
+                    <i class="bi bi-plus"></i>
+                  </button>
+                </div>
+                <div class="cart-item-total">$<%= item.totalPrice.toFixed(2) %>
+                </div>
+                <button class="cart-item-remove" onclick="removeCartItem('<%= item.dishId %>')">
+                  <i class="bi bi-trash3"></i>
+                </button>
+              </div>
               <% }) %>
-            </tbody>
-          </table>
+          </div>
+          <a href="/menu" class="btn btn-outline-secondary rounded-pill mt-3">
+            <i class="bi bi-arrow-left me-2"></i>
+            <%= t('continue_shopping') %>
+          </a>
         </div>
-      </div>
 
-      <!-- Order Summary -->
-      <div class="col-lg-4">
-        <div class="card" style="border: none; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08);">
-          <div class="card-body" style="padding: 1.5rem;">
-            <h5 style="color: #078930; font-weight: 700; border-bottom: 2px solid #fcdd09; padding-bottom: 0.75rem; margin-bottom: 1.5rem;">
-              <i class="bi bi-receipt me-2"></i><%= t('order_summary') %>
+        <!-- Order Summary -->
+        <div class="col-lg-4">
+          <div class="glass-card summary-card sticky-top" style="top: 100px;">
+            <h5 class="summary-title"><i class="bi bi-receipt me-2"></i>
+              <%= t('order_summary') %>
             </h5>
-            <div class="d-flex justify-content-between mb-2">
-              <span><%= t('subtotal') %> (<%= cart.totalQty %> <%= t('items') %>):</span>
-              <span class="fw-bold">$<%= cart.totalPrice.toFixed(2) %></span>
+            <div class="summary-row">
+              <span>
+                <%= t('subtotal') %> (<span id="cart-qty">
+                    <%= cart.totalQty %>
+                  </span>
+                  <%= t('items') %>)
+              </span>
+              <span class="fw-bold" id="cart-subtotal">$<%= cart.totalPrice.toFixed(2) %></span>
             </div>
-            <div class="d-flex justify-content-between mb-2">
-              <span><%= t('delivery_fee') %>:</span>
-              <span class="fw-bold" style="color: #078930;">$0.00</span>
+            <div class="summary-row">
+              <span>
+                <%= t('delivery_fee') %>
+              </span>
+              <span class="text-success fw-bold">FREE</span>
             </div>
-            <hr style="border-top: 2px dashed #e0e0e0;">
-            <div class="d-flex justify-content-between mb-4">
-              <span class="h5"><%= t('total') %>:</span>
-              <span class="h5" style="color: #078930;">$<%= cart.totalPrice.toFixed(2) %></span>
+            <hr class="dashed">
+            <div class="summary-row total">
+              <span>
+                <%= t('total') %>
+              </span>
+              <span id="cart-total">$<%= cart.totalPrice.toFixed(2) %></span>
             </div>
-            <div class="d-grid gap-2">
-              <a href="/checkout" class="btn btn-success btn-lg" style="background: linear-gradient(135deg, #078930, #056b24); border: none; border-radius: 50px; padding: 0.75rem;">
-                <i class="bi bi-credit-card me-2"></i><%= t('checkout') %>
-              </a>
-              <a href="/menu" class="btn btn-outline-secondary" style="border: 2px solid #2c3e50; color: #2c3e50; border-radius: 50px; padding: 0.75rem;">
-                <i class="bi bi-arrow-left me-2"></i><%= t('continue_shopping') %>
-              </a>
-            </div>
+            <a href="/checkout" class="btn btn-primary w-100 rounded-pill py-3 mt-4">
+              <i class="bi bi-lock-fill me-2"></i>
+              <%= t('checkout') %>
+            </a>
           </div>
         </div>
       </div>
-    </div>
-  <% } %>
+      <% } %>
 </div>

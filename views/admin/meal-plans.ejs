@@ -1,0 +1,58 @@
+<div class="container-fluid py-4 px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold"><i class="bi bi-calendar-week me-2"></i>Manage Meal Plans</h2>
+        <div>
+            <a href="/admin/meal-plans/new" class="btn btn-primary rounded-pill"><i class="bi bi-plus-lg me-1"></i>New
+                Plan</a>
+            <a href="/admin" class="btn btn-outline-secondary rounded-pill ms-2"><i
+                    class="bi bi-arrow-left me-1"></i>Dashboard</a>
+        </div>
+    </div>
+
+    <% if (!plans || plans.length===0) { %>
+        <div class="empty-state">
+            <i class="bi bi-calendar-x"></i>
+            <h4>No meal plans yet</h4>
+            <p>Create your first meal plan to get started.</p>
+            <a href="/admin/meal-plans/new" class="btn btn-primary rounded-pill px-5 mt-2"><i
+                    class="bi bi-plus-lg me-1"></i>Create Plan</a>
+        </div>
+        <% } else { %>
+            <div class="row g-4">
+                <% plans.forEach(plan=> { %>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="glass-card h-100">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h5 class="mb-1">
+                                        <%= plan.name %>
+                                    </h5>
+                                    <span class="badge bg-primary rounded-pill">
+                                        <%= plan.duration %>
+                                    </span>
+                                    <span
+                                        class="badge bg-<%= plan.isActive ? 'success' : 'secondary' %> rounded-pill ms-1">
+                                        <%= plan.isActive ? 'Active' : 'Inactive' %>
+                                    </span>
+                                </div>
+                                <span class="h4 text-primary mb-0">$<%= plan.price.toFixed(2) %></span>
+                            </div>
+                            <p class="text-muted small">
+                                <%= plan.description || 'No description' %>
+                            </p>
+                            <div class="d-flex gap-2 mt-auto">
+                                <a href="/admin/meal-plans/<%= plan._id %>/edit"
+                                    class="btn btn-sm btn-outline-primary rounded-pill flex-fill"><i
+                                        class="bi bi-pencil me-1"></i>Edit</a>
+                                <form action="/admin/meal-plans/<%= plan._id %>/delete" method="post" class="flex-fill"
+                                    onsubmit="return confirm('Delete this plan?')">
+                                    <button class="btn btn-sm btn-outline-danger rounded-pill w-100"><i
+                                            class="bi bi-trash3 me-1"></i>Delete</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <% }) %>
+            </div>
+            <% } %>
+</div>

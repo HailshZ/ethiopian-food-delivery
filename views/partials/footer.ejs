@@ -1,12 +1,57 @@
-<footer class="bg-dark text-white py-4 mt-5">
+<footer class="main-footer">
   <div class="container">
-    <div class="row">
-      <div class="col-md-6 text-center text-md-start">
-        <p class="mb-0">&copy; 2025 EthioFood Delivery. All rights reserved.</p>
+    <div class="row g-4 py-4">
+      <div class="col-lg-4 col-md-6">
+        <h5 class="footer-brand"><i class="bi bi-cup-hot-fill me-2"></i>EthioFood</h5>
+        <p class="text-white-50 mb-3">Authentic Ethiopian food and coffee delivered fresh to your door.</p>
+        <div class="d-flex gap-3">
+          <a href="#" class="footer-social"><i class="bi bi-facebook"></i></a>
+          <a href="#" class="footer-social"><i class="bi bi-instagram"></i></a>
+          <a href="#" class="footer-social"><i class="bi bi-telegram"></i></a>
+          <a href="#" class="footer-social"><i class="bi bi-tiktok"></i></a>
+        </div>
       </div>
-      <div class="col-md-6 text-center text-md-end">
-        <p class="mb-0">Developed by Hazel</p>
+      <div class="col-lg-2 col-md-6">
+        <h6 class="footer-heading">Quick Links</h6>
+        <ul class="footer-links">
+          <li><a href="/menu">
+              <%= t('menu') %>
+            </a></li>
+          <li><a href="/meal-plans">
+              <%= t('meal_plans') %>
+            </a></li>
+          <li><a href="/cart">
+              <%= t('cart') %>
+            </a></li>
+        </ul>
       </div>
+      <div class="col-lg-3 col-md-6">
+        <h6 class="footer-heading">Account</h6>
+        <ul class="footer-links">
+          <li><a href="/profile">
+              <%= t('profile') %>
+            </a></li>
+          <li><a href="/orders">
+              <%= t('my_orders') %>
+            </a></li>
+          <li><a href="/subscriptions">
+              <%= t('subscriptions') %>
+            </a></li>
+        </ul>
+      </div>
+      <div class="col-lg-3 col-md-6">
+        <h6 class="footer-heading">Contact</h6>
+        <ul class="footer-links">
+          <li><i class="bi bi-geo-alt me-2"></i>Addis Ababa, Ethiopia</li>
+          <li><i class="bi bi-telephone me-2"></i>+251 912 345 678</li>
+          <li><i class="bi bi-envelope me-2"></i>info@ethiofood.com</li>
+        </ul>
+      </div>
+    </div>
+    <hr class="border-secondary">
+    <div class="d-flex flex-wrap justify-content-between align-items-center py-2">
+      <p class="mb-0 text-white-50 small">&copy; 2025 EthioFood Delivery. All rights reserved.</p>
+      <p class="mb-0 text-white-50 small">Crafted with <i class="bi bi-heart-fill text-danger"></i> in Ethiopia</p>
     </div>
   </div>
 </footer>

@@ -1,0 +1,124 @@
+<div class="container-fluid py-4 px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold"><i class="bi bi-clipboard-check me-2"></i>All Orders</h2>
+        <div>
+            <div class="btn-group">
+                <a href="/admin/orders"
+                    class="btn btn-<%= currentStatus === 'all' ? 'primary' : 'outline-primary' %> rounded-pill">All</a>
+                <a href="/admin/orders?status=pending"
+                    class="btn btn-<%= currentStatus === 'pending' ? 'warning' : 'outline-warning' %> rounded-pill">Pending</a>
+                <a href="/admin/orders?status=confirmed"
+                    class="btn btn-<%= currentStatus === 'confirmed' ? 'primary' : 'outline-primary' %> rounded-pill">Confirmed</a>
+                <a href="/admin/orders?status=preparing"
+                    class="btn btn-<%= currentStatus === 'preparing' ? 'info' : 'outline-info' %> rounded-pill">Preparing</a>
+                <a href="/admin/orders?status=delivered"
+                    class="btn btn-<%= currentStatus === 'delivered' ? 'success' : 'outline-success' %> rounded-pill">Delivered</a>
+            </div>
+            <a href="/admin" class="btn btn-outline-secondary rounded-pill ms-3"><i
+                    class="bi bi-arrow-left me-1"></i>Dashboard</a>
+        </div>
+    </div>
+
+    <div class="glass-card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Customer</th>
+                        <th>Phone</th>
+                        <th>Address</th>
+                        <th>Items</th>
+                        <th>Total</th>
+                        <th>Payment</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% orders.forEach(order=> { %>
+                        <tr>
+                            <td class="fw-semibold">#<%= order._id.toString().slice(-6) %>
+                            </td>
+                            <td>
+                                <%= order.user ? order.user.name : 'N/A' %>
+                            </td>
+                            <td class="small">
+                                <%= order.user ? (order.user.phone || '-' ) : '-' %>
+                            </td>
+                            <td class="small">
+                                <%= order.shippingAddress ? order.shippingAddress.street + ', ' +
+                                    order.shippingAddress.city : '-' %>
+                            </td>
+                            <td>
+                                <%= order.items.length %>
+                            </td>
+                            <td class="fw-bold text-primary">$<%= order.totalAmount.toFixed(2) %>
+                            </td>
+                            <td><span
+                                    class="badge bg-<%= order.paymentStatus==='paid'?'success':'warning' %> rounded-pill">
+                                    <%= order.paymentStatus %>
+                                </span></td>
+                            <td><span
+                                    class="badge bg-<%= order.orderStatus==='delivered'?'success':order.orderStatus==='cancelled'?'danger':order.orderStatus==='preparing'?'info':'warning' %> rounded-pill">
+                                    <%= order.orderStatus %>
+                                </span></td>
+                            <td class="small text-muted">
+                                <%= new Date(order.createdAt).toLocaleDateString() %>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary rounded-pill" data-bs-toggle="modal"
+                                    data-bs-target="#orderModal<%= order._id %>"><i class="bi bi-pencil"></i></button>
+                                <div class="modal fade" id="orderModal<%= order._id %>" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content rounded-4">
+                                            <div class="modal-header border-0">
+                                                <h5>Update Order #<%= order._id.toString().slice(-6) %>
+                                                </h5><button type="button" class="btn-close"
+                                                    data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <form action="/admin/orders/<%= order._id %>/status" method="post">
+                                                <div class="modal-body">
+                                                    <div class="mb-3"><label class="form-label">Order Status</label>
+                                                        <select name="orderStatus" class="form-select rounded-3">
+                                                            <option value="pending" <%=order.orderStatus==='pending'
+                                                                ?'selected':'' %>>Pending</option>
+                                                            <option value="confirmed" <%=order.orderStatus==='confirmed'
+                                                                ?'selected':'' %>>Confirmed</option>
+                                                            <option value="preparing" <%=order.orderStatus==='preparing'
+                                                                ?'selected':'' %>>Preparing</option>
+                                                            <option value="delivered" <%=order.orderStatus==='delivered'
+                                                                ?'selected':'' %>>Delivered</option>
+                                                            <option value="cancelled" <%=order.orderStatus==='cancelled'
+                                                                ?'selected':'' %>>Cancelled</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="mb-3"><label class="form-label">Payment Status</label>
+                                                        <select name="paymentStatus" class="form-select rounded-3">
+                                                            <option value="pending" <%=order.paymentStatus==='pending'
+                                                                ?'selected':'' %>>Pending</option>
+                                                            <option value="paid" <%=order.paymentStatus==='paid'
+                                                                ?'selected':'' %>>Paid</option>
+                                                            <option value="failed" <%=order.paymentStatus==='failed'
+                                                                ?'selected':'' %>>Failed</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="mb-3"><label class="form-label">Note</label><input
+                                                            name="note" class="form-control rounded-3"
+                                                            placeholder="Optional..."></div>
+                                                </div>
+                                                <div class="modal-footer border-0"><button type="submit"
+                                                        class="btn btn-primary rounded-pill px-4">Update</button></div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

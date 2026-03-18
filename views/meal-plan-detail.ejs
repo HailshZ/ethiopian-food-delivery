@@ -1,0 +1,132 @@
+<div class="container py-5">
+    <a href="/meal-plans" class="btn btn-outline-secondary rounded-pill mb-4"><i class="bi bi-arrow-left me-1"></i> Back
+        to Plans</a>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="glass-card">
+                <h2 class="mb-1">
+                    <%= currentLanguage==='en' ? plan.name : (plan.nameAm || plan.name) %>
+                </h2>
+                <span class="badge bg-primary rounded-pill mb-3">
+                    <%= plan.duration %>
+                </span>
+                <p class="text-muted">
+                    <%= currentLanguage==='en' ? plan.description : (plan.descriptionAm || plan.description) %>
+                </p>
+
+                <h5 class="mt-4 mb-3"><i class="bi bi-calendar3 me-2 text-primary"></i>Full Weekly Schedule</h5>
+                <div class="schedule-full">
+                    <% const days=['monday','tuesday','wednesday','thursday','friday','saturday','sunday']; %>
+                        <% const dayNames=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']; %>
+                            <% days.forEach((day, i)=> { %>
+                                <div class="schedule-full-day">
+                                    <div class="schedule-day-name">
+                                        <%= dayNames[i] %>
+                                    </div>
+                                    <div class="schedule-day-content">
+                                        <% if (plan.meals[day] && plan.meals[day].length> 0) { %>
+                                            <% plan.meals[day].forEach(slot=> { %>
+                                                <div class="schedule-meal-item">
+                                                    <% if (slot.dish && slot.dish.imageUrl) { %>
+                                                        <img src="<%= slot.dish.imageUrl %>" alt=""
+                                                            class="schedule-meal-img">
+                                                        <% } %>
+                                                            <div>
+                                                                <strong>
+                                                                    <%= slot.dish ? (currentLanguage==='en' ?
+                                                                        slot.dish.name : (slot.dish.nameAm ||
+                                                                        slot.dish.name)) : 'TBD' %>
+                                                                </strong>
+                                                                <span class="badge bg-light text-dark ms-2">
+                                                                    <%= slot.mealType %>
+                                                                </span>
+                                                            </div>
+                                                </div>
+                                                <% }) %>
+                                                    <% } else { %>
+                                                        <span class="text-muted">No meals scheduled</span>
+                                                        <% } %>
+                                    </div>
+                                </div>
+                                <% }) %>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="glass-card summary-card sticky-top" style="top: 100px;">
+                <h5 class="summary-title"><i class="bi bi-bag-check me-2"></i>Subscribe</h5>
+                <div class="text-center mb-4">
+                    <div class="plan-detail-price">$<%= plan.price.toFixed(2) %>
+                    </div>
+                    <span class="text-muted">per <%= plan.duration==='weekly' ? 'week' : 'month' %></span>
+                </div>
+                <div class="plan-features">
+                    <div class="plan-feature"><i class="bi bi-check-circle-fill text-success"></i> Fresh daily meals
+                    </div>
+                    <div class="plan-feature"><i class="bi bi-check-circle-fill text-success"></i> Free delivery</div>
+                    <div class="plan-feature"><i class="bi bi-check-circle-fill text-success"></i> Cancel anytime</div>
+                    <div class="plan-feature"><i class="bi bi-check-circle-fill text-success"></i> Real-time tracking
+                    </div>
+                </div>
+                <hr>
+                <h6 class="mb-3">Delivery Address</h6>
+                <form id="subscribe-form">
+                    <input type="hidden" name="planId" value="<%= plan._id %>">
+                    <div class="mb-3">
+                        <input type="text" class="form-control rounded-3" id="sub-street" placeholder="Street address"
+                            required>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-7">
+                            <input type="text" class="form-control rounded-3" id="sub-city" placeholder="City" required>
+                        </div>
+                        <div class="col-5">
+                            <input type="text" class="form-control rounded-3" id="sub-zip" placeholder="ZIP" required>
+                        </div>
+                    </div>
+                    <button type="submit" id="subscribe-btn" class="btn btn-primary w-100 rounded-pill py-3">
+                        <i class="bi bi-credit-card me-2"></i>Subscribe Now
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('subscribe-form').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const btn = document.getElementById('subscribe-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+
+        try {
+            const response = await fetch('/api/subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    planId: '<%= plan._id %>',
+                    shippingAddress: {
+                        street: document.getElementById('sub-street').value,
+                        city: document.getElementById('sub-city').value,
+                        zipCode: document.getElementById('sub-zip').value
+                    }
+                })
+            });
+            const data = await response.json();
+            if (data.success && data.checkoutUrl) {
+                window.location.href = data.checkoutUrl;
+            } else {
+                showToast(data.error || 'Failed to initiate payment', 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-credit-card me-2"></i>Subscribe Now';
+            }
+        } catch (err) {
+            showToast('Network error. Please try again.', 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-credit-card me-2"></i>Subscribe Now';
+        }
+    });
+</script>

@@ -1,43 +1,196 @@
 <!-- Hero Section -->
-<div style="background: linear-gradient(135deg, #078930 0%, #056b24 100%); color: white; padding: 4rem 0; margin-bottom: 3rem;">
-  <div class="container text-center">
-    <h1 class="display-4 fw-bold mb-4"><%= t('welcome') %></h1>
-    <p class="lead mb-4" style="font-size: 1.3rem;"><%= t('description') %></p>
-    <a href="/menu" class="btn btn-light btn-lg" style="border-radius: 50px; padding: 0.75rem 2.5rem; font-weight: 600; background: #fcdd09; color: #2c3e50; border: none;">
-      <i class="bi bi-bag me-2"></i><%= t('order_now') %>
-    </a>
+<section class="hero-section">
+  <div class="hero-overlay"></div>
+  <div class="container hero-content text-center">
+    <h1 class="hero-title animate__animated animate__fadeInDown">
+      <%= t('welcome') %>
+    </h1>
+    <p class="hero-subtitle animate__animated animate__fadeInUp animate__delay-1s">
+      <%= t('description') %>
+    </p>
+    <div class="d-flex gap-3 justify-content-center animate__animated animate__fadeInUp animate__delay-1s">
+      <a href="/menu" class="btn btn-accent btn-lg rounded-pill px-5 py-3">
+        <i class="bi bi-bag me-2"></i>
+        <%= t('order_now') %>
+      </a>
+      <a href="/meal-plans" class="btn btn-outline-light btn-lg rounded-pill px-5 py-3">
+        <i class="bi bi-calendar-week me-2"></i>
+        <%= t('meal_plans') %>
+      </a>
+    </div>
   </div>
-</div>
+</section>
 
-<!-- Featured Categories or Something -->
-<div class="container pb-5">
-  <div class="row g-4">
-    <div class="col-md-4">
-      <div class="card text-center" style="border: none; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
-        <div class="card-body" style="padding: 2rem;">
-          <i class="bi bi-cup-hot-fill" style="font-size: 3rem; color: #078930;"></i>
-          <h5 class="mt-3" style="font-weight: 700;">Ethiopian Coffee</h5>
-          <p style="color: #5d6d7e;">Traditional coffee ceremony</p>
-        </div>
+<!-- Today's Specials -->
+<% if (todaysSpecials && todaysSpecials.length> 0) { %>
+  <section class="py-5">
+    <div class="container">
+      <div class="section-header text-center mb-5">
+        <span class="section-badge"><i class="bi bi-star-fill me-1"></i>
+          <%= t('todays_special') %>
+        </span>
+        <h2 class="section-title">
+          <%= t('todays_special') %>
+        </h2>
+        <div class="section-divider"></div>
+      </div>
+      <div class="row g-4">
+        <% todaysSpecials.forEach(special=> { %>
+          <div class="col-md-6 col-lg-4">
+            <div class="special-card">
+              <div class="special-badge"><i class="bi bi-fire me-1"></i> Special</div>
+              <img
+                src="<%= special.dish.imageUrl || 'https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=400' %>"
+                alt="<%= special.dish.name %>" class="special-card-img"
+                onerror="this.src='https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=400'">
+              <div class="special-card-body">
+                <h5>
+                  <%= currentLanguage==='en' ? special.dish.name : (special.dish.nameAm || special.dish.name) %>
+                </h5>
+                <p class="text-muted small">
+                  <%= currentLanguage==='en' ? (special.description || special.dish.description) :
+                    (special.descriptionAm || special.dish.descriptionAm || special.dish.description) %>
+                </p>
+                <div class="d-flex align-items-center justify-content-between">
+                  <div>
+                    <span class="special-price">$<%= special.specialPrice.toFixed(2) %></span>
+                    <span class="original-price">$<%= special.dish.price.toFixed(2) %></span>
+                  </div>
+                  <button class="btn btn-primary btn-sm rounded-pill ajax-add-cart"
+                    data-dish-id="<%= special.dish._id %>">
+                    <i class="bi bi-cart-plus me-1"></i>
+                    <%= t('add_to_cart') %>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <% }) %>
       </div>
     </div>
-    <div class="col-md-4">
-      <div class="card text-center" style="border: none; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
-        <div class="card-body" style="padding: 2rem;">
-          <i class="bi bi-egg-fried" style="font-size: 3rem; color: #078930;"></i>
-          <h5 class="mt-3" style="font-weight: 700;">Doro Wat</h5>
-          <p style="color: #5d6d7e;">Spicy chicken stew</p>
+  </section>
+  <% } %>
+
+    <!-- Categories -->
+    <section class="py-5 bg-light-subtle">
+      <div class="container">
+        <div class="section-header text-center mb-5">
+          <h2 class="section-title">
+            <%= t('explore_categories') %>
+          </h2>
+          <div class="section-divider"></div>
+        </div>
+        <div class="row g-4">
+          <div class="col-md-4">
+            <a href="/menu?category=food" class="category-card">
+              <div class="category-icon"><i class="bi bi-egg-fried"></i></div>
+              <h5>Ethiopian Food</h5>
+              <p>Doro Wat, Kitfo, Tibs & more</p>
+            </a>
+          </div>
+          <div class="col-md-4">
+            <a href="/menu?category=coffee" class="category-card">
+              <div class="category-icon"><i class="bi bi-cup-hot-fill"></i></div>
+              <h5>Ethiopian Coffee</h5>
+              <p>Traditional coffee ceremony</p>
+            </a>
+          </div>
+          <div class="col-md-4">
+            <a href="/menu?category=drink" class="category-card">
+              <div class="category-icon"><i class="bi bi-cup-straw"></i></div>
+              <h5>Fresh Drinks</h5>
+              <p>Juices, smoothies & more</p>
+            </a>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card text-center" style="border: none; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
-        <div class="card-body" style="padding: 2rem;">
-          <i class="bi bi-basket" style="font-size: 3rem; color: #078930;"></i>
-          <h5 class="mt-3" style="font-weight: 700;">Injera & More</h5>
-          <p style="color: #5d6d7e;">Authentic Ethiopian cuisine</p>
+    </section>
+
+    <!-- Meal Plans Promo -->
+    <% if (featuredPlans && featuredPlans.length> 0) { %>
+      <section class="py-5">
+        <div class="container">
+          <div class="section-header text-center mb-5">
+            <span class="section-badge"><i class="bi bi-calendar-week me-1"></i> Save More</span>
+            <h2 class="section-title">
+              <%= t('meal_plans') %>
+            </h2>
+            <p class="text-muted">Subscribe to weekly or monthly meal plans and save!</p>
+            <div class="section-divider"></div>
+          </div>
+          <div class="row g-4">
+            <% featuredPlans.forEach(plan=> { %>
+              <div class="col-md-6 col-lg-4">
+                <div class="plan-promo-card">
+                  <div class="plan-promo-header">
+                    <h5>
+                      <%= currentLanguage==='en' ? plan.name : (plan.nameAm || plan.name) %>
+                    </h5>
+                    <div class="plan-promo-price">$<%= plan.price.toFixed(2) %><span>/<%= plan.duration %></span></div>
+                  </div>
+                  <p class="text-muted small px-4 mt-3">
+                    <%= currentLanguage==='en' ? plan.description : (plan.descriptionAm || plan.description) %>
+                  </p>
+                  <div class="px-4 pb-4">
+                    <a href="/meal-plans/<%= plan._id %>" class="btn btn-primary w-100 rounded-pill">
+                      <i class="bi bi-eye me-1"></i> View Plan
+                    </a>
+                  </div>
+                </div>
+              </div>
+              <% }) %>
+          </div>
+          <div class="text-center mt-4">
+            <a href="/meal-plans" class="btn btn-outline-primary rounded-pill px-5">
+              <%= t('view_all') %> Plans <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+          </div>
         </div>
-      </div>
-    </div>
-  </div>
-</div>
+      </section>
+      <% } %>
+
+        <!-- How It Works -->
+        <section class="py-5 bg-light-subtle">
+          <div class="container">
+            <div class="section-header text-center mb-5">
+              <h2 class="section-title">
+                <%= t('how_it_works') %>
+              </h2>
+              <div class="section-divider"></div>
+            </div>
+            <div class="row g-4 text-center">
+              <div class="col-md-3">
+                <div class="step-card">
+                  <div class="step-number">1</div>
+                  <i class="bi bi-search step-icon"></i>
+                  <h6>Browse Menu</h6>
+                  <p class="small text-muted">Explore our authentic Ethiopian dishes</p>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="step-card">
+                  <div class="step-number">2</div>
+                  <i class="bi bi-cart-plus step-icon"></i>
+                  <h6>Add to Cart</h6>
+                  <p class="small text-muted">Select your favorites and add to cart</p>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="step-card">
+                  <div class="step-number">3</div>
+                  <i class="bi bi-credit-card step-icon"></i>
+                  <h6>Pay via Chapa</h6>
+                  <p class="small text-muted">Secure payment with Telebirr or CBE</p>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="step-card">
+                  <div class="step-number">4</div>
+                  <i class="bi bi-truck step-icon"></i>
+                  <h6>Track & Enjoy</h6>
+                  <p class="small text-muted">Track your delivery in real-time</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
