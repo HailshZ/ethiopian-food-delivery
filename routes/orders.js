@@ -217,14 +217,20 @@ router.get('/order/:id', isLoggedIn, async (req, res) => {
     }
 });
 
-// GET /orders – with debug log
+// GET /orders – with error handling callback
 router.get('/orders', isLoggedIn, async (req, res) => {
-    console.log('✅ /orders route was called!');   // <-- debug log added
+    console.log('✅ /orders route was called!');
     try {
         const orders = await Order.find({ user: req.session.userId }).sort({ createdAt: -1 }).limit(20);
-        res.render('orders', { title: 'My Orders', orders });
+        res.render('orders', { title: 'My Orders', orders }, (err, html) => {
+            if (err) {
+                console.error('❌ Error rendering orders.ejs:', err);
+                return res.status(500).send('Error rendering orders page: ' + err.message);
+            }
+            res.send(html);
+        });
     } catch (err) {
-        console.error(err);
+        console.error('❌ Error in /orders route:', err);
         res.status(500).send('Server Error');
     }
 });
