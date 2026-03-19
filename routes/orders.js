@@ -1,4 +1,4 @@
-// routes/orders.js – Checkout, payment, and order routes
+// routes/orders.js – Checkout, payment, and order routes (with deep string conversion)
 const express = require('express');
 const router = express.Router();
 const Order = require('../models/Order');
@@ -23,27 +23,47 @@ router.get('/checkout', isLoggedIn, async (req, res) => {
     });
 });
 
-// POST /api/initiate-payment – Chapa payment
+// POST /api/initiate-payment – Chapa payment with deep string conversion
 router.post('/api/initiate-payment', isLoggedIn, async (req, res) => {
     const { paymentMethod, amount, cart, shippingAddress } = req.body;
     const user = await User.findById(req.session.userId);
+
+    console.log('========== CHAPA PAYLOAD DEBUG ==========');
+    console.log('User ID:', req.session.userId);
+    console.log('Payment Method:', paymentMethod);
+    console.log('Original amount:', amount, typeof amount);
+    console.log('Cart items count:', cart ? cart.length : 0);
+    console.log('Shipping Address:', shippingAddress);
 
     if (!shippingAddress || !shippingAddress.street || !shippingAddress.city || !shippingAddress.zipCode) {
         return res.status(400).json({ error: 'Shipping address is required' });
     }
 
     const txRef = `order-${user._id}-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+    console.log('txRef:', txRef);
 
     try {
-        const customerInfo = {
-            email: user.email,
-            first_name: user.name.split(' ')[0],
-            last_name: user.name.split(' ').slice(1).join(' ') || 'Customer',
-            phone_number: user.phone || '0911000000'
-        };
+        // Convert amount to integer cents and ensure it's a string
+        const amountInCents = Math.round(amount * 100);
+        const amountStr = String(amountInCents);
+        console.log('amountStr (cents):', amountStr, typeof amountStr);
 
-        const response = await chapa.initialize({
-            amount: amount,
+        // Use a hardcoded valid phone number for testing (Chapa requires 09 or 07 format)
+        const formattedPhone = '0911000000';
+        console.log('Phone (hardcoded):', formattedPhone, typeof formattedPhone);
+
+        // Prepare customer info – all fields as strings
+        const customerInfo = {
+            email: String(user.email),
+            first_name: String(user.name.split(' ')[0] || 'Customer'),
+            last_name: String(user.name.split(' ').slice(1).join(' ') || 'Name'),
+            phone_number: formattedPhone
+        };
+        console.log('Customer Info:', customerInfo);
+
+        // Build the payload
+        const payload = {
+            amount: amountStr,
             currency: 'ETB',
             email: customerInfo.email,
             first_name: customerInfo.first_name,
@@ -56,7 +76,36 @@ router.post('/api/initiate-payment', isLoggedIn, async (req, res) => {
                 title: 'EthioFood Delivery',
                 description: 'Payment for your order'
             }
-        });
+        };
+
+        // Deep stringify function to ensure no numbers survive
+        function deepStringify(obj) {
+            if (obj === null || obj === undefined) return '';
+            if (typeof obj === 'string') return obj;
+            if (typeof obj === 'number') return String(obj);
+            if (typeof obj === 'boolean') return String(obj);
+            if (Array.isArray(obj)) return obj.map(item => deepStringify(item));
+            if (typeof obj === 'object') {
+                const result = {};
+                for (const key in obj) {
+                    result[key] = deepStringify(obj[key]);
+                }
+                return result;
+            }
+            return String(obj);
+        }
+
+        const finalPayload = deepStringify(payload);
+
+        console.log('Final Payload (all strings):', JSON.stringify(finalPayload, null, 2));
+        console.log('Type checks after conversion:');
+        console.log('amount type:', typeof finalPayload.amount);
+        console.log('email type:', typeof finalPayload.email);
+        console.log('phone type:', typeof finalPayload.phone_number);
+        console.log('tx_ref type:', typeof finalPayload.tx_ref);
+
+        const response = await chapa.initialize(finalPayload);
+        console.log('Chapa response:', response);
 
         if (response.status === 'success') {
             // Set estimated delivery (45 mins from now)
@@ -87,16 +136,18 @@ router.post('/api/initiate-payment', isLoggedIn, async (req, res) => {
                 }]
             });
             await order.save();
+            console.log('Order saved with txRef:', txRef);
 
             res.json({
                 success: true,
                 checkoutUrl: response.data.checkout_url
             });
         } else {
+            console.log('Payment initiation failed, response:', response);
             res.status(400).json({ error: 'Payment initiation failed' });
         }
     } catch (error) {
-        console.error('Chapa error:', error);
+        console.error('Chapa error caught:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -107,6 +158,7 @@ router.post('/api/payment-callback', async (req, res) => {
 
     try {
         const verification = await chapa.verify(tx_ref);
+        console.log('Verification result:', verification);
 
         if (verification.status === 'success') {
             const order = await Order.findOne({ chapaTxRef: tx_ref });
@@ -119,6 +171,7 @@ router.post('/api/payment-callback', async (req, res) => {
                     note: 'Payment verified successfully'
                 });
                 await order.save();
+                console.log('Order updated:', order._id);
             }
         }
         res.sendStatus(200);
