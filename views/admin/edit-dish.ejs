@@ -1,0 +1,62 @@
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0"><i class="bi bi-pencil me-2"></i>Edit Dish: <%= dish.name %></h4>
+        </div>
+        <div class="card-body">
+          <% if (locals.error_msg) { %>
+            <div class="alert alert-danger"><%= error_msg %></div>
+          <% } %>
+
+          <form action="/admin/dish/<%= dish._id %>/edit" method="post">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="name" class="form-label fw-semibold">Name (English)</label>
+                <input type="text" class="form-control" id="name" name="name" value="<%= dish.name %>" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="nameAm" class="form-label fw-semibold">Name (Amharic)</label>
+                <input type="text" class="form-control" id="nameAm" name="nameAm" value="<%= dish.nameAm %>" required>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="description" class="form-label fw-semibold">Description (English)</label>
+                <textarea class="form-control" id="description" name="description" rows="3" required><%= dish.description %></textarea>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="descriptionAm" class="form-label fw-semibold">Description (Amharic)</label>
+                <textarea class="form-control" id="descriptionAm" name="descriptionAm" rows="3" required><%= dish.descriptionAm %></textarea>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-3 mb-3">
+                <label for="price" class="form-label fw-semibold">Price ($)</label>
+                <input type="number" step="0.01" class="form-control" id="price" name="price" value="<%= dish.price %>" required>
+              </div>
+              <div class="col-md-3 mb-3">
+                <label for="category" class="form-label fw-semibold">Category</label>
+                <select class="form-select" id="category" name="category" required>
+                  <option value="food" <%= dish.category === 'food' ? 'selected' : '' %>>Food</option>
+                  <option value="coffee" <%= dish.category === 'coffee' ? 'selected' : '' %>>Coffee</option>
+                  <option value="drink" <%= dish.category === 'drink' ? 'selected' : '' %>>Drink</option>
+                </select>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="imageUrl" class="form-label fw-semibold">Image URL</label>
+                <input type="url" class="form-control" id="imageUrl" name="imageUrl" value="<%= dish.imageUrl %>">
+              </div>
+            </div>
+            <div class="form-check mb-3">
+              <input class="form-check-input" type="checkbox" id="isAvailable" name="isAvailable" <%= dish.isAvailable ? 'checked' : '' %>>
+              <label class="form-check-label" for="isAvailable">Available for ordering</label>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 py-2">Update Dish</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

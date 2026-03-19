@@ -1,0 +1,56 @@
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 style="color: #078930;"><i class="bi bi-menu-button-wide me-2"></i>Manage Menu</h1>
+    <a href="/admin/dish/add" class="btn btn-success"><i class="bi bi-plus-circle me-2"></i>Add New Dish</a>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th>Image</th>
+              <th>Name (EN)</th>
+              <th>Name (AM)</th>
+              <th>Category</th>
+              <th>Price</th>
+              <th>Available</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% dishes.forEach(dish => { %>
+              <tr>
+                <td>
+                  <img src="<%= dish.imageUrl %>" alt="<%= dish.name %>" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;">
+                </td>
+                <td><%= dish.name %></td>
+                <td><%= dish.nameAm %></td>
+                <td><%= dish.category %></td>
+                <td>$<%= dish.price.toFixed(2) %></td>
+                <td>
+                  <% if (dish.isAvailable) { %>
+                    <span class="badge bg-success">Yes</span>
+                  <% } else { %>
+                    <span class="badge bg-danger">No</span>
+                  <% } %>
+                </td>
+                <td>
+                  <a href="/admin/dish/<%= dish._id %>/edit" class="btn btn-sm btn-outline-primary me-1">
+                    <i class="bi bi-pencil"></i> Edit
+                  </a>
+                  <form action="/admin/dish/<%= dish._id %>/delete" method="post" class="d-inline" onsubmit="return confirm('Are you sure?');">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                      <i class="bi bi-trash"></i> Delete
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
