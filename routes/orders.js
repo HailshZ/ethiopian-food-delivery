@@ -217,8 +217,9 @@ router.get('/order/:id', isLoggedIn, async (req, res) => {
     }
 });
 
-// GET /orders
+// GET /orders – with debug log
 router.get('/orders', isLoggedIn, async (req, res) => {
+    console.log('✅ /orders route was called!');   // <-- debug log added
     try {
         const orders = await Order.find({ user: req.session.userId }).sort({ createdAt: -1 }).limit(20);
         res.render('orders', { title: 'My Orders', orders });
