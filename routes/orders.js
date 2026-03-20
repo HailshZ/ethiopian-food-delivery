@@ -1,4 +1,4 @@
-// routes/orders.js – Checkout, payment, and order routes (with deep string conversion)
+// routes/orders.js – Checkout, payment, and order routes (with deep string conversion and currency support)
 const express = require('express');
 const router = express.Router();
 const Order = require('../models/Order');
@@ -8,6 +8,7 @@ const { isLoggedIn } = require('../middleware/auth');
 const Chapa = require('chapa-nodejs').Chapa;
 
 const chapa = new Chapa({ secretKey: process.env.CHAPA_SECRET_KEY || '' });
+const USD_TO_ETB_RATE = parseFloat(process.env.USD_TO_ETB_RATE) || 55;
 
 // GET /checkout
 router.get('/checkout', isLoggedIn, async (req, res) => {
@@ -23,7 +24,7 @@ router.get('/checkout', isLoggedIn, async (req, res) => {
     });
 });
 
-// POST /api/initiate-payment – Chapa payment with deep string conversion
+// POST /api/initiate-payment – Chapa payment with deep string conversion and currency handling
 router.post('/api/initiate-payment', isLoggedIn, async (req, res) => {
     const { paymentMethod, amount, cart, shippingAddress } = req.body;
     const user = await User.findById(req.session.userId);
@@ -31,9 +32,10 @@ router.post('/api/initiate-payment', isLoggedIn, async (req, res) => {
     console.log('========== CHAPA PAYLOAD DEBUG ==========');
     console.log('User ID:', req.session.userId);
     console.log('Payment Method:', paymentMethod);
-    console.log('Original amount:', amount, typeof amount);
+    console.log('Original amount (USD):', amount, typeof amount);
     console.log('Cart items count:', cart ? cart.length : 0);
     console.log('Shipping Address:', shippingAddress);
+    console.log('Selected currency:', req.session.currency);
 
     if (!shippingAddress || !shippingAddress.street || !shippingAddress.city || !shippingAddress.zipCode) {
         return res.status(400).json({ error: 'Shipping address is required' });
@@ -43,8 +45,16 @@ router.post('/api/initiate-payment', isLoggedIn, async (req, res) => {
     console.log('txRef:', txRef);
 
     try {
-        // Convert amount to integer cents and ensure it's a string
-        const amountInCents = Math.round(amount * 100);
+        // Convert amount to ETB for Chapa
+        let amountETB;
+        if (req.session.currency === 'ETB') {
+            amountETB = amount; // amount already in ETB
+        } else {
+            amountETB = amount * USD_TO_ETB_RATE;
+        }
+        console.log('Amount in ETB:', amountETB, typeof amountETB);
+
+        const amountInCents = Math.round(amountETB * 100);
         const amountStr = String(amountInCents);
         console.log('amountStr (cents):', amountStr, typeof amountStr);
 
@@ -122,7 +132,7 @@ router.post('/api/initiate-payment', isLoggedIn, async (req, res) => {
                     totalPrice: item.totalPrice,
                     imageUrl: item.imageUrl
                 })),
-                totalAmount: amount,
+                totalAmount: amount, // store USD in database
                 shippingAddress: shippingAddress,
                 paymentMethod: paymentMethod,
                 chapaTxRef: txRef,

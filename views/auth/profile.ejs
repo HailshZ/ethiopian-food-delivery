@@ -24,7 +24,7 @@
             </small>
           </div>
           <div class="text-center">
-            <div class="h5 text-primary mb-0">$<%= totalSpent.toFixed(0) %>
+            <div class="h5 text-primary mb-0"><%= totalSpent ? formatPrice(totalSpent) : '0.00' %>
             </div>
             <small class="text-muted">
               <%= t('spent') %>
@@ -102,7 +102,7 @@
                   <span class="badge bg-<%= order.orderStatus === 'delivered' ? 'success' : 'warning' %> rounded-pill">
                     <%= order.orderStatus %>
                   </span>
-                  <span class="fw-bold text-primary">$<%= order.totalAmount.toFixed(2) %></span>
+                  <span class="fw-bold text-primary"><%= formatPrice(order.totalAmount) %></span>
                   <a href="/delivery/<%= order._id %>" class="btn btn-sm btn-outline-primary rounded-pill"><i
                       class="bi bi-geo-alt"></i></a>
                 </div>

@@ -27,7 +27,7 @@
               <div class="text-muted small">
                 <%= t('total_paid') %>
               </div>
-              <div class="fw-bold text-primary h4">$<%= order.totalAmount.toFixed(2) %>
+              <div class="fw-bold text-primary h4"><%= formatPrice(order.totalAmount) %>
               </div>
             </div>
             <div class="col-sm-6">
@@ -61,7 +61,7 @@
                 <%= item.name %> <span class="text-muted">x<%= item.qty %></span>
               </span>
             </div>
-            <span class="fw-bold text-primary">$<%= item.totalPrice.toFixed(2) %></span>
+            <span class="fw-bold text-primary"><%= formatPrice(item.totalPrice) %></span>
           </div>
           <% }) %>
 

@@ -21,7 +21,7 @@
                 <div class="table-responsive">
                     <table class="table table-hover align-middle">
                         <thead>
-                            <tr>
+                             <tr>
                                 <th>Order ID</th>
                                 <th>Customer</th>
                                 <th>Items</th>
@@ -30,11 +30,11 @@
                                 <th>Payment</th>
                                 <th>Date</th>
                                 <th>Action</th>
-                            </tr>
+                             </tr>
                         </thead>
                         <tbody>
                             <% orders.forEach(order => { %>
-                                <tr>
+                                 <tr>
                                     <td>#<%= order._id.toString().slice(-6) %></td>
                                     <td>
                                         <strong><%= order.user ? order.user.name : 'N/A' %></strong><br>
@@ -50,7 +50,7 @@
                                             <% } %>
                                         </ul>
                                     </td>
-                                    <td class="fw-bold">$<%= order.totalAmount.toFixed(2) %></td>
+                                    <td class="fw-bold"><%= formatPrice(order.totalAmount) %></td>
                                     <td>
                                         <span class="badge bg-<%= order.orderStatus === 'delivered' ? 'success' : (order.orderStatus === 'cancelled' ? 'danger' : 'warning') %>">
                                             <%= order.orderStatus %>
@@ -74,7 +74,7 @@
                                             <button type="submit" class="btn btn-sm btn-outline-primary">Update</button>
                                         </form>
                                     </td>
-                                </tr>
+                                 </tr>
                             <% }) %>
                         </tbody>
                     </table>
