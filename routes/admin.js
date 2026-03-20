@@ -6,8 +6,6 @@ const Dish = require('../models/Dish');
 const User = require('../models/User');
 const { isLoggedIn } = require('../middleware/auth');
 const isAdmin = require('../middleware/admin');
-const fs = require('fs');
-const path = require('path');
 
 // Apply both middlewares to all admin routes
 router.use(isLoggedIn, isAdmin);
@@ -43,16 +41,25 @@ router.get('/', async (req, res) => {
     }
 });
 
-// Manage Orders
+// Manage Orders (with filter by status)
 router.get('/orders', async (req, res) => {
     try {
-        const orders = await Order.find()
+        const { status } = req.query;
+        let filter = {};
+        if (status && status !== 'all') {
+            filter.orderStatus = status;
+        }
+        const orders = await Order.find(filter)
             .sort({ createdAt: -1 })
             .populate('user', 'name email');
-        res.render('admin/orders', { title: 'Manage Orders', orders });
+        res.render('admin/orders', {
+            title: 'Manage Orders',
+            orders,
+            currentStatus: status || 'all'  // this is the missing variable
+        });
     } catch (err) {
-        console.error(err);
-        req.flash('error', 'Error loading orders');
+        console.error('❌ Error in /admin/orders:', err);
+        req.flash('error', 'Error loading orders: ' + err.message);
         res.redirect('/admin');
     }
 });
