@@ -203,3 +203,62 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         }
     });
 });
+
+// ---- Scroll Reveal Animation (IntersectionObserver) ----
+document.addEventListener('DOMContentLoaded', function () {
+    const observerOptions = {
+        root: null,
+        rootMargin: '0px 0px -50px 0px',
+        threshold: 0.1
+    };
+
+    const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('revealed');
+                revealObserver.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+
+    // Observe all scroll-reveal elements
+    document.querySelectorAll('.scroll-reveal, .stagger-children').forEach(el => {
+        revealObserver.observe(el);
+    });
+
+    // Auto-add reveal to dish cards and glass cards on page load
+    document.querySelectorAll('.dish-card, .glass-card, .order-card').forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, Math.min(index * 80, 800));
+    });
+
+    // Enhance category filter pills with ripple effect
+    document.querySelectorAll('.filter-pill').forEach(pill => {
+        pill.addEventListener('click', function (e) {
+            const ripple = document.createElement('span');
+            ripple.style.cssText = `
+                position: absolute; border-radius: 50%; background: rgba(255,255,255,0.4);
+                width: 20px; height: 20px; transform: scale(0); animation: ripple 0.4s ease-out;
+                pointer-events: none;
+            `;
+            const rect = this.getBoundingClientRect();
+            ripple.style.left = (e.clientX - rect.left - 10) + 'px';
+            ripple.style.top = (e.clientY - rect.top - 10) + 'px';
+            this.style.position = 'relative';
+            this.style.overflow = 'hidden';
+            this.appendChild(ripple);
+            setTimeout(() => ripple.remove(), 400);
+        });
+    });
+});
+
+// ---- Page Transition Effect ----
+window.addEventListener('beforeunload', function () {
+    document.body.style.transition = 'opacity 0.15s ease';
+    document.body.style.opacity = '0.5';
+});

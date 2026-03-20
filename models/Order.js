@@ -54,7 +54,22 @@ const orderSchema = new mongoose.Schema({
     location: { lat: Number, lng: Number },
     timestamp: { type: Date, default: Date.now },
     note: String
-  }]
+  }],
+  discount: {
+    type: Number,
+    default: 0
+  },
+  promoCode: {
+    type: String,
+    default: ''
+  },
+  finalAmount: {
+    type: Number
+  },
+  isReviewed: {
+    type: Boolean,
+    default: false
+  }
 }, {
   timestamps: true
 });

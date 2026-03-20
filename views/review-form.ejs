@@ -1,0 +1,59 @@
+<div class="container py-5">
+  <a href="/orders" class="btn btn-outline-secondary rounded-pill mb-4"><i class="bi bi-arrow-left me-1"></i> Back to Orders</a>
+
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="glass-card">
+        <div class="text-center mb-4">
+          <i class="bi bi-star-fill text-warning" style="font-size: 3rem;"></i>
+          <h2 class="mt-2 fw-bold"><%= t('leave_review') || 'Leave a Review' %></h2>
+          <p class="text-muted">Order #<%= order._id.toString().slice(-8) %> – Rate the dishes you ordered</p>
+        </div>
+
+        <form action="/review/<%= order._id %>" method="POST">
+          <% order.items.forEach((item, index) => { %>
+            <div class="review-dish-card mb-4 p-3 rounded-4 border <%= reviewedDishIds.includes(item.dishId.toString()) ? 'bg-light' : '' %>" style="animation: fadeInUp 0.4s ease <%= index * 0.1 %>s both;">
+              <div class="d-flex align-items-center mb-3">
+                <img src="<%= item.imageUrl %>" alt="<%= item.name %>" class="rounded-3 me-3"
+                  style="width: 60px; height: 60px; object-fit: cover; border: 2px solid var(--ethio-yellow);"
+                  onerror="this.src='https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=100'">
+                <div>
+                  <h6 class="mb-0 fw-bold"><%= item.name %></h6>
+                  <span class="text-muted small">x<%= item.qty %> – <%= settings.currencySymbol || 'ETB' %> <%= item.totalPrice.toFixed(2) %></span>
+                </div>
+              </div>
+
+              <% if (reviewedDishIds.includes(item.dishId.toString())) { %>
+                <div class="text-success small"><i class="bi bi-check-circle-fill me-1"></i> Already reviewed</div>
+              <% } else { %>
+                <!-- Star Rating -->
+                <div class="mb-3">
+                  <label class="form-label fw-semibold small text-uppercase text-muted">Rating</label>
+                  <div class="star-rating" data-dish-id="<%= item.dishId %>">
+                    <% for (let i = 5; i >= 1; i--) { %>
+                      <input type="radio" name="ratings[<%= item.dishId %>]" value="<%= i %>" id="star-<%= item.dishId %>-<%= i %>" required>
+                      <label for="star-<%= item.dishId %>-<%= i %>" class="star-label"><i class="bi bi-star-fill"></i></label>
+                    <% } %>
+                  </div>
+                </div>
+
+                <!-- Comment -->
+                <div class="mb-2">
+                  <label class="form-label fw-semibold small text-uppercase text-muted">Comment (optional)</label>
+                  <textarea name="comments[<%= item.dishId %>]" class="form-control rounded-3" rows="2" 
+                    placeholder="Share your experience..." maxlength="500"></textarea>
+                </div>
+              <% } %>
+            </div>
+          <% }) %>
+
+          <div class="text-center mt-4">
+            <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5">
+              <i class="bi bi-send me-2"></i> Submit Review
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

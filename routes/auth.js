@@ -66,8 +66,9 @@ router.post('/login', async (req, res) => {
         req.session.userId = user._id;
         req.session.userName = user.name;
         req.session.isAdmin = user.isAdmin;
+        req.session.role = user.role || 'user';
         req.flash('success', 'Logged in successfully');
-        if (user.isAdmin) {
+        if (user.isAdmin || user.role === 'superadmin') {
             return res.redirect('/admin');
         }
         res.redirect('/menu');

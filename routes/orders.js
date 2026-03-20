@@ -1,11 +1,13 @@
-// routes/orders.js – Checkout, payment, and order routes (with deep string conversion and currency support)
+// routes/orders.js – Checkout, payment, and order routes (with promo codes and email)
 const express = require('express');
 const router = express.Router();
 const Order = require('../models/Order');
 const User = require('../models/User');
+const PromoCode = require('../models/PromoCode');
 const cartHelper = require('../middleware/cart');
 const { isLoggedIn } = require('../middleware/auth');
 const Chapa = require('chapa-nodejs').Chapa;
+const { sendOrderConfirmation } = require('../utils/email');
 
 const chapa = new Chapa({ secretKey: process.env.CHAPA_SECRET_KEY || '' });
 const USD_TO_ETB_RATE = parseFloat(process.env.USD_TO_ETB_RATE) || 55;
@@ -24,54 +26,87 @@ router.get('/checkout', isLoggedIn, async (req, res) => {
     });
 });
 
-// POST /api/initiate-payment – Chapa payment with deep string conversion and currency handling
+// POST /api/validate-promo – Validate promo code
+router.post('/api/validate-promo', isLoggedIn, async (req, res) => {
+    try {
+        const { code, orderAmount } = req.body;
+        if (!code) return res.status(400).json({ error: 'Promo code is required' });
+
+        const promo = await PromoCode.findOne({ code: code.toUpperCase().trim() });
+        if (!promo) return res.status(404).json({ error: 'Invalid promo code' });
+
+        const validation = promo.isValid(orderAmount);
+        if (!validation.valid) return res.status(400).json({ error: validation.reason });
+
+        const discount = promo.calculateDiscount(orderAmount);
+        res.json({
+            success: true,
+            discount,
+            discountType: promo.discountType,
+            discountValue: promo.discountValue,
+            finalAmount: orderAmount - discount
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// POST /api/initiate-payment – Chapa payment with promo support
 router.post('/api/initiate-payment', isLoggedIn, async (req, res) => {
-    const { paymentMethod, amount, cart, shippingAddress } = req.body;
+    const { paymentMethod, amount, cart, shippingAddress, promoCode } = req.body;
     const user = await User.findById(req.session.userId);
 
     console.log('========== CHAPA PAYLOAD DEBUG ==========');
     console.log('User ID:', req.session.userId);
     console.log('Payment Method:', paymentMethod);
-    console.log('Original amount (USD):', amount, typeof amount);
-    console.log('Cart items count:', cart ? cart.length : 0);
-    console.log('Shipping Address:', shippingAddress);
-    console.log('Selected currency:', req.session.currency);
+    console.log('Original amount:', amount, typeof amount);
+    console.log('Promo Code:', promoCode);
 
     if (!shippingAddress || !shippingAddress.street || !shippingAddress.city || !shippingAddress.zipCode) {
         return res.status(400).json({ error: 'Shipping address is required' });
     }
 
+    // Calculate discount
+    let discount = 0;
+    let validPromoCode = '';
+    if (promoCode) {
+        const promo = await PromoCode.findOne({ code: promoCode.toUpperCase().trim() });
+        if (promo) {
+            const validation = promo.isValid(amount);
+            if (validation.valid) {
+                discount = promo.calculateDiscount(amount);
+                validPromoCode = promo.code;
+                // Increment usage
+                promo.usedCount += 1;
+                await promo.save();
+            }
+        }
+    }
+
+    const finalAmount = amount - discount;
+    console.log('Discount:', discount, 'Final Amount:', finalAmount);
+
     const txRef = `order-${user._id}-${Date.now()}-${Math.random().toString(36).substring(7)}`;
-    console.log('txRef:', txRef);
 
     try {
         // Convert amount to ETB for Chapa
-        let amountETB;
-        if (req.session.currency === 'ETB') {
-            amountETB = amount; // amount already in ETB
-        } else {
-            amountETB = amount * USD_TO_ETB_RATE;
+        let amountETB = finalAmount;
+        if (req.session.currency !== 'ETB') {
+            amountETB = finalAmount * USD_TO_ETB_RATE;
         }
-        console.log('Amount in ETB:', amountETB, typeof amountETB);
 
         const amountInCents = Math.round(amountETB * 100);
         const amountStr = String(amountInCents);
-        console.log('amountStr (cents):', amountStr, typeof amountStr);
 
-        // Use a hardcoded valid phone number for testing (Chapa requires 09 or 07 format)
         const formattedPhone = '0911000000';
-        console.log('Phone (hardcoded):', formattedPhone, typeof formattedPhone);
 
-        // Prepare customer info – all fields as strings
         const customerInfo = {
             email: String(user.email),
             first_name: String(user.name.split(' ')[0] || 'Customer'),
             last_name: String(user.name.split(' ').slice(1).join(' ') || 'Name'),
             phone_number: formattedPhone
         };
-        console.log('Customer Info:', customerInfo);
 
-        // Build the payload
         const payload = {
             amount: amountStr,
             currency: 'ETB',
@@ -88,7 +123,6 @@ router.post('/api/initiate-payment', isLoggedIn, async (req, res) => {
             }
         };
 
-        // Deep stringify function to ensure no numbers survive
         function deepStringify(obj) {
             if (obj === null || obj === undefined) return '';
             if (typeof obj === 'string') return obj;
@@ -106,19 +140,9 @@ router.post('/api/initiate-payment', isLoggedIn, async (req, res) => {
         }
 
         const finalPayload = deepStringify(payload);
-
-        console.log('Final Payload (all strings):', JSON.stringify(finalPayload, null, 2));
-        console.log('Type checks after conversion:');
-        console.log('amount type:', typeof finalPayload.amount);
-        console.log('email type:', typeof finalPayload.email);
-        console.log('phone type:', typeof finalPayload.phone_number);
-        console.log('tx_ref type:', typeof finalPayload.tx_ref);
-
         const response = await chapa.initialize(finalPayload);
-        console.log('Chapa response:', response);
 
         if (response.status === 'success') {
-            // Set estimated delivery (45 mins from now)
             const estimatedDelivery = new Date(Date.now() + 45 * 60 * 1000);
 
             const order = new Order({
@@ -132,7 +156,10 @@ router.post('/api/initiate-payment', isLoggedIn, async (req, res) => {
                     totalPrice: item.totalPrice,
                     imageUrl: item.imageUrl
                 })),
-                totalAmount: amount, // store USD in database
+                totalAmount: amount,
+                discount: discount,
+                promoCode: validPromoCode,
+                finalAmount: finalAmount,
                 shippingAddress: shippingAddress,
                 paymentMethod: paymentMethod,
                 chapaTxRef: txRef,
@@ -146,14 +173,12 @@ router.post('/api/initiate-payment', isLoggedIn, async (req, res) => {
                 }]
             });
             await order.save();
-            console.log('Order saved with txRef:', txRef);
 
             res.json({
                 success: true,
                 checkoutUrl: response.data.checkout_url
             });
         } else {
-            console.log('Payment initiation failed, response:', response);
             res.status(400).json({ error: 'Payment initiation failed' });
         }
     } catch (error) {
@@ -168,10 +193,9 @@ router.post('/api/payment-callback', async (req, res) => {
 
     try {
         const verification = await chapa.verify(tx_ref);
-        console.log('Verification result:', verification);
 
         if (verification.status === 'success') {
-            const order = await Order.findOne({ chapaTxRef: tx_ref });
+            const order = await Order.findOne({ chapaTxRef: tx_ref }).populate('user', 'name email');
             if (order) {
                 order.paymentStatus = 'paid';
                 order.orderStatus = 'confirmed';
@@ -181,7 +205,13 @@ router.post('/api/payment-callback', async (req, res) => {
                     note: 'Payment verified successfully'
                 });
                 await order.save();
-                console.log('Order updated:', order._id);
+
+                // Send confirmation email
+                if (order.user) {
+                    const SystemSettings = require('../models/SystemSettings');
+                    const settings = await SystemSettings.getSettings();
+                    sendOrderConfirmation(order, order.user, settings);
+                }
             }
         }
         res.sendStatus(200);
@@ -201,6 +231,14 @@ router.get('/order-confirmation', async (req, res) => {
         if (!order) return res.status(404).send('Order not found');
 
         cartHelper.clearCart(req.session);
+
+        // Send confirmation email if not sent yet (fallback for when callback didn't fire)
+        if (order.user && order.paymentStatus !== 'paid') {
+            const SystemSettings = require('../models/SystemSettings');
+            const settings = await SystemSettings.getSettings();
+            sendOrderConfirmation(order, order.user, settings);
+        }
+
         res.render('order-confirmation', { title: 'Order Confirmation', order });
     } catch (err) {
         console.error(err);
@@ -229,7 +267,6 @@ router.get('/order/:id', isLoggedIn, async (req, res) => {
 
 // GET /orders – with error handling callback
 router.get('/orders', isLoggedIn, async (req, res) => {
-    console.log('✅ /orders route was called!');
     try {
         const orders = await Order.find({ user: req.session.userId }).sort({ createdAt: -1 }).limit(20);
         res.render('orders', { title: 'My Orders', orders }, (err, html) => {

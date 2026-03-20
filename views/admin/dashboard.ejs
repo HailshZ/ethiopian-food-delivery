@@ -6,7 +6,9 @@
       <div class="card text-white bg-primary shadow-sm">
         <div class="card-body">
           <h5 class="card-title">Total Orders</h5>
-          <p class="display-4"><%= totalOrders %></p>
+          <p class="display-4">
+            <%= totalOrders %>
+          </p>
         </div>
       </div>
     </div>
@@ -14,7 +16,10 @@
       <div class="card text-white bg-success shadow-sm">
         <div class="card-body">
           <h5 class="card-title">Revenue</h5>
-          <p class="display-4"><%= (totalRevenue) %></p>
+          <p class="display-4">
+            <%= settings.currencySymbol || 'ETB' %>
+              <%= totalRevenue.toFixed(2) %>
+          </p>
         </div>
       </div>
     </div>
@@ -22,7 +27,9 @@
       <div class="card text-white bg-warning shadow-sm">
         <div class="card-body">
           <h5 class="card-title">Menu Items</h5>
-          <p class="display-4"><%= totalDishes %></p>
+          <p class="display-4">
+            <%= totalDishes %>
+          </p>
         </div>
       </div>
     </div>
@@ -30,7 +37,9 @@
       <div class="card text-white bg-info shadow-sm">
         <div class="card-body">
           <h5 class="card-title">Users</h5>
-          <p class="display-4"><%= totalUsers %></p>
+          <p class="display-4">
+            <%= totalUsers %>
+          </p>
         </div>
       </div>
     </div>
@@ -43,38 +52,47 @@
           <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Recent Orders</h5>
         </div>
         <div class="card-body">
-          <% if (recentOrders.length === 0) { %>
+          <% if (recentOrders.length===0) { %>
             <p class="text-muted">No orders yet.</p>
-          <% } else { %>
-            <div class="table-responsive">
-              <table class="table table-hover">
-                <thead>
-                  <tr>
-                    <th>Order ID</th>
-                    <th>Customer</th>
-                    <th>Total</th>
-                    <th>Status</th>
-                    <th>Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <% recentOrders.forEach(order => { %>
+            <% } else { %>
+              <div class="table-responsive">
+                <table class="table table-hover">
+                  <thead>
                     <tr>
-                      <td>#<%= order._id.toString().slice(-6) %></td>
-                      <td><%= order.user ? order.user.name : 'N/A' %></td>
-                      <td><%= (order.totalAmount) %></td>
-                      <td>
-                        <span class="badge bg-<%= order.orderStatus === 'delivered' ? 'success' : (order.orderStatus === 'cancelled' ? 'danger' : 'warning') %>">
-                          <%= order.orderStatus %>
-                        </span>
-                      </td>
-                      <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
+                      <th>Order ID</th>
+                      <th>Customer</th>
+                      <th>Total</th>
+                      <th>Status</th>
+                      <th>Date</th>
                     </tr>
-                  <% }) %>
-                </tbody>
-              </table>
-            </div>
-          <% } %>
+                  </thead>
+                  <tbody>
+                    <% recentOrders.forEach(order=> { %>
+                      <tr>
+                        <td>#<%= order._id.toString().slice(-6) %>
+                        </td>
+                        <td>
+                          <%= order.user ? order.user.name : 'N/A' %>
+                        </td>
+                        <td>
+                          <%= settings.currencySymbol || 'ETB' %>
+                            <%= order.totalAmount.toFixed(2) %>
+                        </td>
+                        <td>
+                          <span
+                            class="badge bg-<%= order.orderStatus === 'delivered' ? 'success' : (order.orderStatus === 'cancelled' ? 'danger' : 'warning') %>">
+                            <%= order.orderStatus %>
+                          </span>
+                        </td>
+                        <td>
+                          <%= new Date(order.createdAt).toLocaleDateString() %>
+                        </td>
+                      </tr>
+                      <% }) %>
+                  </tbody>
+                </table>
+              </div>
+              <% } %>
         </div>
       </div>
     </div>
@@ -93,6 +111,14 @@
           <a href="/admin/dish/add" class="btn btn-outline-warning w-100 mb-2">
             <i class="bi bi-plus-circle me-2"></i>Add New Dish
           </a>
+          <a href="/admin/promos" class="btn btn-outline-info w-100 mb-2">
+            <i class="bi bi-tags me-2"></i>Promo Codes (<%= totalPromos %>)
+          </a>
+          <% if (session.role==='superadmin' ) { %>
+            <a href="/superadmin/settings" class="btn btn-outline-danger w-100 mb-2">
+              <i class="bi bi-shield-lock me-2"></i>System Settings
+            </a>
+            <% } %>
         </div>
       </div>
     </div>

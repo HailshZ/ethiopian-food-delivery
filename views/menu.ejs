@@ -19,8 +19,12 @@
         <div class="filter-pills">
           <button class="filter-pill active" data-category="all"><i class="bi bi-grid-3x3-gap me-1"></i> All</button>
           <button class="filter-pill" data-category="food"><i class="bi bi-egg-fried me-1"></i> Food</button>
+          <button class="filter-pill" data-category="appetizer"><i class="bi bi-cup-straw me-1"></i> Appetizer</button>
+          <button class="filter-pill" data-category="breakfast"><i class="bi bi-sunrise me-1"></i> Breakfast</button>
           <button class="filter-pill" data-category="coffee"><i class="bi bi-cup-hot me-1"></i> Coffee</button>
           <button class="filter-pill" data-category="drink"><i class="bi bi-cup-straw me-1"></i> Drinks</button>
+          <button class="filter-pill" data-category="dessert"><i class="bi bi-cake me-1"></i> Dessert</button>
+          <button class="filter-pill" data-category="combo"><i class="bi bi-box me-1"></i> Combos</button>
         </div>
       </div>
     </div>
@@ -35,7 +39,7 @@
       <div class="row g-4">
         <% todaysSpecials.forEach(special=> { %>
           <div class="col-md-6 col-lg-4">
-            <div class="dish-card special">
+            <div class="dish-card special animate__animated animate__fadeInUp">
               <div class="dish-card-badge"><i class="bi bi-fire"></i> Special</div>
               <img src="<%= special.dish.imageUrl %>" alt="<%= special.dish.name %>" class="dish-card-img"
                 onerror="this.src='https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=400'">
@@ -47,17 +51,32 @@
                   <%= currentLanguage==='en' ? special.dish.description : (special.dish.descriptionAm ||
                     special.dish.description) %>
                 </p>
-                <div class="dish-card-footer">
-                  <div>
-                    <span class="dish-price">$<%= special.specialPrice.toFixed(2) %></span>
-                    <span class="dish-original-price">$<%= special.dish.price.toFixed(2) %></span>
+                <% if (special.dish.averageRating> 0) { %>
+                  <div class="dish-rating mb-2">
+                    <% for (let i=1; i <=5; i++) { %>
+                      <i class="bi bi-star<%= i <= Math.round(special.dish.averageRating) ? '-fill text-warning' : ' text-muted' %>"
+                        style="font-size: 0.8rem;"></i>
+                      <% } %>
+                        <span class="text-muted small ms-1">(<%= special.dish.reviewCount %>)</span>
                   </div>
-                  <button class="btn btn-primary btn-sm rounded-pill ajax-add-cart"
-                    data-dish-id="<%= special.dish._id %>">
-                    <i class="bi bi-cart-plus me-1"></i>
-                    <%= t('add_to_cart') %>
-                  </button>
-                </div>
+                  <% } %>
+                    <div class="dish-card-footer">
+                      <div>
+                        <span class="dish-price">
+                          <%= settings.currencySymbol || 'ETB' %>
+                            <%= special.specialPrice.toFixed(2) %>
+                        </span>
+                        <span class="dish-original-price">
+                          <%= settings.currencySymbol || 'ETB' %>
+                            <%= special.dish.price.toFixed(2) %>
+                        </span>
+                      </div>
+                      <button class="btn btn-primary btn-sm rounded-pill ajax-add-cart"
+                        data-dish-id="<%= special.dish._id %>">
+                        <i class="bi bi-cart-plus me-1"></i>
+                        <%= t('add_to_cart') %>
+                      </button>
+                    </div>
               </div>
             </div>
           </div>
@@ -75,11 +94,19 @@
         </div>
         <% } else { %>
           <div class="row g-4" id="dishes-grid">
-            <% dishes.forEach(dish=> { %>
-              <div class="col-md-6 col-lg-4 dish-item" data-category="<%= dish.category %>">
+            <% dishes.forEach((dish, index)=> { %>
+              <div class="col-md-6 col-lg-4 dish-item" data-category="<%= dish.category %>"
+                style="animation: fadeInUp 0.4s ease <%= Math.min(index * 0.05, 0.5) %>s both;">
                 <div class="dish-card">
                   <div class="dish-card-category">
-                    <%= dish.category %>
+                    <% if (dish.spiceLevel) { %>
+                      <% const spiceIcons={ 'mild' : '🌶️' , 'medium' : '🌶️🌶️' , 'hot' : '🔥' , 'extra-hot' : '🔥🔥'
+                        }; %>
+                        <span class="me-1">
+                          <%= spiceIcons[dish.spiceLevel] || '' %>
+                        </span>
+                        <% } %>
+                          <%= dish.category %>
                   </div>
                   <img
                     src="<%= dish.imageUrl || 'https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=400' %>"
@@ -92,13 +119,26 @@
                     <p class="dish-card-desc">
                       <%= currentLanguage==='en' ? dish.description : (dish.descriptionAm || dish.description) %>
                     </p>
-                    <div class="dish-card-footer">
-                      <span class="dish-price">$<%= dish.price.toFixed(2) %></span>
-                      <button class="btn btn-primary btn-sm rounded-pill ajax-add-cart" data-dish-id="<%= dish._id %>">
-                        <i class="bi bi-cart-plus me-1"></i>
-                        <%= t('add_to_cart') %>
-                      </button>
-                    </div>
+                    <% if (dish.averageRating> 0) { %>
+                      <div class="dish-rating mb-2">
+                        <% for (let i=1; i <=5; i++) { %>
+                          <i class="bi bi-star<%= i <= Math.round(dish.averageRating) ? '-fill text-warning' : ' text-muted' %>"
+                            style="font-size: 0.8rem;"></i>
+                          <% } %>
+                            <span class="text-muted small ms-1">(<%= dish.reviewCount %>)</span>
+                      </div>
+                      <% } %>
+                        <div class="dish-card-footer">
+                          <span class="dish-price">
+                            <%= settings.currencySymbol || 'ETB' %>
+                              <%= dish.price.toFixed(2) %>
+                          </span>
+                          <button class="btn btn-primary btn-sm rounded-pill ajax-add-cart"
+                            data-dish-id="<%= dish._id %>">
+                            <i class="bi bi-cart-plus me-1"></i>
+                            <%= t('add_to_cart') %>
+                          </button>
+                        </div>
                   </div>
                 </div>
               </div>

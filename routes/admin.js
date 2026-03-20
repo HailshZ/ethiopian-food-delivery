@@ -1,9 +1,10 @@
-// routes/admin.js – Admin dashboard with order and menu management
+// routes/admin.js – Admin dashboard with order, menu, and promo code management
 const express = require('express');
 const router = express.Router();
 const Order = require('../models/Order');
 const Dish = require('../models/Dish');
 const User = require('../models/User');
+const PromoCode = require('../models/PromoCode');
 const { isLoggedIn } = require('../middleware/auth');
 const isAdmin = require('../middleware/admin');
 
@@ -19,6 +20,7 @@ router.get('/', async (req, res) => {
         ]);
         const totalDishes = await Dish.countDocuments();
         const totalUsers = await User.countDocuments();
+        const totalPromos = await PromoCode.countDocuments({ isActive: true });
 
         // Recent orders
         const recentOrders = await Order.find()
@@ -32,6 +34,7 @@ router.get('/', async (req, res) => {
             totalRevenue: totalRevenue[0]?.total || 0,
             totalDishes,
             totalUsers,
+            totalPromos,
             recentOrders
         });
     } catch (err) {
@@ -55,7 +58,7 @@ router.get('/orders', async (req, res) => {
         res.render('admin/orders', {
             title: 'Manage Orders',
             orders,
-            currentStatus: status || 'all'  // this is the missing variable
+            currentStatus: status || 'all'
         });
     } catch (err) {
         console.error('❌ Error in /admin/orders:', err);
@@ -108,7 +111,7 @@ router.get('/dish/add', (req, res) => {
 
 // Add Dish POST
 router.post('/dish/add', async (req, res) => {
-    const { name, nameAm, description, descriptionAm, price, category, imageUrl } = req.body;
+    const { name, nameAm, description, descriptionAm, price, category, imageUrl, spiceLevel } = req.body;
     try {
         const dish = new Dish({
             name,
@@ -118,6 +121,7 @@ router.post('/dish/add', async (req, res) => {
             price: parseFloat(price),
             category,
             imageUrl: imageUrl || '/images/placeholder.jpg',
+            spiceLevel: spiceLevel || '',
             isAvailable: true
         });
         await dish.save();
@@ -148,7 +152,7 @@ router.get('/dish/:id/edit', async (req, res) => {
 
 // Edit Dish POST
 router.post('/dish/:id/edit', async (req, res) => {
-    const { name, nameAm, description, descriptionAm, price, category, imageUrl, isAvailable } = req.body;
+    const { name, nameAm, description, descriptionAm, price, category, imageUrl, isAvailable, spiceLevel } = req.body;
     try {
         const dish = await Dish.findById(req.params.id);
         if (!dish) {
@@ -163,6 +167,7 @@ router.post('/dish/:id/edit', async (req, res) => {
         dish.category = category;
         dish.imageUrl = imageUrl || dish.imageUrl;
         dish.isAvailable = isAvailable === 'on';
+        dish.spiceLevel = spiceLevel || '';
         await dish.save();
         req.flash('success', 'Dish updated successfully');
         res.redirect('/admin/menu');
@@ -183,6 +188,82 @@ router.post('/dish/:id/delete', async (req, res) => {
         console.error(err);
         req.flash('error', 'Error deleting dish');
         res.redirect('/admin/menu');
+    }
+});
+
+// ============== PROMO CODES ==============
+
+// List Promo Codes
+router.get('/promos', async (req, res) => {
+    try {
+        const promos = await PromoCode.find().sort({ createdAt: -1 });
+        res.render('admin/promos', { title: 'Manage Promo Codes', promos });
+    } catch (err) {
+        console.error(err);
+        req.flash('error', 'Error loading promo codes');
+        res.redirect('/admin');
+    }
+});
+
+// Add Promo Form
+router.get('/promo/add', (req, res) => {
+    res.render('admin/promo-form', { title: 'Add Promo Code' });
+});
+
+// Add Promo POST
+router.post('/promo/add', async (req, res) => {
+    const { code, discountType, discountValue, minOrderAmount, maxUses, expiresAt } = req.body;
+    try {
+        const promo = new PromoCode({
+            code: code.toUpperCase().trim(),
+            discountType,
+            discountValue: parseFloat(discountValue),
+            minOrderAmount: parseFloat(minOrderAmount) || 0,
+            maxUses: parseInt(maxUses) || 0,
+            expiresAt: expiresAt ? new Date(expiresAt) : null,
+            isActive: true
+        });
+        await promo.save();
+        req.flash('success', 'Promo code created successfully');
+        res.redirect('/admin/promos');
+    } catch (err) {
+        console.error(err);
+        if (err.code === 11000) {
+            req.flash('error', 'Promo code already exists');
+        } else {
+            req.flash('error', 'Error creating promo code');
+        }
+        res.redirect('/admin/promo/add');
+    }
+});
+
+// Toggle Promo Status
+router.post('/promo/:id/toggle', async (req, res) => {
+    try {
+        const promo = await PromoCode.findById(req.params.id);
+        if (promo) {
+            promo.isActive = !promo.isActive;
+            await promo.save();
+            req.flash('success', `Promo code ${promo.isActive ? 'activated' : 'deactivated'}`);
+        }
+        res.redirect('/admin/promos');
+    } catch (err) {
+        console.error(err);
+        req.flash('error', 'Error toggling promo code');
+        res.redirect('/admin/promos');
+    }
+});
+
+// Delete Promo
+router.post('/promo/:id/delete', async (req, res) => {
+    try {
+        await PromoCode.findByIdAndDelete(req.params.id);
+        req.flash('success', 'Promo code deleted');
+        res.redirect('/admin/promos');
+    } catch (err) {
+        console.error(err);
+        req.flash('error', 'Error deleting promo code');
+        res.redirect('/admin/promos');
     }
 });
 

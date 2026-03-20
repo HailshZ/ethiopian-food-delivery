@@ -53,8 +53,14 @@
                 </p>
                 <div class="d-flex align-items-center justify-content-between">
                   <div>
-                    <span class="special-price">$<%= special.specialPrice.toFixed(2) %></span>
-                    <span class="original-price">$<%= special.dish.price.toFixed(2) %></span>
+                    <span class="special-price">
+                      <%= settings.currencySymbol || 'ETB' %>
+                        <%= special.specialPrice.toFixed(2) %>
+                    </span>
+                    <span class="original-price">
+                      <%= settings.currencySymbol || 'ETB' %>
+                        <%= special.dish.price.toFixed(2) %>
+                    </span>
                   </div>
                   <button class="btn btn-primary btn-sm rounded-pill ajax-add-cart"
                     data-dish-id="<%= special.dish._id %>">
@@ -126,7 +132,10 @@
                     <h5>
                       <%= currentLanguage==='en' ? plan.name : (plan.nameAm || plan.name) %>
                     </h5>
-                    <div class="plan-promo-price">$<%= plan.price.toFixed(2) %><span>/<%= plan.duration %></span></div>
+                    <div class="plan-promo-price">
+                      <%= settings.currencySymbol || 'ETB' %>
+                        <%= plan.price.toFixed(2) %><span>/<%= plan.duration %></span>
+                    </div>
                   </div>
                   <p class="text-muted small px-4 mt-3">
                     <%= currentLanguage==='en' ? plan.description : (plan.descriptionAm || plan.description) %>

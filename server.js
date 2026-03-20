@@ -1,5 +1,5 @@
 
-// server.js – EthioFood Delivery (Refactored)
+// server.js – EthioFood Delivery (Refactored with new features)
 require('dotenv').config();
 
 const express = require('express');
@@ -12,6 +12,7 @@ const fs = require('fs');
 const flash = require('connect-flash');
 const DailySpecial = require('./models/DailySpecial');
 const MealPlan = require('./models/MealPlan');
+const SystemSettings = require('./models/SystemSettings');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -76,6 +77,26 @@ mongoose.connect(process.env.MONGO_URI)
       next();
     });
 
+    // System settings middleware – load settings for all views
+    app.use(async (req, res, next) => {
+      try {
+        const settings = await SystemSettings.getSettings();
+        res.locals.settings = settings;
+      } catch (err) {
+        res.locals.settings = {
+          systemName: 'EthioFood Delivery',
+          currency: 'ETB',
+          currencySymbol: 'ETB',
+          contactEmail: 'info@ethiofood.com',
+          contactPhone: '+251 912 345 678',
+          address: 'Addis Ababa, Ethiopia',
+          deliveryFee: 50,
+          minOrderAmount: 100
+        };
+      }
+      next();
+    });
+
     // Language switcher
     app.post('/language', (req, res) => {
       const { language } = req.body;
@@ -115,10 +136,33 @@ mongoose.connect(process.env.MONGO_URI)
           name: 'Admin',
           email: 'admin@ethiofood.com',
           password: 'admin123',
-          isAdmin: true
+          isAdmin: true,
+          role: 'admin'
         });
         await admin.save();
         res.send('✅ Admin created: admin@ethiofood.com / admin123');
+      } catch (err) {
+        res.status(500).send('Error: ' + err.message);
+      }
+    });
+
+    // Setup superadmin route
+    app.get('/setup-superadmin', async (req, res) => {
+      try {
+        const User = require('./models/User');
+        const superExists = await User.findOne({ role: 'superadmin' });
+        if (superExists) {
+          return res.send('Super Admin already exists. Login with superadmin credentials.');
+        }
+        const superadmin = new User({
+          name: 'Super Admin',
+          email: 'superadmin@ethiofood.com',
+          password: 'super123',
+          isAdmin: true,
+          role: 'superadmin'
+        });
+        await superadmin.save();
+        res.send('✅ Super Admin created: superadmin@ethiofood.com / super123');
       } catch (err) {
         res.status(500).send('Error: ' + err.message);
       }
@@ -131,7 +175,9 @@ mongoose.connect(process.env.MONGO_URI)
     app.use('/', require('./routes/orders'));
     app.use('/', require('./routes/subscription'));
     app.use('/', require('./routes/delivery'));
+    app.use('/', require('./routes/reviews'));
     app.use('/admin', require('./routes/admin'));
+    app.use('/superadmin', require('./routes/superadmin'));
 
     // Start server
     app.listen(PORT, () => {

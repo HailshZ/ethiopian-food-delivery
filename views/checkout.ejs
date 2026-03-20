@@ -1,5 +1,7 @@
 <div class="container py-5">
-  <h1 class="fw-bold mb-5 text-center" style="color: #078930;"><%= t('checkout') %></h1>
+  <h1 class="fw-bold mb-5 text-center" style="color: #078930;">
+    <%= t('checkout') %>
+  </h1>
 
   <!-- Hidden data container for cart items -->
   <div id="cart-data" data-cart='<%- JSON.stringify(cart.items) %>' style="display: none;"></div>
@@ -8,30 +10,42 @@
     <!-- Shipping Address Form -->
     <div class="col-lg-8">
       <div class="card border-0 shadow-lg" style="border-radius: 30px;">
-        <div class="card-header text-white py-3 px-4" style="background: linear-gradient(135deg, #078930 0%, #056b24 100%); border-radius: 30px 30px 0 0;">
-          <h5 class="mb-0"><i class="bi bi-truck me-2"></i><%= t('shipping_address') %></h5>
+        <div class="card-header text-white py-3 px-4"
+          style="background: linear-gradient(135deg, #078930 0%, #056b24 100%); border-radius: 30px 30px 0 0;">
+          <h5 class="mb-0"><i class="bi bi-truck me-2"></i>
+            <%= t('shipping_address') %>
+          </h5>
         </div>
         <div class="card-body p-5">
           <form id="shipping-form">
             <div class="mb-4">
-              <label class="form-label fw-semibold text-secondary"><%= t('street_address') %></label>
+              <label class="form-label fw-semibold text-secondary">
+                <%= t('street_address') %>
+              </label>
               <div class="input-group">
-                <span class="input-group-text bg-white border-end-0" style="border-color: #ced4da;"><i class="bi bi-house-door-fill" style="color: #078930;"></i></span>
+                <span class="input-group-text bg-white border-end-0" style="border-color: #ced4da;"><i
+                    class="bi bi-house-door-fill" style="color: #078930;"></i></span>
                 <input type="text" class="form-control border-start-0 ps-0" id="street" name="street" required>
               </div>
             </div>
             <div class="row">
               <div class="col-md-6 mb-4">
-                <label class="form-label fw-semibold text-secondary"><%= t('city') %></label>
+                <label class="form-label fw-semibold text-secondary">
+                  <%= t('city') %>
+                </label>
                 <div class="input-group">
-                  <span class="input-group-text bg-white border-end-0"><i class="bi bi-building" style="color: #078930;"></i></span>
+                  <span class="input-group-text bg-white border-end-0"><i class="bi bi-building"
+                      style="color: #078930;"></i></span>
                   <input type="text" class="form-control border-start-0 ps-0" id="city" name="city" required>
                 </div>
               </div>
               <div class="col-md-6 mb-4">
-                <label class="form-label fw-semibold text-secondary"><%= t('zip_code') %></label>
+                <label class="form-label fw-semibold text-secondary">
+                  <%= t('zip_code') %>
+                </label>
                 <div class="input-group">
-                  <span class="input-group-text bg-white border-end-0"><i class="bi bi-mailbox" style="color: #078930;"></i></span>
+                  <span class="input-group-text bg-white border-end-0"><i class="bi bi-mailbox"
+                      style="color: #078930;"></i></span>
                   <input type="text" class="form-control border-start-0 ps-0" id="zipCode" name="zipCode" required>
                 </div>
               </div>
@@ -39,18 +53,22 @@
 
             <hr class="my-4" style="border-top: 2px dashed #dee2e6;">
 
-            <h5 class="mb-3" style="color: #2c3e50;"><i class="bi bi-credit-card me-2" style="color: #078930;"></i>Payment Method</h5>
+            <h5 class="mb-3" style="color: #2c3e50;"><i class="bi bi-credit-card me-2"
+                style="color: #078930;"></i>Payment Method</h5>
             <div class="row g-3 mb-4">
               <div class="col-md-6">
-                <div class="form-check card p-3 border" style="cursor: pointer;" onclick="document.getElementById('telebirr').checked = true; toggleForms();">
-                  <input class="form-check-input" type="radio" name="paymentMethod" id="telebirr" value="telebirr" checked>
+                <div class="form-check card p-3 border" style="cursor: pointer;"
+                  onclick="document.getElementById('telebirr').checked = true; toggleForms();">
+                  <input class="form-check-input" type="radio" name="paymentMethod" id="telebirr" value="telebirr"
+                    checked>
                   <label class="form-check-label" for="telebirr">
                     <i class="bi bi-phone" style="color: #078930;"></i> Telebirr
                   </label>
                 </div>
               </div>
               <div class="col-md-6">
-                <div class="form-check card p-3 border" style="cursor: pointer;" onclick="document.getElementById('cbe').checked = true; toggleForms();">
+                <div class="form-check card p-3 border" style="cursor: pointer;"
+                  onclick="document.getElementById('cbe').checked = true; toggleForms();">
                   <input class="form-check-input" type="radio" name="paymentMethod" id="cbe" value="cbe">
                   <label class="form-check-label" for="cbe">
                     <i class="bi bi-bank" style="color: #078930;"></i> CBE Birr
@@ -66,8 +84,13 @@
               <p class="text-muted">You will be redirected to CBE Birr to complete payment.</p>
             </div>
 
-            <button id="pay-button" class="btn w-100 text-white py-3 fw-bold rounded-pill shadow" style="background: linear-gradient(135deg, #078930, #056b24); border: none;">
-              <i class="bi bi-lock-fill me-2"></i><%= t('pay_now') %> <%= (cart.totalPrice) %>
+            <button id="pay-button" class="btn w-100 text-white py-3 fw-bold rounded-pill shadow"
+              style="background: linear-gradient(135deg, #078930, #056b24); border: none;">
+              <i class="bi bi-lock-fill me-2"></i>
+              <%= t('pay_now') %> <span id="pay-amount">
+                  <%= settings.currencySymbol || 'ETB' %>
+                    <%= cart.totalPrice.toFixed(2) %>
+                </span>
             </button>
           </form>
         </div>
@@ -77,33 +100,74 @@
     <!-- Order Summary -->
     <div class="col-lg-4">
       <div class="card border-0 shadow-lg" style="border-radius: 30px;">
-        <div class="card-header text-white py-3 px-4" style="background: linear-gradient(135deg, #2c3e50, #1a252f); border-radius: 30px 30px 0 0;">
-          <h5 class="mb-0"><i class="bi bi-receipt me-2"></i><%= t('order_summary') %></h5>
+        <div class="card-header text-white py-3 px-4"
+          style="background: linear-gradient(135deg, #2c3e50, #1a252f); border-radius: 30px 30px 0 0;">
+          <h5 class="mb-0"><i class="bi bi-receipt me-2"></i>
+            <%= t('order_summary') %>
+          </h5>
         </div>
         <div class="card-body p-4">
-          <% cart.items.forEach(item => { %>
+          <% cart.items.forEach(item=> { %>
             <div class="d-flex justify-content-between align-items-center mb-3">
               <div>
-                <span class="fw-semibold"><%= currentLanguage === 'en' ? item.name : (item.nameAm || item.name) %></span>
+                <span class="fw-semibold">
+                  <%= currentLanguage==='en' ? item.name : (item.nameAm || item.name) %>
+                </span>
                 <span class="text-secondary small d-block">x<%= item.qty %></span>
               </div>
-              <span class="fw-bold" style="color: #078930;"><%= (item.totalPrice) %></span>
+              <span class="fw-bold" style="color: #078930;">
+                <%= settings.currencySymbol || 'ETB' %>
+                  <%= item.totalPrice.toFixed(2) %>
+              </span>
             </div>
-          <% }) %>
-          <hr>
-          <div class="d-flex justify-content-between mb-2">
-            <span><%= t('subtotal') %>:</span>
-            <span class="fw-bold"><%= (cart.totalPrice) %></span>
-          </div>
-          <div class="d-flex justify-content-between mb-2">
-            <span><%= t('delivery_fee') %>:</span>
-            <span class="fw-bold text-success"><%= (0) %></span>
-          </div>
-          <hr>
-          <div class="d-flex justify-content-between">
-            <span class="h5"><%= t('total') %>:</span>
-            <span class="h5" style="color: #078930;"><%= (cart.totalPrice) %></span>
-          </div>
+            <% }) %>
+              <hr>
+              <div class="d-flex justify-content-between mb-2">
+                <span>
+                  <%= t('subtotal') %>:
+                </span>
+                <span class="fw-bold">
+                  <%= settings.currencySymbol || 'ETB' %>
+                    <%= cart.totalPrice.toFixed(2) %>
+                </span>
+              </div>
+
+              <!-- Promo Code -->
+              <div class="promo-code-section mb-3 mt-3">
+                <div class="input-group">
+                  <input type="text" id="promo-code-input" class="form-control rounded-start-pill"
+                    placeholder="Promo code" style="border-right: 0;">
+                  <button type="button" id="apply-promo-btn" class="btn btn-outline-primary rounded-end-pill"
+                    onclick="applyPromoCode()">
+                    Apply
+                  </button>
+                </div>
+                <div id="promo-feedback" class="mt-2 small"></div>
+              </div>
+
+              <!-- Discount line (hidden by default) -->
+              <div id="discount-line" class="d-flex justify-content-between mb-2 text-success"
+                style="display: none !important;">
+                <span>Discount <span id="promo-code-display"></span></span>
+                <span class="fw-bold" id="discount-amount"></span>
+              </div>
+
+              <div class="d-flex justify-content-between mb-2">
+                <span>
+                  <%= t('delivery_fee') %>:
+                </span>
+                <span class="fw-bold text-success">Free</span>
+              </div>
+              <hr>
+              <div class="d-flex justify-content-between">
+                <span class="h5">
+                  <%= t('total') %>:
+                </span>
+                <span class="h5" style="color: #078930;" id="total-display">
+                  <%= settings.currencySymbol || 'ETB' %>
+                    <%= cart.totalPrice.toFixed(2) %>
+                </span>
+              </div>
         </div>
       </div>
     </div>
@@ -111,60 +175,124 @@
 </div>
 
 <script>
-function toggleForms() {
-  const method = document.querySelector('input[name="paymentMethod"]:checked').value;
-  document.querySelectorAll('.payment-info').forEach(el => el.style.display = 'none');
-  document.getElementById(method + '-form').style.display = 'block';
-}
+  const currencySymbol = '<%= settings.currencySymbol || "ETB" %>';
+  let originalTotal = <%= cart.totalPrice %>;
+  let currentDiscount = 0;
+  let appliedPromoCode = '';
 
-document.getElementById('pay-button').addEventListener('click', async function (e) {
-  e.preventDefault();
-
-  const method = document.querySelector('input[name="paymentMethod"]:checked').value;
-  const street = document.getElementById('street').value;
-  const city = document.getElementById('city').value;
-  const zipCode = document.getElementById('zipCode').value;
-
-  if (!street || !city || !zipCode) {
-    alert('Please fill in all shipping address fields.');
-    return;
+  function toggleForms() {
+    const method = document.querySelector('input[name="paymentMethod"]:checked').value;
+    document.querySelectorAll('.payment-info').forEach(el => el.style.display = 'none');
+    document.getElementById(method + '-form').style.display = 'block';
   }
 
-  // Retrieve cart items from hidden data attribute
-  const cartDataElement = document.getElementById('cart-data');
-  const cartItems = JSON.parse(cartDataElement.dataset.cart);
+  async function applyPromoCode() {
+    const codeInput = document.getElementById('promo-code-input');
+    const feedback = document.getElementById('promo-feedback');
+    const code = codeInput.value.trim();
 
-  const button = this;
-  button.disabled = true;
-  button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
-
-  try {
-    const response = await fetch('/api/initiate-payment', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        paymentMethod: method,
-        amount: <%= cart.totalPrice %>,
-        cart: cartItems,
-        shippingAddress: { street, city, zipCode }
-      })
-    });
-
-    const data = await response.json();
-    console.log('Payment initiation response:', data);
-
-    if (data.success && data.checkoutUrl) {
-      window.location.href = data.checkoutUrl;
-    } else {
-      alert('Payment initiation failed: ' + (data.error || 'Unknown error'));
-      button.disabled = false;
-      button.innerHTML = '<i class="bi bi-lock-fill me-2"></i><%= t('pay_now') %> <%= (cart.totalPrice) %>';
+    if (!code) {
+      feedback.innerHTML = '<span class="text-danger"><i class="bi bi-exclamation-circle me-1"></i>Please enter a promo code</span>';
+      return;
     }
-  } catch (err) {
-    console.error('Fetch error:', err);
-    alert('Network error. Please try again. Check console for details.');
-    button.disabled = false;
-    button.innerHTML = '<i class="bi bi-lock-fill me-2"></i><%= t('pay_now') %> <%= (cart.totalPrice) %>';
+
+    try {
+      const res = await fetch('/api/validate-promo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, orderAmount: originalTotal })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        currentDiscount = data.discount;
+        appliedPromoCode = code.toUpperCase();
+        const finalAmount = originalTotal - currentDiscount;
+
+        // Show discount line
+        document.getElementById('discount-line').style.display = 'flex';
+        document.getElementById('discount-line').style.cssText = '';
+        document.getElementById('promo-code-display').textContent = `(${appliedPromoCode})`;
+        document.getElementById('discount-amount').textContent = `-${currencySymbol} ${currentDiscount.toFixed(2)}`;
+
+        // Update total
+        document.getElementById('total-display').textContent = `${currencySymbol} ${finalAmount.toFixed(2)}`;
+        document.getElementById('pay-amount').textContent = `${currencySymbol} ${finalAmount.toFixed(2)}`;
+
+        feedback.innerHTML = `<span class="text-success"><i class="bi bi-check-circle-fill me-1"></i>Promo applied! You save ${currencySymbol} ${currentDiscount.toFixed(2)}</span>`;
+        codeInput.disabled = true;
+        document.getElementById('apply-promo-btn').disabled = true;
+
+        if (typeof showToast === 'function') {
+          showToast(`Promo code applied! You save ${currencySymbol} ${currentDiscount.toFixed(2)}`, 'success');
+        }
+      } else {
+        feedback.innerHTML = `<span class="text-danger"><i class="bi bi-exclamation-circle me-1"></i>${data.error}</span>`;
+      }
+    } catch (err) {
+      feedback.innerHTML = '<span class="text-danger"><i class="bi bi-exclamation-circle me-1"></i>Error validating promo code</span>';
+    }
   }
-});
+
+  document.getElementById('pay-button').addEventListener('click', async function (e) {
+    e.preventDefault();
+
+    const method = document.querySelector('input[name="paymentMethod"]:checked').value;
+    const street = document.getElementById('street').value;
+    const city = document.getElementById('city').value;
+    const zipCode = document.getElementById('zipCode').value;
+
+    if (!street || !city || !zipCode) {
+      if (typeof showToast === 'function') {
+        showToast('Please fill in all shipping address fields', 'error');
+      } else {
+        alert('Please fill in all shipping address fields.');
+      }
+      return;
+    }
+
+    const cartDataElement = document.getElementById('cart-data');
+    const cartItems = JSON.parse(cartDataElement.dataset.cart);
+
+    const button = this;
+    button.disabled = true;
+    button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+
+    try {
+      const response = await fetch('/api/initiate-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paymentMethod: method,
+          amount: originalTotal,
+          cart: cartItems,
+          shippingAddress: { street, city, zipCode },
+          promoCode: appliedPromoCode
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      } else {
+        if (typeof showToast === 'function') {
+          showToast('Payment initiation failed: ' + (data.error || 'Unknown error'), 'error');
+        } else {
+          alert('Payment initiation failed: ' + (data.error || 'Unknown error'));
+        }
+        button.disabled = false;
+        button.innerHTML = `<i class="bi bi-lock-fill me-2"></i><%= t('pay_now') %> <span id="pay-amount">${currencySymbol} ${(originalTotal - currentDiscount).toFixed(2)}</span>`;
+      }
+    } catch (err) {
+      console.error('Fetch error:', err);
+      if (typeof showToast === 'function') {
+        showToast('Network error. Please try again.', 'error');
+      } else {
+        alert('Network error. Please try again.');
+      }
+      button.disabled = false;
+      button.innerHTML = `<i class="bi bi-lock-fill me-2"></i><%= t('pay_now') %> <span id="pay-amount">${currencySymbol} ${(originalTotal - currentDiscount).toFixed(2)}</span>`;
+    }
+  });
 </script>

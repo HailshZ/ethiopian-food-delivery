@@ -23,7 +23,7 @@ const dishSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ['food', 'coffee', 'drink'],
+    enum: ['food', 'coffee', 'drink', 'appetizer', 'breakfast', 'dessert', 'combo'],
     default: 'food'
   },
   imageUrl: {
@@ -33,6 +33,19 @@ const dishSchema = new mongoose.Schema({
   isAvailable: {
     type: Boolean,
     default: true
+  },
+  averageRating: {
+    type: Number,
+    default: 0
+  },
+  reviewCount: {
+    type: Number,
+    default: 0
+  },
+  spiceLevel: {
+    type: String,
+    enum: ['mild', 'medium', 'hot', 'extra-hot', ''],
+    default: ''
   }
 }, {
   timestamps: true

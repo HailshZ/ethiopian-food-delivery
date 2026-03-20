@@ -800,3 +800,162 @@ body {
     font-weight: 600;
 }
 }
+
+/* ================================================
+   STAR RATING (Review Form)
+   ================================================ */
+.star-rating {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+  gap: 4px;
+}
+.star-rating input { display: none; }
+.star-rating .star-label {
+  cursor: pointer;
+  font-size: 1.5rem;
+  color: #ddd;
+  transition: all 0.2s ease;
+}
+.star-rating .star-label:hover,
+.star-rating .star-label:hover ~ .star-label,
+.star-rating input:checked ~ .star-label {
+  color: #fcdd09;
+  transform: scale(1.15);
+}
+.star-rating .star-label:active { transform: scale(0.95); }
+
+/* Dish rating display */
+.dish-rating { display: flex; align-items: center; gap: 2px; }
+
+/* ================================================
+   PROMO CODE
+   ================================================ */
+.promo-code-section .form-control {
+  border: 2px solid #e0e0e0;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.promo-code-section .form-control:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(7,137,48,0.1);
+}
+.promo-code-section .btn {
+  font-weight: 600;
+  border-width: 2px;
+}
+
+/* ================================================
+   DELIVERY COUNTDOWN & PULSE
+   ================================================ */
+.delivery-status-pulse {
+  animation: statusPulse 2s infinite;
+}
+@keyframes statusPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(7,137,48,0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(7,137,48,0); }
+}
+
+#delivery-countdown {
+  background: linear-gradient(135deg, rgba(7,137,48,0.05), rgba(252,221,9,0.05));
+  border-radius: 12px;
+  padding: 8px 16px;
+  display: inline-block;
+}
+
+/* ================================================
+   REVIEW CARD
+   ================================================ */
+.review-dish-card {
+  transition: var(--transition);
+  border-color: #e8e8e8 !important;
+}
+.review-dish-card:hover {
+  border-color: var(--primary) !important;
+  box-shadow: 0 4px 15px rgba(7,137,48,0.08);
+}
+
+/* ================================================
+   SCROLL REVEAL ANIMATION
+   ================================================ */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.scroll-reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger children */
+.stagger-children > * {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.stagger-children.revealed > *:nth-child(1) { transition-delay: 0.05s; }
+.stagger-children.revealed > *:nth-child(2) { transition-delay: 0.1s; }
+.stagger-children.revealed > *:nth-child(3) { transition-delay: 0.15s; }
+.stagger-children.revealed > *:nth-child(4) { transition-delay: 0.2s; }
+.stagger-children.revealed > *:nth-child(5) { transition-delay: 0.25s; }
+.stagger-children.revealed > *:nth-child(6) { transition-delay: 0.3s; }
+.stagger-children.revealed > * {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ================================================
+   SHIMMER LOADING
+   ================================================ */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ================================================
+   SUPERADMIN
+   ================================================ */
+.superadmin-badge {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 50px;
+}
+
+/* ================================================
+   ENHANCED ANIMATIONS
+   ================================================ */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.float-animation { animation: float 3s ease-in-out infinite; }
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 5px rgba(7,137,48,0.3); }
+  50% { box-shadow: 0 0 20px rgba(7,137,48,0.5); }
+}
+.glow-animation { animation: glow 2s ease-in-out infinite; }
+
+/* Card hover micro-interaction */
+.dish-card, .glass-card, .plan-card, .category-card {
+  will-change: transform;
+}
+
+/* ================================================
+   SPICE LEVEL INDICATOR
+   ================================================ */
+.spice-indicator {
+  display: inline-flex;
+  gap: 2px;
+  font-size: 0.7rem;
+}

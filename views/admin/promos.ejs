@@ -1,0 +1,103 @@
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-tags-fill me-2 text-primary"></i>Promo Codes</h2>
+            <p class="text-muted mb-0">Create and manage discount codes</p>
+        </div>
+        <a href="/admin/promo/add" class="btn btn-primary rounded-pill"><i class="bi bi-plus-lg me-1"></i> New Promo
+            Code</a>
+    </div>
+
+    <div class="glass-card">
+        <% if (promos.length===0) { %>
+            <div class="empty-state">
+                <i class="bi bi-tags"></i>
+                <h4>No Promo Codes Yet</h4>
+                <p class="text-muted">Create your first promo code to offer discounts</p>
+                <a href="/admin/promo/add" class="btn btn-primary rounded-pill"><i class="bi bi-plus-lg me-1"></i>
+                    Create Promo Code</a>
+            </div>
+            <% } else { %>
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Discount</th>
+                                <th>Min Order</th>
+                                <th>Usage</th>
+                                <th>Expires</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% promos.forEach(promo=> { %>
+                                <tr style="animation: fadeInUp 0.3s ease;">
+                                    <td>
+                                        <span class="badge bg-dark rounded-pill px-3 py-2 font-monospace"
+                                            style="letter-spacing: 1px;">
+                                            <%= promo.code %>
+                                        </span>
+                                    </td>
+                                    <td class="fw-bold text-primary">
+                                        <% if (promo.discountType==='percentage' ) { %>
+                                            <%= promo.discountValue %>%
+                                                <% } else { %>
+                                                    <%= settings.currencySymbol || 'ETB' %>
+                                                        <%= promo.discountValue.toFixed(2) %>
+                                                            <% } %>
+                                    </td>
+                                    <td>
+                                        <%= settings.currencySymbol || 'ETB' %>
+                                            <%= promo.minOrderAmount.toFixed(2) %>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark">
+                                            <%= promo.usedCount %> / <%= promo.maxUses || '∞' %>
+                                        </span>
+                                    </td>
+                                    <td class="small text-muted">
+                                        <% if (promo.expiresAt) { %>
+                                            <%= new Date(promo.expiresAt).toLocaleDateString() %>
+                                                <% if (new Date()> promo.expiresAt) { %>
+                                                    <span class="badge bg-danger ms-1">Expired</span>
+                                                    <% } %>
+                                                        <% } else { %>
+                                                            Never
+                                                            <% } %>
+                                    </td>
+                                    <td>
+                                        <% if (promo.isActive) { %>
+                                            <span class="badge bg-success rounded-pill px-3">Active</span>
+                                            <% } else { %>
+                                                <span class="badge bg-secondary rounded-pill px-3">Inactive</span>
+                                                <% } %>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex gap-1">
+                                            <form action="/admin/promo/<%= promo._id %>/toggle" method="POST"
+                                                class="d-inline">
+                                                <button type="submit"
+                                                    class="btn btn-sm btn-outline-warning rounded-pill"
+                                                    title="Toggle Status">
+                                                    <i class="bi bi-<%= promo.isActive ? 'pause' : 'play' %>-fill"></i>
+                                                </button>
+                                            </form>
+                                            <form action="/admin/promo/<%= promo._id %>/delete" method="POST"
+                                                class="d-inline" onsubmit="return confirm('Delete this promo code?')">
+                                                <button type="submit"
+                                                    class="btn btn-sm btn-outline-danger rounded-pill">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+                <% } %>
+    </div>
+</div>
