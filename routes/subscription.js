@@ -12,7 +12,7 @@ const chapa = new Chapa({ secretKey: process.env.CHAPA_SECRET_KEY || '' });
 // GET /meal-plans – Browse plans
 router.get('/meal-plans', async (req, res) => {
     try {
-        const plans = await MealPlan.find({ isActive: true }).populate('meals.monday.dish meals.tuesday.dish meals.wednesday.dish meals.thursday.dish meals.friday.dish meals.saturday.dish meals.sunday.dish');
+        const plans = await MealPlan.find({ isActive: true, approvalStatus: { $in: ['approved', null] } }).populate('meals.monday.dish meals.tuesday.dish meals.wednesday.dish meals.thursday.dish meals.friday.dish meals.saturday.dish meals.sunday.dish');
         res.render('meal-plans', { title: 'Meal Plans', plans });
     } catch (err) {
         console.error(err);

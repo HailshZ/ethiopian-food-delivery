@@ -127,7 +127,7 @@ mongoose.connect(process.env.MONGO_URI)
       try {
         const today = new Date().getDay();
         const todaysSpecials = await DailySpecial.find({ dayOfWeek: today, isActive: true }).populate('dish');
-        const featuredPlans = await MealPlan.find({ isActive: true }).limit(3);
+        const featuredPlans = await MealPlan.find({ isActive: true, approvalStatus: { $in: ['approved', null] } }).limit(3);
         res.render('index', { title: 'Home', todaysSpecials, featuredPlans });
       } catch (err) {
         res.render('index', { title: 'Home', todaysSpecials: [], featuredPlans: [] });

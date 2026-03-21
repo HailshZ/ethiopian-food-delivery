@@ -7,7 +7,7 @@ const DailySpecial = require('../models/DailySpecial');
 // GET /menu
 router.get('/menu', async (req, res) => {
     try {
-        const dishes = await Dish.find({ isAvailable: true, approvalStatus: 'approved' });
+        const dishes = await Dish.find({ isAvailable: true, approvalStatus: { $in: ['approved', null] } });
         const today = new Date().getDay(); // 0=Sunday
         const todaysSpecials = await DailySpecial.find({ dayOfWeek: today, isActive: true }).populate('dish');
         res.render('menu', { title: 'Menu', dishes, todaysSpecials });
@@ -21,7 +21,7 @@ router.get('/menu', async (req, res) => {
 router.get('/api/dishes', async (req, res) => {
     try {
         const { q, category } = req.query;
-        const filter = { isAvailable: true, approvalStatus: 'approved' };
+        const filter = { isAvailable: true, approvalStatus: { $in: ['approved', null] } };
         if (category && category !== 'all') filter.category = category;
         if (q) {
             filter.$or = [
