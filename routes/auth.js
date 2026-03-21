@@ -63,11 +63,20 @@ router.post('/login', async (req, res) => {
             req.flash('error', 'Invalid email or password');
             return res.redirect('/login');
         }
+        // Block deactivated accounts
+        if (!user.isActive) {
+            req.flash('error', 'Your account has been deactivated. Contact support.');
+            return res.redirect('/login');
+        }
         req.session.userId = user._id;
         req.session.userName = user.name;
         req.session.isAdmin = user.isAdmin;
         req.session.role = user.role || 'user';
+        req.session.restaurantName = user.restaurantName || '';
         req.flash('success', 'Logged in successfully');
+        if (user.role === 'owner') {
+            return res.redirect('/owner/dashboard');
+        }
         if (user.isAdmin || user.role === 'superadmin') {
             return res.redirect('/admin');
         }

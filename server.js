@@ -87,13 +87,23 @@ mongoose.connect(process.env.MONGO_URI)
           systemName: 'EthioFood Delivery',
           currency: 'ETB',
           currencySymbol: 'ETB',
+          currencyPosition: 'left',
           contactEmail: 'info@ethiofood.com',
           contactPhone: '+251 912 345 678',
           address: 'Addis Ababa, Ethiopia',
-          deliveryFee: 50,
-          minOrderAmount: 100
+          deliveryFeePerKm: 15,
+          baseDeliveryFee: 20,
+          minOrderAmount: 100,
+          restaurantLocation: { lat: 9.0192, lng: 38.7525 }
         };
       }
+      // Global currency format helper
+      res.locals.formatPrice = (amount) => {
+        const s = res.locals.settings;
+        const sym = s.currencySymbol || 'ETB';
+        const val = typeof amount === 'number' ? amount.toFixed(2) : amount;
+        return (s.currencyPosition === 'right') ? `${val} ${sym}` : `${sym} ${val}`;
+      };
       next();
     });
 
@@ -176,6 +186,7 @@ mongoose.connect(process.env.MONGO_URI)
     app.use('/', require('./routes/subscription'));
     app.use('/', require('./routes/delivery'));
     app.use('/', require('./routes/reviews'));
+    app.use('/owner', require('./routes/owner'));
     app.use('/admin', require('./routes/admin'));
     app.use('/superadmin', require('./routes/superadmin'));
 

@@ -1,118 +1,138 @@
-<div class="container py-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="fw-bold mb-1"><i class="bi bi-gear-fill me-2 text-primary"></i>System Settings</h2>
-            <p class="text-muted mb-0">Configure your platform's core settings</p>
-        </div>
-        <a href="/admin" class="btn btn-outline-secondary rounded-pill"><i class="bi bi-arrow-left me-1"></i> Back to
-            Admin</a>
-    </div>
+<div class="container py-4">
+    <h1 class="mb-4" style="color: #ff6b6b;"><i class="bi bi-shield-lock me-2"></i>System Settings</h1>
 
-    <div class="row g-4">
-        <div class="col-lg-8">
-            <form action="/superadmin/settings" method="POST">
-                <!-- Branding -->
-                <div class="glass-card mb-4">
-                    <h5 class="fw-bold mb-3"><i class="bi bi-building me-2 text-primary"></i>Branding</h5>
-                    <div class="row g-3">
-                        <div class="col-md-6">
+    <form action="/superadmin/settings" method="post">
+        <div class="row g-4">
+            <!-- General -->
+            <div class="col-md-6">
+                <div class="card shadow-sm border-0" style="border-radius: 15px;">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="bi bi-gear me-2"></i>General</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
                             <label class="form-label fw-semibold">System Name</label>
-                            <input type="text" name="systemName" class="form-control rounded-3"
+                            <input type="text" name="systemName" class="form-control"
                                 value="<%= sysSettings.systemName %>">
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label fw-semibold">Currency</label>
-                            <input type="text" name="currency" class="form-control rounded-3"
-                                value="<%= sysSettings.currency %>">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label fw-semibold">Currency Symbol</label>
-                            <input type="text" name="currencySymbol" class="form-control rounded-3"
-                                value="<%= sysSettings.currencySymbol %>">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Contact Info -->
-                <div class="glass-card mb-4">
-                    <h5 class="fw-bold mb-3"><i class="bi bi-telephone me-2 text-primary"></i>Contact Information</h5>
-                    <div class="row g-3">
-                        <div class="col-md-6">
+                        <div class="mb-3">
                             <label class="form-label fw-semibold">Contact Email</label>
-                            <input type="email" name="contactEmail" class="form-control rounded-3"
+                            <input type="email" name="contactEmail" class="form-control"
                                 value="<%= sysSettings.contactEmail %>">
                         </div>
-                        <div class="col-md-6">
+                        <div class="mb-3">
                             <label class="form-label fw-semibold">Contact Phone</label>
-                            <input type="text" name="contactPhone" class="form-control rounded-3"
+                            <input type="text" name="contactPhone" class="form-control"
                                 value="<%= sysSettings.contactPhone %>">
                         </div>
-                        <div class="col-12">
+                        <div class="mb-3">
                             <label class="form-label fw-semibold">Address</label>
-                            <input type="text" name="address" class="form-control rounded-3"
-                                value="<%= sysSettings.address %>">
+                            <input type="text" name="address" class="form-control" value="<%= sysSettings.address %>">
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Order Settings -->
-                <div class="glass-card mb-4">
-                    <h5 class="fw-bold mb-3"><i class="bi bi-cart-check me-2 text-primary"></i>Order Settings</h5>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Delivery Fee (<%= sysSettings.currencySymbol %>
-                                    )</label>
-                            <input type="number" step="0.01" name="deliveryFee" class="form-control rounded-3"
-                                value="<%= sysSettings.deliveryFee %>">
+            <!-- Currency -->
+            <div class="col-md-6">
+                <div class="card shadow-sm border-0" style="border-radius: 15px;">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="bi bi-currency-exchange me-2"></i>Currency & Pricing</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Currency</label>
+                                <input type="text" name="currency" class="form-control"
+                                    value="<%= sysSettings.currency %>">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Symbol</label>
+                                <input type="text" name="currencySymbol" class="form-control"
+                                    value="<%= sysSettings.currencySymbol %>">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Position</label>
+                                <select name="currencyPosition" class="form-select">
+                                    <option value="left" <%=sysSettings.currencyPosition==='left' ? 'selected' : '' %>
+                                        >Left (ETB 100)</option>
+                                    <option value="right" <%=sysSettings.currencyPosition==='right' ? 'selected' : '' %>
+                                        >Right (100 ETB)</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Minimum Order Amount (<%= sysSettings.currencySymbol
-                                    %>)</label>
-                            <input type="number" step="0.01" name="minOrderAmount" class="form-control rounded-3"
-                                value="<%= sysSettings.minOrderAmount %>">
+                        <div class="mt-3 p-2 bg-light rounded text-center">
+                            <small class="text-muted">Preview:</small>
+                            <strong class="ms-2" id="currency-preview">
+                                <%= sysSettings.currencyPosition==='right' ? '100.00 ' + sysSettings.currencySymbol :
+                                    sysSettings.currencySymbol + ' 100.00' %>
+                            </strong>
+                        </div>
+                        <hr>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Base Delivery Fee</label>
+                                <input type="number" name="baseDeliveryFee" class="form-control" step="0.01"
+                                    value="<%= sysSettings.baseDeliveryFee %>">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Fee per KM</label>
+                                <input type="number" name="deliveryFeePerKm" class="form-control" step="0.01"
+                                    value="<%= sysSettings.deliveryFeePerKm %>">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Min Order</label>
+                                <input type="number" name="minOrderAmount" class="form-control" step="0.01"
+                                    value="<%= sysSettings.minOrderAmount %>">
+                            </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5">
-                    <i class="bi bi-check-lg me-2"></i>Save Settings
-                </button>
-            </form>
-        </div>
-
-        <!-- Quick Links -->
-        <div class="col-lg-4">
-            <div class="glass-card mb-4">
-                <h5 class="fw-bold mb-3"><i class="bi bi-lightning me-2 text-warning"></i>Quick Actions</h5>
-                <div class="d-grid gap-2">
-                    <a href="/superadmin/users" class="btn btn-outline-primary rounded-pill"><i
-                            class="bi bi-people me-2"></i>Manage Users & Roles</a>
-                    <a href="/admin" class="btn btn-outline-secondary rounded-pill"><i
-                            class="bi bi-speedometer2 me-2"></i>Admin Dashboard</a>
-                    <a href="/admin/promos" class="btn btn-outline-success rounded-pill"><i
-                            class="bi bi-tags me-2"></i>Promo Codes</a>
+            <!-- Restaurant Location -->
+            <div class="col-12">
+                <div class="card shadow-sm border-0" style="border-radius: 15px;">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="bi bi-geo-alt me-2"></i>Restaurant Location (for delivery fee
+                            calculation)</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Latitude</label>
+                                <input type="number" name="restaurantLat" class="form-control" step="0.0001"
+                                    value="<%= sysSettings.restaurantLocation ? sysSettings.restaurantLocation.lat : 9.0192 %>">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Longitude</label>
+                                <input type="number" name="restaurantLng" class="form-control" step="0.0001"
+                                    value="<%= sysSettings.restaurantLocation ? sysSettings.restaurantLocation.lng : 38.7525 %>">
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <div class="glass-card">
-                <h5 class="fw-bold mb-3"><i class="bi bi-info-circle me-2 text-info"></i>Current Config</h5>
-                <ul class="list-unstyled mb-0">
-                    <li class="mb-2"><span class="text-muted">Name:</span> <strong>
-                            <%= sysSettings.systemName %>
-                        </strong></li>
-                    <li class="mb-2"><span class="text-muted">Currency:</span> <strong>
-                            <%= sysSettings.currencySymbol %>
-                        </strong></li>
-                    <li class="mb-2"><span class="text-muted">Delivery Fee:</span> <strong>
-                            <%= sysSettings.currencySymbol %>
-                                <%= sysSettings.deliveryFee %>
-                        </strong></li>
-                    <li class="mb-0"><span class="text-muted">Min Order:</span> <strong>
-                            <%= sysSettings.currencySymbol %>
-                                <%= sysSettings.minOrderAmount %>
-                        </strong></li>
-                </ul>
-            </div>
         </div>
-    </div>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-danger rounded-pill px-5 py-2"><i
+                    class="bi bi-check2-circle me-2"></i>Save Settings</button>
+            <a href="/superadmin/users" class="btn btn-outline-primary rounded-pill ms-2"><i
+                    class="bi bi-people me-1"></i>Manage Users</a>
+        </div>
+    </form>
 </div>
+
+<script>
+    // Live currency preview
+    document.querySelectorAll('[name="currencySymbol"], [name="currencyPosition"]').forEach(el => {
+        el.addEventListener('change', updatePreview);
+        el.addEventListener('input', updatePreview);
+    });
+    function updatePreview() {
+        const sym = document.querySelector('[name="currencySymbol"]').value;
+        const pos = document.querySelector('[name="currencyPosition"]').value;
+        document.getElementById('currency-preview').textContent = pos === 'right' ? '100.00 ' + sym : sym + ' 100.00';
+    }
+</script>

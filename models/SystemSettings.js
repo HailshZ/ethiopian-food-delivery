@@ -13,6 +13,11 @@ const systemSettingsSchema = new mongoose.Schema({
         type: String,
         default: 'ETB'
     },
+    currencyPosition: {
+        type: String,
+        enum: ['left', 'right'],
+        default: 'left'
+    },
     contactEmail: {
         type: String,
         default: 'info@ethiofood.com'
@@ -25,13 +30,21 @@ const systemSettingsSchema = new mongoose.Schema({
         type: String,
         default: 'Addis Ababa, Ethiopia'
     },
-    deliveryFee: {
+    deliveryFeePerKm: {
         type: Number,
-        default: 50
+        default: 15
+    },
+    baseDeliveryFee: {
+        type: Number,
+        default: 20
     },
     minOrderAmount: {
         type: Number,
         default: 100
+    },
+    restaurantLocation: {
+        lat: { type: Number, default: 9.0192 },
+        lng: { type: Number, default: 38.7525 }
     },
     logoUrl: {
         type: String,

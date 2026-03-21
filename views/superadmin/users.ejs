@@ -1,75 +1,110 @@
-<div class="container py-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="fw-bold mb-1"><i class="bi bi-people-fill me-2 text-primary"></i>User Management</h2>
-            <p class="text-muted mb-0">Manage user roles and permissions</p>
+<div class="container py-4">
+    <h1 class="mb-4" style="color: #ff6b6b;"><i class="bi bi-people me-2"></i>Manage Users</h1>
+
+    <!-- Add Admin Form -->
+    <div class="card shadow-sm border-0 mb-4" style="border-radius: 15px;">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="bi bi-person-plus me-2"></i>Add New Admin</h5>
         </div>
-        <a href="/superadmin/settings" class="btn btn-outline-secondary rounded-pill"><i
-                class="bi bi-arrow-left me-1"></i> Back to Settings</a>
+        <div class="card-body">
+            <form action="/superadmin/admin/add" method="post">
+                <div class="row g-3">
+                    <div class="col-md-3"><input type="text" name="name" class="form-control" placeholder="Full Name"
+                            required></div>
+                    <div class="col-md-3"><input type="email" name="email" class="form-control" placeholder="Email"
+                            required></div>
+                    <div class="col-md-2"><input type="password" name="password" class="form-control"
+                            placeholder="Password" required minlength="6"></div>
+                    <div class="col-md-2"><input type="text" name="phone" class="form-control" placeholder="Phone">
+                    </div>
+                    <div class="col-md-2"><button class="btn btn-danger w-100 rounded-pill"><i
+                                class="bi bi-plus me-1"></i>Add Admin</button></div>
+                </div>
+            </form>
+        </div>
     </div>
 
-    <div class="glass-card">
-        <div class="table-responsive">
-            <table class="table mb-0">
-                <thead>
-                    <tr>
-                        <th>User</th>
-                        <th>Email</th>
-                        <th>Current Role</th>
-                        <th>Joined</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% users.forEach(user=> { %>
-                        <tr style="animation: fadeInUp 0.3s ease;">
-                            <td>
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="user-avatar" style="width: 36px; height: 36px; font-size: 0.8rem;">
-                                        <%= user.name.charAt(0).toUpperCase() %>
-                                    </div>
-                                    <strong>
-                                        <%= user.name %>
-                                    </strong>
-                                </div>
-                            </td>
-                            <td class="text-muted">
-                                <%= user.email %>
-                            </td>
-                            <td>
-                                <% if (user.role==='superadmin' ) { %>
-                                    <span class="badge bg-danger rounded-pill px-3 py-2"><i
-                                            class="bi bi-shield-lock me-1"></i>Super Admin</span>
-                                    <% } else if (user.role==='admin' ) { %>
-                                        <span class="badge bg-warning text-dark rounded-pill px-3 py-2"><i
-                                                class="bi bi-shield me-1"></i>Admin</span>
-                                        <% } else { %>
-                                            <span class="badge bg-secondary rounded-pill px-3 py-2"><i
-                                                    class="bi bi-person me-1"></i>User</span>
-                                            <% } %>
-                            </td>
-                            <td class="text-muted small">
-                                <%= new Date(user.createdAt).toLocaleDateString() %>
-                            </td>
-                            <td>
-                                <form action="/superadmin/user/<%= user._id %>/role" method="POST"
-                                    class="d-flex gap-2 align-items-center">
-                                    <select name="role" class="form-select form-select-sm rounded-pill"
-                                        style="width: auto;">
-                                        <option value="user" <%=user.role==='user' ? 'selected' : '' %>>User</option>
-                                        <option value="admin" <%=user.role==='admin' ? 'selected' : '' %>>Admin</option>
-                                        <option value="superadmin" <%=user.role==='superadmin' ? 'selected' : '' %>
-                                            >Super Admin</option>
-                                    </select>
-                                    <button type="submit" class="btn btn-sm btn-primary rounded-pill px-3">
-                                        <i class="bi bi-check-lg"></i>
-                                    </button>
-                                </form>
-                            </td>
+    <!-- Users List -->
+    <div class="card shadow-sm border-0" style="border-radius: 15px;">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Joined</th>
+                            <th>Change Role</th>
+                            <th>Toggle</th>
                         </tr>
-                        <% }) %>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        <% users.forEach(u=> { %>
+                            <tr class="<%= !u.isActive ? 'table-danger' : '' %>">
+                                <td>
+                                    <strong>
+                                        <%= u.name %>
+                                    </strong>
+                                    <% if (u.restaurantName) { %>
+                                        <small class="d-block text-muted"><i class="bi bi-shop me-1"></i>
+                                            <%= u.restaurantName %>
+                                        </small>
+                                        <% } %>
+                                </td>
+                                <td>
+                                    <%= u.email %>
+                                </td>
+                                <td>
+                                    <span
+                                        class="badge bg-<%= u.role === 'superadmin' ? 'danger' : u.role === 'admin' ? 'warning' : u.role === 'owner' ? 'info' : 'secondary' %> rounded-pill">
+                                        <%= u.role %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span
+                                        class="badge bg-<%= u.isActive !== false ? 'success' : 'danger' %> rounded-pill">
+                                        <%= u.isActive !==false ? 'Active' : 'Inactive' %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <%= new Date(u.createdAt).toLocaleDateString() %>
+                                </td>
+                                <td>
+                                    <form action="/superadmin/user/<%= u._id %>/role" method="post"
+                                        class="d-flex gap-1">
+                                        <select name="role" class="form-select form-select-sm" style="width:110px;">
+                                            <option value="user" <%=u.role==='user' ? 'selected' : '' %>>User</option>
+                                            <option value="owner" <%=u.role==='owner' ? 'selected' : '' %>>Owner
+                                            </option>
+                                            <option value="admin" <%=u.role==='admin' ? 'selected' : '' %>>Admin
+                                            </option>
+                                            <option value="superadmin" <%=u.role==='superadmin' ? 'selected' : '' %>
+                                                >Super Admin</option>
+                                        </select>
+                                        <button class="btn btn-sm btn-outline-primary rounded-pill">Set</button>
+                                    </form>
+                                </td>
+                                <td>
+                                    <% if (u._id.toString() !==session.userId) { %>
+                                        <form action="/superadmin/user/<%= u._id %>/toggle" method="post">
+                                            <button
+                                                class="btn btn-sm btn-<%= u.isActive !== false ? 'outline-danger' : 'outline-success' %> rounded-pill">
+                                                <i
+                                                    class="bi bi-<%= u.isActive !== false ? 'lock' : 'unlock' %> me-1"></i>
+                                                <%= u.isActive !==false ? 'Deactivate' : 'Activate' %>
+                                            </button>
+                                        </form>
+                                        <% } else { %>
+                                            <span class="text-muted small">You</span>
+                                            <% } %>
+                                </td>
+                            </tr>
+                            <% }) %>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>

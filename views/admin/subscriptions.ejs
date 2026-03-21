@@ -1,53 +1,83 @@
-<div class="container-fluid py-4 px-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold"><i class="bi bi-arrow-repeat me-2"></i>Subscriptions</h2>
-        <a href="/admin" class="btn btn-outline-secondary rounded-pill"><i
-                class="bi bi-arrow-left me-1"></i>Dashboard</a>
-    </div>
+<div class="container py-4">
+    <h1 class="mb-4" style="color: #078930;"><i class="bi bi-arrow-repeat me-2"></i>Subscriptions</h1>
 
-    <div class="glass-card">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th>User</th>
-                        <th>Plan</th>
-                        <th>Status</th>
-                        <th>Payment</th>
-                        <th>Amount</th>
-                        <th>Start</th>
-                        <th>End</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% subscriptions.forEach(sub=> { %>
-                        <tr>
-                            <td>
-                                <%= sub.user ? sub.user.name : 'N/A' %>
-                            </td>
-                            <td class="fw-semibold">
-                                <%= sub.mealPlan ? sub.mealPlan.name : 'Unknown' %>
-                            </td>
-                            <td><span
-                                    class="badge bg-<%= sub.status==='active'?'success':sub.status==='cancelled'?'danger':'warning' %> rounded-pill">
-                                    <%= sub.status %>
-                                </span></td>
-                            <td><span
-                                    class="badge bg-<%= sub.paymentStatus==='paid'?'success':'warning' %> rounded-pill">
-                                    <%= sub.paymentStatus %>
-                                </span></td>
-                            <td class="fw-bold text-primary">$<%= sub.totalPaid.toFixed(2) %>
-                            </td>
-                            <td class="small">
-                                <%= new Date(sub.startDate).toLocaleDateString() %>
-                            </td>
-                            <td class="small">
-                                <%= sub.endDate ? new Date(sub.endDate).toLocaleDateString() : 'Ongoing' %>
-                            </td>
-                        </tr>
-                        <% }) %>
-                </tbody>
-            </table>
+    <div class="card shadow-sm border-0" style="border-radius: 15px;">
+        <div class="card-body">
+            <% if (subscriptions.length===0) { %>
+                <p class="text-muted">No subscriptions yet.</p>
+                <% } else { %>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Meal Plan</th>
+                                    <th>Status</th>
+                                    <th>Payment</th>
+                                    <th>Started</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% subscriptions.forEach(s=> { %>
+                                    <tr>
+                                        <td>
+                                            <strong>
+                                                <%= s.user ? s.user.name : 'N/A' %>
+                                            </strong>
+                                            <small class="d-block text-muted">
+                                                <%= s.user ? s.user.email : '' %>
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <strong>
+                                                <%= s.mealPlan ? s.mealPlan.name : 'Deleted Plan' %>
+                                            </strong>
+                                            <% if (s.mealPlan) { %>
+                                                <small class="d-block text-muted">
+                                                    <%= formatPrice(s.mealPlan.price) %> / <%= s.mealPlan.duration %>
+                                                </small>
+                                                <% } %>
+                                        </td>
+                                        <td>
+                                            <span
+                                                class="badge bg-<%= s.status === 'active' ? 'success' : s.status === 'paused' ? 'warning' : s.status === 'cancelled' ? 'danger' : 'secondary' %> rounded-pill">
+                                                <%= s.status %>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span
+                                                class="badge bg-<%= s.paymentStatus === 'paid' ? 'success' : 'warning' %> rounded-pill">
+                                                <%= s.paymentStatus %>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <%= new Date(s.startDate).toLocaleDateString() %>
+                                        </td>
+                                        <td>
+                                            <form action="/admin/subscription/<%= s._id %>/update" method="post"
+                                                class="d-flex gap-1">
+                                                <select name="status" class="form-select form-select-sm"
+                                                    style="width: 110px;">
+                                                    <option value="active" <%=s.status==='active' ? 'selected' : '' %>
+                                                        >Active</option>
+                                                    <option value="paused" <%=s.status==='paused' ? 'selected' : '' %>
+                                                        >Paused</option>
+                                                    <option value="cancelled" <%=s.status==='cancelled' ? 'selected'
+                                                        : '' %>>Cancelled</option>
+                                                    <option value="expired" <%=s.status==='expired' ? 'selected' : '' %>
+                                                        >Expired</option>
+                                                </select>
+                                                <button
+                                                    class="btn btn-sm btn-outline-primary rounded-pill">Update</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                    <% } %>
         </div>
     </div>
 </div>

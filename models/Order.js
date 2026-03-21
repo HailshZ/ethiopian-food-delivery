@@ -69,6 +69,14 @@ const orderSchema = new mongoose.Schema({
   isReviewed: {
     type: Boolean,
     default: false
+  },
+  deliveryFee: {
+    type: Number,
+    default: 0
+  },
+  deliveryDistance: {
+    type: Number,
+    default: 0
   }
 }, {
   timestamps: true

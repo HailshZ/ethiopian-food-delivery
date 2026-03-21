@@ -1,0 +1,51 @@
+<div class="container py-4">
+    <a href="/owner/dashboard" class="btn btn-outline-secondary rounded-pill mb-3"><i
+            class="bi bi-arrow-left me-1"></i>Back to Dashboard</a>
+    <h2 style="color: #078930;"><i class="bi bi-calendar-plus me-2"></i>Add Meal Plan</h2>
+    <p class="text-muted mb-4">Your meal plan will be submitted for admin approval.</p>
+
+    <div class="card shadow-sm border-0" style="border-radius: 15px;">
+        <div class="card-body p-4">
+            <form action="/owner/meal-plan/add" method="post">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Plan Name (English) *</label>
+                        <input type="text" name="name" class="form-control" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Plan Name (Amharic)</label>
+                        <input type="text" name="nameAm" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Description (English)</label>
+                        <textarea name="description" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Description (Amharic)</label>
+                        <textarea name="descriptionAm" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Price *</label>
+                        <input type="number" name="price" class="form-control" step="0.01" min="1" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Duration</label>
+                        <select name="duration" class="form-select">
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Image URL</label>
+                        <input type="url" name="imageUrl" class="form-control" placeholder="https://...">
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-success rounded-pill px-4">
+                        <i class="bi bi-send me-1"></i>Submit for Approval
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

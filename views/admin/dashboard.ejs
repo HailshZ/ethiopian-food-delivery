@@ -3,8 +3,8 @@
 
   <div class="row g-4 mb-4">
     <div class="col-md-3">
-      <div class="card text-white bg-primary shadow-sm">
-        <div class="card-body">
+      <div class="card text-white bg-primary shadow-sm" style="border-radius: 15px;">
+        <div class="card-body text-center">
           <h5 class="card-title">Total Orders</h5>
           <p class="display-4">
             <%= totalOrders %>
@@ -13,19 +13,18 @@
       </div>
     </div>
     <div class="col-md-3">
-      <div class="card text-white bg-success shadow-sm">
-        <div class="card-body">
+      <div class="card text-white bg-success shadow-sm" style="border-radius: 15px;">
+        <div class="card-body text-center">
           <h5 class="card-title">Revenue</h5>
           <p class="display-4">
-            <%= settings.currencySymbol || 'ETB' %>
-              <%= totalRevenue.toFixed(2) %>
+            <%= formatPrice(totalRevenue) %>
           </p>
         </div>
       </div>
     </div>
     <div class="col-md-3">
-      <div class="card text-white bg-warning shadow-sm">
-        <div class="card-body">
+      <div class="card text-white bg-warning shadow-sm" style="border-radius: 15px;">
+        <div class="card-body text-center">
           <h5 class="card-title">Menu Items</h5>
           <p class="display-4">
             <%= totalDishes %>
@@ -34,8 +33,8 @@
       </div>
     </div>
     <div class="col-md-3">
-      <div class="card text-white bg-info shadow-sm">
-        <div class="card-body">
+      <div class="card text-white bg-info shadow-sm" style="border-radius: 15px;">
+        <div class="card-body text-center">
           <h5 class="card-title">Users</h5>
           <p class="display-4">
             <%= totalUsers %>
@@ -47,7 +46,7 @@
 
   <div class="row">
     <div class="col-md-8">
-      <div class="card shadow-sm">
+      <div class="card shadow-sm border-0" style="border-radius: 15px;">
         <div class="card-header bg-secondary text-white">
           <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Recent Orders</h5>
         </div>
@@ -75,15 +74,12 @@
                           <%= order.user ? order.user.name : 'N/A' %>
                         </td>
                         <td>
-                          <%= settings.currencySymbol || 'ETB' %>
-                            <%= order.totalAmount.toFixed(2) %>
+                          <%= formatPrice(order.totalAmount) %>
                         </td>
-                        <td>
-                          <span
+                        <td><span
                             class="badge bg-<%= order.orderStatus === 'delivered' ? 'success' : (order.orderStatus === 'cancelled' ? 'danger' : 'warning') %>">
                             <%= order.orderStatus %>
-                          </span>
-                        </td>
+                          </span></td>
                         <td>
                           <%= new Date(order.createdAt).toLocaleDateString() %>
                         </td>
@@ -97,27 +93,36 @@
       </div>
     </div>
     <div class="col-md-4">
-      <div class="card shadow-sm">
+      <div class="card shadow-sm border-0" style="border-radius: 15px;">
         <div class="card-header bg-secondary text-white">
           <h5 class="mb-0"><i class="bi bi-gear me-2"></i>Quick Actions</h5>
         </div>
         <div class="card-body">
-          <a href="/admin/orders" class="btn btn-outline-primary w-100 mb-2">
-            <i class="bi bi-list-check me-2"></i>Manage Orders
+          <a href="/admin/orders" class="btn btn-outline-primary w-100 mb-2"><i class="bi bi-list-check me-2"></i>Manage
+            Orders</a>
+          <a href="/admin/menu" class="btn btn-outline-success w-100 mb-2"><i
+              class="bi bi-menu-button-wide me-2"></i>Manage Menu</a>
+          <a href="/admin/approvals" class="btn btn-outline-warning w-100 mb-2 position-relative">
+            <i class="bi bi-check2-square me-2"></i>Pending Approvals
+            <% if (pendingApprovals> 0) { %>
+              <span class="badge bg-danger rounded-pill position-absolute" style="top:-5px;right:-5px;">
+                <%= pendingApprovals %>
+              </span>
+              <% } %>
           </a>
-          <a href="/admin/menu" class="btn btn-outline-success w-100 mb-2">
-            <i class="bi bi-menu-button-wide me-2"></i>Manage Menu
-          </a>
-          <a href="/admin/dish/add" class="btn btn-outline-warning w-100 mb-2">
-            <i class="bi bi-plus-circle me-2"></i>Add New Dish
-          </a>
-          <a href="/admin/promos" class="btn btn-outline-info w-100 mb-2">
-            <i class="bi bi-tags me-2"></i>Promo Codes (<%= totalPromos %>)
-          </a>
+          <a href="/admin/owners" class="btn btn-outline-info w-100 mb-2"><i class="bi bi-shop me-2"></i>Restaurant
+            Owners (<%= totalOwners %>)</a>
+          <a href="/admin/meal-plans" class="btn btn-outline-secondary w-100 mb-2"><i
+              class="bi bi-calendar-week me-2"></i>Meal Plans</a>
+          <a href="/admin/subscriptions" class="btn btn-outline-dark w-100 mb-2"><i
+              class="bi bi-arrow-repeat me-2"></i>Subscriptions</a>
+          <a href="/admin/promos" class="btn btn-outline-info w-100 mb-2"><i class="bi bi-tags me-2"></i>Promo Codes (
+            <%= totalPromos %>)</a>
           <% if (session.role==='superadmin' ) { %>
-            <a href="/superadmin/settings" class="btn btn-outline-danger w-100 mb-2">
-              <i class="bi bi-shield-lock me-2"></i>System Settings
-            </a>
+            <a href="/superadmin/settings" class="btn btn-outline-danger w-100 mb-2"><i
+                class="bi bi-shield-lock me-2"></i>System Settings</a>
+            <a href="/superadmin/users" class="btn btn-outline-danger w-100 mb-2"><i
+                class="bi bi-people me-2"></i>Manage Users</a>
             <% } %>
         </div>
       </div>

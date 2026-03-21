@@ -1,0 +1,163 @@
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 style="color: #078930;"><i class="bi bi-shop me-2"></i>Owner Dashboard</h1>
+        <span class="badge bg-success rounded-pill px-3 py-2" style="font-size: 0.9rem;">
+            <i class="bi bi-building me-1"></i>
+            <%= session.restaurantName || session.userName %>
+        </span>
+    </div>
+
+    <!-- Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center p-3 bg-primary text-white" style="border-radius: 15px;">
+                <h3>
+                    <%= totalDishes %>
+                </h3>
+                <small>Total Dishes</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center p-3 bg-success text-white" style="border-radius: 15px;">
+                <h3>
+                    <%= approvedDishes %>
+                </h3>
+                <small>Approved</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center p-3 bg-warning text-dark" style="border-radius: 15px;">
+                <h3>
+                    <%= pendingDishes %>
+                </h3>
+                <small>Pending</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center p-3 bg-danger text-white" style="border-radius: 15px;">
+                <h3>
+                    <%= rejectedDishes %>
+                </h3>
+                <small>Rejected</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="mb-4 d-flex gap-2 flex-wrap">
+        <a href="/owner/dish/add" class="btn btn-success rounded-pill"><i class="bi bi-plus-circle me-1"></i>Add
+            Dish</a>
+        <a href="/owner/meal-plan/add" class="btn btn-outline-primary rounded-pill"><i
+                class="bi bi-calendar-plus me-1"></i>Add Meal Plan</a>
+    </div>
+
+    <!-- Dishes -->
+    <div class="card shadow-sm border-0 mb-4" style="border-radius: 15px;">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="bi bi-egg-fried me-2"></i>My Dishes</h5>
+        </div>
+        <div class="card-body">
+            <% if (dishes.length===0) { %>
+                <p class="text-muted">No dishes yet. Add your first dish!</p>
+                <% } else { %>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Category</th>
+                                    <th>Price</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% dishes.forEach(d=> { %>
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <img src="<%= d.imageUrl %>" class="rounded-2"
+                                                    style="width:40px;height:40px;object-fit:cover;"
+                                                    onerror="this.src='https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=100'">
+                                                <div>
+                                                    <strong>
+                                                        <%= d.name %>
+                                                    </strong>
+                                                    <small class="d-block text-muted">
+                                                        <%= d.nameAm %>
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td><span class="badge bg-secondary rounded-pill">
+                                                <%= d.category %>
+                                            </span></td>
+                                        <td class="fw-bold">
+                                            <%= formatPrice(d.price) %>
+                                        </td>
+                                        <td>
+                                            <span
+                                                class="badge bg-<%= d.approvalStatus === 'approved' ? 'success' : d.approvalStatus === 'pending' ? 'warning' : 'danger' %> rounded-pill">
+                                                <%= d.approvalStatus %>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a href="/owner/dish/<%= d._id %>/edit"
+                                                class="btn btn-sm btn-outline-primary rounded-pill"><i
+                                                    class="bi bi-pencil"></i></a>
+                                        </td>
+                                    </tr>
+                                    <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                    <% } %>
+        </div>
+    </div>
+
+    <!-- Meal Plans -->
+    <div class="card shadow-sm border-0" style="border-radius: 15px;">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="bi bi-calendar-week me-2"></i>My Meal Plans</h5>
+        </div>
+        <div class="card-body">
+            <% if (mealPlans.length===0) { %>
+                <p class="text-muted">No meal plans yet.</p>
+                <% } else { %>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Price</th>
+                                    <th>Duration</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% mealPlans.forEach(p=> { %>
+                                    <tr>
+                                        <td><strong>
+                                                <%= p.name %>
+                                            </strong></td>
+                                        <td class="fw-bold">
+                                            <%= formatPrice(p.price) %>
+                                        </td>
+                                        <td>
+                                            <%= p.duration %>
+                                        </td>
+                                        <td>
+                                            <span
+                                                class="badge bg-<%= p.approvalStatus === 'approved' ? 'success' : p.approvalStatus === 'pending' ? 'warning' : 'danger' %> rounded-pill">
+                                                <%= p.approvalStatus %>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                    <% } %>
+        </div>
+    </div>
+</div>

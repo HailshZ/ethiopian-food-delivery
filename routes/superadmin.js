@@ -1,10 +1,11 @@
-// routes/superadmin.js – Super Admin system settings and user management
+// routes/superadmin.js – Super Admin system settings, admin management, and user management
 const express = require('express');
 const router = express.Router();
 const { isLoggedIn } = require('../middleware/auth');
 const isSuperAdmin = require('../middleware/superadmin');
 const SystemSettings = require('../models/SystemSettings');
 const User = require('../models/User');
+const bcrypt = require('bcrypt');
 
 // Apply both middlewares
 router.use(isLoggedIn, isSuperAdmin);
@@ -27,17 +28,25 @@ router.get('/settings', async (req, res) => {
 // POST /superadmin/settings
 router.post('/settings', async (req, res) => {
     try {
-        const { systemName, currency, currencySymbol, contactEmail, contactPhone, address, deliveryFee, minOrderAmount } = req.body;
+        const { systemName, currency, currencySymbol, currencyPosition, contactEmail, contactPhone, address, deliveryFeePerKm, baseDeliveryFee, minOrderAmount, restaurantLat, restaurantLng } = req.body;
         let settings = await SystemSettings.getSettings();
 
         settings.systemName = systemName || settings.systemName;
         settings.currency = currency || settings.currency;
         settings.currencySymbol = currencySymbol || settings.currencySymbol;
+        settings.currencyPosition = currencyPosition || settings.currencyPosition;
         settings.contactEmail = contactEmail || settings.contactEmail;
         settings.contactPhone = contactPhone || settings.contactPhone;
         settings.address = address || settings.address;
-        settings.deliveryFee = parseFloat(deliveryFee) || settings.deliveryFee;
+        settings.deliveryFeePerKm = parseFloat(deliveryFeePerKm) || settings.deliveryFeePerKm;
+        settings.baseDeliveryFee = parseFloat(baseDeliveryFee) || settings.baseDeliveryFee;
         settings.minOrderAmount = parseFloat(minOrderAmount) || settings.minOrderAmount;
+        if (restaurantLat && restaurantLng) {
+            settings.restaurantLocation = {
+                lat: parseFloat(restaurantLat),
+                lng: parseFloat(restaurantLng)
+            };
+        }
 
         await settings.save();
         req.flash('success', 'System settings updated successfully');
@@ -64,11 +73,70 @@ router.get('/users', async (req, res) => {
     }
 });
 
-// POST /superadmin/user/:id/role
+// POST /superadmin/admin/add – Add new admin
+router.post('/admin/add', async (req, res) => {
+    try {
+        const { name, email, password, phone } = req.body;
+        if (!name || !email || !password) {
+            req.flash('error', 'Name, email and password are required');
+            return res.redirect('/superadmin/users');
+        }
+
+        const exists = await User.findOne({ email: email.toLowerCase() });
+        if (exists) {
+            req.flash('error', 'Email already registered');
+            return res.redirect('/superadmin/users');
+        }
+
+        const admin = new User({
+            name,
+            email: email.toLowerCase(),
+            password,
+            phone: phone || '',
+            isAdmin: true,
+            role: 'admin'
+        });
+        await admin.save();
+        req.flash('success', `Admin "${name}" created successfully`);
+        res.redirect('/superadmin/users');
+    } catch (err) {
+        console.error(err);
+        req.flash('error', 'Error creating admin: ' + err.message);
+        res.redirect('/superadmin/users');
+    }
+});
+
+// POST /superadmin/user/:id/toggle – Activate/deactivate user
+router.post('/user/:id/toggle', async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            req.flash('error', 'User not found');
+            return res.redirect('/superadmin/users');
+        }
+
+        // Prevent deactivating yourself
+        if (user._id.toString() === req.session.userId) {
+            req.flash('error', 'Cannot deactivate your own account');
+            return res.redirect('/superadmin/users');
+        }
+
+        user.isActive = !user.isActive;
+        await user.save();
+        req.flash('success', `User ${user.isActive ? 'activated' : 'deactivated'} successfully`);
+        res.redirect('/superadmin/users');
+    } catch (err) {
+        console.error(err);
+        req.flash('error', 'Error toggling user status');
+        res.redirect('/superadmin/users');
+    }
+});
+
+// POST /superadmin/user/:id/role – Change user role
 router.post('/user/:id/role', async (req, res) => {
     try {
         const { role } = req.body;
-        if (!['user', 'admin', 'superadmin'].includes(role)) {
+        if (!['user', 'admin', 'superadmin', 'owner'].includes(role)) {
             req.flash('error', 'Invalid role');
             return res.redirect('/superadmin/users');
         }

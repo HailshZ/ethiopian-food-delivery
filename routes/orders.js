@@ -51,6 +51,44 @@ router.post('/api/validate-promo', isLoggedIn, async (req, res) => {
     }
 });
 
+// Haversine formula – calculate distance in km
+function haversineDistance(lat1, lng1, lat2, lng2) {
+    const R = 6371; // Earth's radius in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+}
+
+// POST /api/calculate-delivery – Calculate delivery fee from customer location
+router.post('/api/calculate-delivery', isLoggedIn, async (req, res) => {
+    try {
+        const { lat, lng } = req.body;
+        if (!lat || !lng) return res.status(400).json({ error: 'Location required' });
+
+        const SystemSettings = require('../models/SystemSettings');
+        const settings = await SystemSettings.getSettings();
+        const rLat = settings.restaurantLocation.lat;
+        const rLng = settings.restaurantLocation.lng;
+
+        const distance = haversineDistance(rLat, rLng, parseFloat(lat), parseFloat(lng));
+        const deliveryFee = settings.baseDeliveryFee + (distance * settings.deliveryFeePerKm);
+
+        res.json({
+            success: true,
+            distance: Math.round(distance * 10) / 10,
+            deliveryFee: Math.round(deliveryFee * 100) / 100,
+            baseDeliveryFee: settings.baseDeliveryFee,
+            perKmRate: settings.deliveryFeePerKm
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // POST /api/initiate-payment – Chapa payment with promo support
 router.post('/api/initiate-payment', isLoggedIn, async (req, res) => {
     const { paymentMethod, amount, cart, shippingAddress, promoCode } = req.body;

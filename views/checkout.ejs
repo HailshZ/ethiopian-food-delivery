@@ -1,9 +1,11 @@
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <div class="container py-5">
   <h1 class="fw-bold mb-5 text-center" style="color: #078930;">
     <%= t('checkout') %>
   </h1>
 
-  <!-- Hidden data container for cart items -->
   <div id="cart-data" data-cart='<%- JSON.stringify(cart.items) %>' style="display: none;"></div>
 
   <div class="row g-4">
@@ -51,6 +53,24 @@
               </div>
             </div>
 
+            <!-- Delivery Location Map -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold text-secondary"><i class="bi bi-geo-alt-fill me-1"
+                  style="color: #078930;"></i>Delivery Location</label>
+              <p class="text-muted small mb-2">Click on the map to set your delivery location. Delivery fee is
+                calculated based on distance.</p>
+              <div id="delivery-map" style="height: 280px; border-radius: 15px; border: 2px solid #dee2e6; z-index: 1;">
+              </div>
+              <input type="hidden" id="delivery-lat" name="deliveryLat">
+              <input type="hidden" id="delivery-lng" name="deliveryLng">
+              <div id="delivery-info" class="mt-2" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded">
+                  <span><i class="bi bi-truck me-1"></i>Distance: <strong id="delivery-distance">-</strong> km</span>
+                  <span>Fee: <strong id="delivery-fee-display" style="color: #078930;">-</strong></span>
+                </div>
+              </div>
+            </div>
+
             <hr class="my-4" style="border-top: 2px dashed #dee2e6;">
 
             <h5 class="mb-3" style="color: #2c3e50;"><i class="bi bi-credit-card me-2"
@@ -88,8 +108,7 @@
               style="background: linear-gradient(135deg, #078930, #056b24); border: none;">
               <i class="bi bi-lock-fill me-2"></i>
               <%= t('pay_now') %> <span id="pay-amount">
-                  <%= settings.currencySymbol || 'ETB' %>
-                    <%= cart.totalPrice.toFixed(2) %>
+                  <%= formatPrice(cart.totalPrice) %>
                 </span>
             </button>
           </form>
@@ -116,8 +135,7 @@
                 <span class="text-secondary small d-block">x<%= item.qty %></span>
               </div>
               <span class="fw-bold" style="color: #078930;">
-                <%= settings.currencySymbol || 'ETB' %>
-                  <%= item.totalPrice.toFixed(2) %>
+                <%= formatPrice(item.totalPrice) %>
               </span>
             </div>
             <% }) %>
@@ -127,8 +145,7 @@
                   <%= t('subtotal') %>:
                 </span>
                 <span class="fw-bold">
-                  <%= settings.currencySymbol || 'ETB' %>
-                    <%= cart.totalPrice.toFixed(2) %>
+                  <%= formatPrice(cart.totalPrice) %>
                 </span>
               </div>
 
@@ -156,7 +173,7 @@
                 <span>
                   <%= t('delivery_fee') %>:
                 </span>
-                <span class="fw-bold text-success">Free</span>
+                <span class="fw-bold" id="summary-delivery-fee" style="color: #078930;">Pick location on map</span>
               </div>
               <hr>
               <div class="d-flex justify-content-between">
@@ -164,8 +181,7 @@
                   <%= t('total') %>:
                 </span>
                 <span class="h5" style="color: #078930;" id="total-display">
-                  <%= settings.currencySymbol || 'ETB' %>
-                    <%= cart.totalPrice.toFixed(2) %>
+                  <%= formatPrice(cart.totalPrice) %>
                 </span>
               </div>
         </div>
@@ -176,8 +192,11 @@
 
 <script>
   const currencySymbol = '<%= settings.currencySymbol || "ETB" %>';
+  const currencyPosition = '<%= settings.currencyPosition || "left" %>';
+  function fmtPrice(v) { const val = parseFloat(v).toFixed(2); return currencyPosition === 'right' ? val + ' ' + currencySymbol : currencySymbol + ' ' + val; }
   let originalTotal = <%= cart.totalPrice %>;
   let currentDiscount = 0;
+  let currentDeliveryFee = 0;
   let appliedPromoCode = '';
 
   function toggleForms() {
@@ -295,4 +314,62 @@
       button.innerHTML = `<i class="bi bi-lock-fill me-2"></i><%= t('pay_now') %> <span id="pay-amount">${currencySymbol} ${(originalTotal - currentDiscount).toFixed(2)}</span>`;
     }
   });
+
+  // Leaflet Map Initialization
+  const restaurantLat = <%= settings.restaurantLocation ?settings.restaurantLocation.lat: 9.0192 %>;
+  const restaurantLng = <%= settings.restaurantLocation ?settings.restaurantLocation.lng: 38.7525 %>;
+
+  const map = L.map('delivery-map').setView([restaurantLat, restaurantLng], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors',
+    maxZoom: 19
+  }).addTo(map);
+
+  // Restaurant marker
+  L.marker([restaurantLat, restaurantLng], {
+    icon: L.divIcon({ className: 'restaurant-marker', html: '<div style="background:#078930;color:white;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,0.3);"><i class="bi bi-shop"></i></div>' })
+  }).addTo(map).bindPopup('Restaurant Location');
+
+  let deliveryMarker = null;
+
+  map.on('click', async function (e) {
+    const { lat, lng } = e.latlng;
+
+    if (deliveryMarker) map.removeLayer(deliveryMarker);
+    deliveryMarker = L.marker([lat, lng], {
+      icon: L.divIcon({ className: 'delivery-marker', html: '<div style="background:#e74c3c;color:white;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,0.3);"><i class="bi bi-geo-alt-fill"></i></div>' })
+    }).addTo(map).bindPopup('Delivery Location').openPopup();
+
+    document.getElementById('delivery-lat').value = lat;
+    document.getElementById('delivery-lng').value = lng;
+
+    // Calculate delivery fee
+    try {
+      const resp = await fetch('/api/calculate-delivery', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lat, lng })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        currentDeliveryFee = data.deliveryFee;
+        document.getElementById('delivery-distance').textContent = data.distance;
+        document.getElementById('delivery-fee-display').textContent = fmtPrice(data.deliveryFee);
+        document.getElementById('delivery-info').style.display = 'block';
+        document.getElementById('summary-delivery-fee').textContent = fmtPrice(data.deliveryFee);
+        updateTotals();
+      }
+    } catch (err) {
+      console.error('Delivery calculation error:', err);
+    }
+  });
+
+  function updateTotals() {
+    const finalTotal = originalTotal - currentDiscount + currentDeliveryFee;
+    document.getElementById('total-display').textContent = fmtPrice(finalTotal);
+    document.getElementById('pay-amount').textContent = fmtPrice(finalTotal);
+  }
+
+  // Fix map rendering after card becomes visible
+  setTimeout(() => { map.invalidateSize(); }, 300);
 </script>

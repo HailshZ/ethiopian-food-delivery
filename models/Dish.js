@@ -46,6 +46,16 @@ const dishSchema = new mongoose.Schema({
     type: String,
     enum: ['mild', 'medium', 'hot', 'extra-hot', ''],
     default: ''
+  },
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
+  approvalStatus: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'approved'
   }
 }, {
   timestamps: true

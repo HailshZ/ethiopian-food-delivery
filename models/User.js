@@ -33,8 +33,17 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['user', 'admin', 'superadmin'],
+    enum: ['user', 'admin', 'superadmin', 'owner'],
     default: 'user'
+  },
+  isActive: {
+    type: Boolean,
+    default: true
+  },
+  restaurantName: {
+    type: String,
+    trim: true,
+    default: ''
   }
 }, {
   timestamps: true

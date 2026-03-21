@@ -22,7 +22,9 @@ const mealPlanSchema = new mongoose.Schema({
     sunday: [mealSlotSchema]
   },
   imageUrl: { type: String, default: '' },
-  isActive: { type: Boolean, default: true }
+  isActive: { type: Boolean, default: true },
+  owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  approvalStatus: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'approved' }
 }, { timestamps: true });
 
 module.exports = mongoose.model('MealPlan', mealPlanSchema);
