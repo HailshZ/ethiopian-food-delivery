@@ -146,6 +146,7 @@ mongoose.connect(process.env.MONGO_URI)
           name: 'Admin',
           email: 'admin@ethiofood.com',
           password: 'admin123',
+          phone: '+251900000001',
           isAdmin: true,
           role: 'admin'
         });
@@ -168,6 +169,7 @@ mongoose.connect(process.env.MONGO_URI)
           name: 'Super Admin',
           email: 'superadmin@ethiofood.com',
           password: 'super123',
+          phone: '+251900000000',
           isAdmin: true,
           role: 'superadmin'
         });
@@ -193,6 +195,10 @@ mongoose.connect(process.env.MONGO_URI)
     // Start server
     app.listen(PORT, () => {
       console.log(`🚀 Server running on http://localhost:${PORT}`);
+
+      // Start the notification scheduler
+      const { startScheduler } = require('./utils/scheduler');
+      startScheduler();
     });
   })
   .catch(err => {

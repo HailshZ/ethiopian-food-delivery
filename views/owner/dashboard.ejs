@@ -1,10 +1,21 @@
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 style="color: #078930;"><i class="bi bi-shop me-2"></i>Owner Dashboard</h1>
-        <span class="badge bg-success rounded-pill px-3 py-2" style="font-size: 0.9rem;">
-            <i class="bi bi-building me-1"></i>
-            <%= session.restaurantName || session.userName %>
-        </span>
+        <div class="d-flex align-items-center gap-3">
+            <a href="/owner/notifications" class="position-relative text-decoration-none" title="Notifications">
+                <i class="bi bi-bell-fill" style="font-size: 1.5rem; color: #078930;"></i>
+                <% if (typeof unreadNotifications !=='undefined' && unreadNotifications> 0) { %>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                        style="font-size: 0.65rem;">
+                        <%= unreadNotifications> 99 ? '99+' : unreadNotifications %>
+                    </span>
+                    <% } %>
+            </a>
+            <span class="badge bg-success rounded-pill px-3 py-2" style="font-size: 0.9rem;">
+                <i class="bi bi-building me-1"></i>
+                <%= session.restaurantName || session.userName %>
+            </span>
+        </div>
     </div>
 
     <!-- Stats -->

@@ -6,6 +6,7 @@ const isOwner = require('../middleware/owner');
 const Dish = require('../models/Dish');
 const MealPlan = require('../models/MealPlan');
 const Order = require('../models/Order');
+const Notification = require('../models/Notification');
 
 router.use(isLoggedIn, isOwner);
 
@@ -20,6 +21,7 @@ router.get('/dashboard', async (req, res) => {
         const approvedDishes = dishes.filter(d => d.approvalStatus === 'approved').length;
         const pendingDishes = dishes.filter(d => d.approvalStatus === 'pending').length;
         const rejectedDishes = dishes.filter(d => d.approvalStatus === 'rejected').length;
+        const unreadNotifications = await Notification.countDocuments({ owner: ownerId, isRead: false });
 
         res.render('owner/dashboard', {
             title: 'Owner Dashboard',
@@ -28,7 +30,8 @@ router.get('/dashboard', async (req, res) => {
             totalDishes,
             approvedDishes,
             pendingDishes,
-            rejectedDishes
+            rejectedDishes,
+            unreadNotifications
         });
     } catch (err) {
         console.error(err);
@@ -154,6 +157,51 @@ router.post('/meal-plan/add', async (req, res) => {
         console.error(err);
         req.flash('error', 'Error adding meal plan: ' + err.message);
         res.redirect('/owner/meal-plan/add');
+    }
+});
+
+// GET /owner/notifications
+router.get('/notifications', async (req, res) => {
+    try {
+        const notifications = await Notification.find({ owner: req.session.userId })
+            .sort({ createdAt: -1 })
+            .limit(50);
+        const unreadNotifications = notifications.filter(n => !n.isRead).length;
+        res.render('owner/notifications', {
+            title: 'Notifications',
+            notifications,
+            unreadNotifications
+        });
+    } catch (err) {
+        console.error(err);
+        req.flash('error', 'Error loading notifications');
+        res.redirect('/owner/dashboard');
+    }
+});
+
+// POST /owner/notifications/read-all
+router.post('/notifications/read-all', async (req, res) => {
+    try {
+        await Notification.updateMany(
+            { owner: req.session.userId, isRead: false },
+            { isRead: true }
+        );
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// POST /owner/notifications/:id/read
+router.post('/notifications/:id/read', async (req, res) => {
+    try {
+        await Notification.findOneAndUpdate(
+            { _id: req.params.id, owner: req.session.userId },
+            { isRead: true }
+        );
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
 });
 

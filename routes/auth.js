@@ -16,8 +16,8 @@ router.post('/register', async (req, res) => {
     try {
         const { name, email, password, password2, phone } = req.body;
         let errors = [];
-        if (!name || !email || !password || !password2) {
-            errors.push({ msg: 'Please fill in all required fields' });
+        if (!name || !phone || !password || !password2) {
+            errors.push({ msg: 'Please fill in all required fields (name, phone, password)' });
         }
         if (password !== password2) {
             errors.push({ msg: 'Passwords do not match' });
@@ -28,12 +28,25 @@ router.post('/register', async (req, res) => {
         if (errors.length > 0) {
             return res.render('auth/register', { title: 'Register', errors, name, email, phone });
         }
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            req.flash('error', 'Email is already registered');
+        // Check for existing phone
+        const existingPhone = await User.findOne({ phone });
+        if (existingPhone) {
+            req.flash('error', 'Phone number is already registered');
             return res.redirect('/register');
         }
-        const newUser = new User({ name, email, password, phone });
+        // Check for existing email if provided
+        if (email && email.trim()) {
+            const existingEmail = await User.findOne({ email: email.trim().toLowerCase() });
+            if (existingEmail) {
+                req.flash('error', 'Email is already registered');
+                return res.redirect('/register');
+            }
+        }
+        const userData = { name, password, phone };
+        if (email && email.trim()) {
+            userData.email = email.trim();
+        }
+        const newUser = new User(userData);
         await newUser.save();
         req.flash('success', 'You are now registered. Please log in.');
         res.redirect('/login');
@@ -52,15 +65,19 @@ router.get('/login', (req, res) => {
 // POST /login
 router.post('/login', async (req, res) => {
     try {
-        const { email, password } = req.body;
-        const user = await User.findOne({ email });
+        const { identifier, password } = req.body;
+        // Try to find user by email or phone
+        let user = await User.findOne({ email: identifier.trim().toLowerCase() });
         if (!user) {
-            req.flash('error', 'Invalid email or password');
+            user = await User.findOne({ phone: identifier.trim() });
+        }
+        if (!user) {
+            req.flash('error', 'Invalid email/phone or password');
             return res.redirect('/login');
         }
         const isMatch = await user.comparePassword(password);
         if (!isMatch) {
-            req.flash('error', 'Invalid email or password');
+            req.flash('error', 'Invalid email/phone or password');
             return res.redirect('/login');
         }
         // Block deactivated accounts

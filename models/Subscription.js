@@ -21,7 +21,8 @@ const subscriptionSchema = new mongoose.Schema({
         default: 'pending'
     },
     chapaTxRef: { type: String },
-    totalPaid: { type: Number, default: 0 }
+    totalPaid: { type: Number, default: 0 },
+    deliveryTime: { type: String, default: '12:00' }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Subscription', subscriptionSchema);

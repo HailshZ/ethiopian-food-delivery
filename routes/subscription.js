@@ -55,7 +55,7 @@ router.post('/api/subscribe', isLoggedIn, async (req, res) => {
         const response = await chapa.initialize({
             amount: plan.price,
             currency: 'ETB',
-            email: user.email,
+            email: user.email || `user-${user.phone || user._id}@ethiofood.local`,
             first_name: user.name.split(' ')[0],
             last_name: user.name.split(' ').slice(1).join(' ') || 'Customer',
             phone_number: user.phone || '0911000000',

@@ -4,6 +4,8 @@ const router = express.Router();
 const Order = require('../models/Order');
 const User = require('../models/User');
 const PromoCode = require('../models/PromoCode');
+const Dish = require('../models/Dish');
+const Notification = require('../models/Notification');
 const cartHelper = require('../middleware/cart');
 const { isLoggedIn } = require('../middleware/auth');
 const Chapa = require('chapa-nodejs').Chapa;
@@ -139,7 +141,7 @@ router.post('/api/initiate-payment', isLoggedIn, async (req, res) => {
         const formattedPhone = '0911000000';
 
         const customerInfo = {
-            email: String(user.email),
+            email: String(user.email || `user-${user.phone || user._id}@ethiofood.local`),
             first_name: String(user.name.split(' ')[0] || 'Customer'),
             last_name: String(user.name.split(' ').slice(1).join(' ') || 'Name'),
             phone_number: formattedPhone
@@ -211,6 +213,27 @@ router.post('/api/initiate-payment', isLoggedIn, async (req, res) => {
                 }]
             });
             await order.save();
+
+            // Notify dish owners about the new order
+            try {
+                const dishIds = cart.map(item => item.dishId).filter(Boolean);
+                if (dishIds.length > 0) {
+                    const dishes = await Dish.find({ _id: { $in: dishIds }, owner: { $ne: null } });
+                    const ownerIds = [...new Set(dishes.map(d => d.owner.toString()))];
+                    for (const ownerId of ownerIds) {
+                        const ownerDishes = dishes.filter(d => d.owner.toString() === ownerId);
+                        const dishNames = ownerDishes.map(d => d.name).join(', ');
+                        await Notification.create({
+                            owner: ownerId,
+                            type: 'new_order',
+                            message: `🛒 New order received! Items: ${dishNames}. Total: ${finalAmount.toFixed(2)}`,
+                            relatedOrder: order._id
+                        });
+                    }
+                }
+            } catch (notifErr) {
+                console.error('Notification error:', notifErr.message);
+            }
 
             res.json({
                 success: true,

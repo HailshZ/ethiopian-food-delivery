@@ -20,20 +20,22 @@
             <% }) %>
               <% } %>
 
-                <form action="/login" method="post">
+                <form action="/login" method="post" id="loginForm" novalidate>
                   <div class="mb-3">
-                    <label class="form-label fw-semibold"><i class="bi bi-envelope me-1"></i>
-                      <%= t('email') %>
+                    <label class="form-label fw-semibold"><i class="bi bi-person-badge me-1"></i>
+                      <%= t('email_or_phone') %>
                     </label>
-                    <input type="email" name="email" class="form-control rounded-3 py-2"
-                      placeholder="<%= t('email_placeholder') %>" required>
+                    <input type="text" name="identifier" id="loginIdentifier" class="form-control rounded-3 py-2"
+                      placeholder="<%= t('email_or_phone_placeholder') %>" required>
+                    <div class="invalid-feedback" id="identifierError">Please enter a valid email or phone number.</div>
                   </div>
                   <div class="mb-4">
                     <label class="form-label fw-semibold"><i class="bi bi-lock me-1"></i>
                       <%= t('password') %>
                     </label>
-                    <input type="password" name="password" class="form-control rounded-3 py-2"
+                    <input type="password" name="password" id="loginPassword" class="form-control rounded-3 py-2"
                       placeholder="<%= t('password_placeholder') %>" required>
+                    <div class="invalid-feedback">Password is required.</div>
                   </div>
                   <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-bold mb-3">
                     <i class="bi bi-box-arrow-in-right me-2"></i>
@@ -49,3 +51,75 @@
     </div>
   </div>
 </div>
+
+<script>
+  (function () {
+    const form = document.getElementById('loginForm');
+    const identifierInput = document.getElementById('loginIdentifier');
+    const passwordInput = document.getElementById('loginPassword');
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^(\+251|0)(9|7)\d{8}$/;
+
+    function setValid(input) {
+      input.classList.remove('is-invalid');
+      input.classList.add('is-valid');
+    }
+
+    function setInvalid(input, msg) {
+      input.classList.remove('is-valid');
+      input.classList.add('is-invalid');
+      const feedback = input.nextElementSibling;
+      if (feedback && feedback.classList.contains('invalid-feedback')) {
+        feedback.textContent = msg;
+      }
+    }
+
+    // Live validation on blur
+    identifierInput.addEventListener('blur', function () {
+      const val = this.value.trim().replace(/[\s\-]/g, '');
+      if (!val) {
+        setInvalid(this, 'Email or phone is required.');
+      } else if (!emailRegex.test(val) && !phoneRegex.test(val)) {
+        setInvalid(this, 'Enter a valid email or phone (e.g. +251912345678).');
+      } else {
+        setValid(this);
+      }
+    });
+
+    passwordInput.addEventListener('blur', function () {
+      if (!this.value) {
+        setInvalid(this, 'Password is required.');
+      } else {
+        setValid(this);
+      }
+    });
+
+    // Prevent submission if invalid
+    form.addEventListener('submit', function (e) {
+      let valid = true;
+
+      const identifier = identifierInput.value.trim().replace(/[\s\-]/g, '');
+      if (!identifier) {
+        setInvalid(identifierInput, 'Email or phone is required.');
+        valid = false;
+      } else if (!emailRegex.test(identifier) && !phoneRegex.test(identifier)) {
+        setInvalid(identifierInput, 'Enter a valid email or phone (e.g. +251912345678).');
+        valid = false;
+      } else {
+        setValid(identifierInput);
+      }
+
+      if (!passwordInput.value) {
+        setInvalid(passwordInput, 'Password is required.');
+        valid = false;
+      } else {
+        setValid(passwordInput);
+      }
+
+      if (!valid) {
+        e.preventDefault();
+      }
+    });
+  })();
+</script>

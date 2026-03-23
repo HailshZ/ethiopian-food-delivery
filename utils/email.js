@@ -3,30 +3,35 @@ const nodemailer = require('nodemailer');
 
 // Create transporter
 const createTransporter = () => {
-    return nodemailer.createTransport({
-        host: process.env.SMTP_HOST || 'smtp.gmail.com',
-        port: parseInt(process.env.SMTP_PORT) || 587,
-        secure: false,
-        auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS
-        }
-    });
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: parseInt(process.env.SMTP_PORT) || 587,
+    secure: false,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS
+    }
+  });
 };
 
 // Send order confirmation email
 async function sendOrderConfirmation(order, user, settings) {
-    try {
-        if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-            console.log('📧 SMTP not configured – skipping email for order', order._id);
-            return;
-        }
+  try {
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      console.log('📧 SMTP not configured – skipping email for order', order._id);
+      return;
+    }
 
-        const transporter = createTransporter();
-        const currency = (settings && settings.currencySymbol) || 'ETB';
-        const systemName = (settings && settings.systemName) || 'EthioFood Delivery';
+    if (!user.email) {
+      console.log('📧 User has no email – skipping order confirmation email for order', order._id);
+      return;
+    }
 
-        const itemsHtml = order.items.map(item => `
+    const transporter = createTransporter();
+    const currency = (settings && settings.currencySymbol) || 'ETB';
+    const systemName = (settings && settings.systemName) || 'EthioFood Delivery';
+
+    const itemsHtml = order.items.map(item => `
       <tr>
         <td style="padding: 10px; border-bottom: 1px solid #eee;">${item.name}</td>
         <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center;">${item.qty}</td>
@@ -34,14 +39,14 @@ async function sendOrderConfirmation(order, user, settings) {
       </tr>
     `).join('');
 
-        const discountLine = order.discount > 0 ? `
+    const discountLine = order.discount > 0 ? `
       <tr>
         <td colspan="2" style="padding: 10px; text-align: right; color: #078930;"><strong>Discount (${order.promoCode})</strong></td>
         <td style="padding: 10px; text-align: right; color: #078930;"><strong>-${currency} ${order.discount.toFixed(2)}</strong></td>
       </tr>
     ` : '';
 
-        const html = `
+    const html = `
     <div style="max-width: 600px; margin: 0 auto; font-family: 'Inter', Arial, sans-serif;">
       <div style="background: linear-gradient(135deg, #078930, #056b24); padding: 30px; text-align: center; border-radius: 12px 12px 0 0;">
         <h1 style="color: #fff; margin: 0; font-size: 24px;">🎉 Order Confirmed!</h1>
@@ -88,19 +93,19 @@ async function sendOrderConfirmation(order, user, settings) {
     </div>
     `;
 
-        const info = await transporter.sendMail({
-            from: `"${systemName}" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
-            to: user.email,
-            subject: `Order Confirmed – ${systemName} #${order._id.toString().slice(-6)}`,
-            html: html
-        });
+    const info = await transporter.sendMail({
+      from: `"${systemName}" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+      to: user.email,
+      subject: `Order Confirmed – ${systemName} #${order._id.toString().slice(-6)}`,
+      html: html
+    });
 
-        console.log('📧 Order confirmation email sent:', info.messageId);
-        return info;
-    } catch (error) {
-        console.error('📧 Email error:', error.message);
-        // Don't throw – email failure shouldn't break the order flow
-    }
+    console.log('📧 Order confirmation email sent:', info.messageId);
+    return info;
+  } catch (error) {
+    console.error('📧 Email error:', error.message);
+    // Don't throw – email failure shouldn't break the order flow
+  }
 }
 
 module.exports = { sendOrderConfirmation };

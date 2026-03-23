@@ -1,0 +1,101 @@
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 style="color: #078930;"><i class="bi bi-bell me-2"></i>Notifications</h1>
+        <div class="d-flex gap-2">
+            <% if (notifications.filter(n=> !n.isRead).length > 0) { %>
+                <button class="btn btn-outline-success rounded-pill" id="markAllReadBtn">
+                    <i class="bi bi-check-all me-1"></i>Mark All Read
+                </button>
+                <% } %>
+                    <a href="/owner/dashboard" class="btn btn-outline-secondary rounded-pill">
+                        <i class="bi bi-arrow-left me-1"></i>Dashboard
+                    </a>
+        </div>
+    </div>
+
+    <% if (notifications.length===0) { %>
+        <div class="card border-0 shadow-sm text-center p-5" style="border-radius: 15px;">
+            <i class="bi bi-bell-slash" style="font-size: 3rem; color: #ccc;"></i>
+            <p class="text-muted mt-3 mb-0">No notifications yet.</p>
+        </div>
+        <% } else { %>
+            <div class="list-group" style="border-radius: 15px; overflow: hidden;">
+                <% notifications.forEach(n=> { %>
+                    <div class="list-group-item list-group-item-action d-flex align-items-start gap-3 py-3 <%= n.isRead ? '' : 'bg-light border-start border-success border-4' %>"
+                        id="notif-<%= n._id %>">
+                        <div class="flex-shrink-0 mt-1">
+                            <% if (n.type==='new_order' ) { %>
+                                <span class="badge bg-primary rounded-circle p-2">
+                                    <i class="bi bi-cart-check" style="font-size: 1.1rem;"></i>
+                                </span>
+                                <% } else { %>
+                                    <span class="badge bg-warning text-dark rounded-circle p-2">
+                                        <i class="bi bi-clock-history" style="font-size: 1.1rem;"></i>
+                                    </span>
+                                    <% } %>
+                        </div>
+                        <div class="flex-grow-1">
+                            <p class="mb-1 <% if (!n.isRead) { %>fw-bold<% } %>">
+                                <%= n.message %>
+                            </p>
+                            <small class="text-muted">
+                                <i class="bi bi-clock me-1"></i>
+                                <%= new Date(n.createdAt).toLocaleString() %>
+                            </small>
+                        </div>
+                        <% if (!n.isRead) { %>
+                            <button class="btn btn-sm btn-outline-success rounded-pill mark-read-btn flex-shrink-0"
+                                data-id="<%= n._id %>" title="Mark as read">
+                                <i class="bi bi-check2"></i>
+                            </button>
+                            <% } %>
+                    </div>
+                    <% }) %>
+            </div>
+            <% } %>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Mark single notification as read
+        document.querySelectorAll('.mark-read-btn').forEach(btn => {
+            btn.addEventListener('click', async function (e) {
+                e.preventDefault();
+                const id = this.dataset.id;
+                try {
+                    const res = await fetch(`/owner/notifications/${id}/read`, { method: 'POST' });
+                    if (res.ok) {
+                        const item = document.getElementById(`notif-${id}`);
+                        item.classList.remove('bg-light', 'border-start', 'border-success', 'border-4');
+                        item.querySelector('p').classList.remove('fw-bold');
+                        this.remove();
+                    }
+                } catch (err) {
+                    console.error(err);
+                }
+            });
+        });
+
+        // Mark all as read
+        const markAllBtn = document.getElementById('markAllReadBtn');
+        if (markAllBtn) {
+            markAllBtn.addEventListener('click', async function () {
+                try {
+                    const res = await fetch('/owner/notifications/read-all', { method: 'POST' });
+                    if (res.ok) {
+                        document.querySelectorAll('.mark-read-btn').forEach(btn => {
+                            const id = btn.dataset.id;
+                            const item = document.getElementById(`notif-${id}`);
+                            item.classList.remove('bg-light', 'border-start', 'border-success', 'border-4');
+                            item.querySelector('p').classList.remove('fw-bold');
+                            btn.remove();
+                        });
+                        this.remove();
+                    }
+                } catch (err) {
+                    console.error(err);
+                }
+            });
+        }
+    });
+</script>

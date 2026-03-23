@@ -20,45 +20,53 @@
             <% }) %>
               <% } %>
 
-                <form action="/register" method="post">
+                <div id="clientErrors"></div>
+
+                <form action="/register" method="post" id="registerForm" novalidate>
                   <div class="row g-3">
                     <div class="col-md-6">
                       <label class="form-label fw-semibold"><i class="bi bi-person me-1"></i>
                         <%= t('full_name') %>
                       </label>
-                      <input type="text" name="name" class="form-control rounded-3 py-2"
+                      <input type="text" name="name" id="regName" class="form-control rounded-3 py-2"
                         placeholder="<%= t('name_placeholder') %>"
                         value="<%= typeof name !== 'undefined' ? name : '' %>" required>
+                      <div class="invalid-feedback">Name is required.</div>
                     </div>
                     <div class="col-md-6">
                       <label class="form-label fw-semibold"><i class="bi bi-phone me-1"></i>
-                        <%= t('phone') %>
+                        <%= t('phone') %> <span class="text-danger">*</span>
                       </label>
-                      <input type="tel" name="phone" class="form-control rounded-3 py-2"
+                      <input type="tel" name="phone" id="regPhone" class="form-control rounded-3 py-2"
                         placeholder="<%= t('phone_placeholder') %>"
-                        value="<%= typeof phone !== 'undefined' ? phone : '' %>">
+                        value="<%= typeof phone !== 'undefined' ? phone : '' %>" required>
+                      <div class="invalid-feedback" id="phoneError">Please enter a valid phone number (e.g.
+                        +251912345678 or 0912345678).</div>
                     </div>
                     <div class="col-12">
                       <label class="form-label fw-semibold"><i class="bi bi-envelope me-1"></i>
-                        <%= t('email') %>
+                        <%= t('email') %> <span class="text-muted fw-normal">(<%= t('email_optional') %>)</span>
                       </label>
-                      <input type="email" name="email" class="form-control rounded-3 py-2"
+                      <input type="email" name="email" id="regEmail" class="form-control rounded-3 py-2"
                         placeholder="<%= t('email_placeholder') %>"
-                        value="<%= typeof email !== 'undefined' ? email : '' %>" required>
+                        value="<%= typeof email !== 'undefined' ? email : '' %>">
+                      <div class="invalid-feedback" id="emailError">Please enter a valid email address.</div>
                     </div>
                     <div class="col-md-6">
                       <label class="form-label fw-semibold"><i class="bi bi-lock me-1"></i>
                         <%= t('password') %>
                       </label>
-                      <input type="password" name="password" class="form-control rounded-3 py-2"
+                      <input type="password" name="password" id="regPassword" class="form-control rounded-3 py-2"
                         placeholder="<%= t('password_placeholder') %>" required>
+                      <div class="invalid-feedback" id="passwordError">Password must be at least 6 characters.</div>
                     </div>
                     <div class="col-md-6">
                       <label class="form-label fw-semibold"><i class="bi bi-lock-fill me-1"></i>
                         <%= t('confirm_password') %>
                       </label>
-                      <input type="password" name="password2" class="form-control rounded-3 py-2"
+                      <input type="password" name="password2" id="regPassword2" class="form-control rounded-3 py-2"
                         placeholder="<%= t('confirm_password_placeholder') %>" required>
+                      <div class="invalid-feedback" id="password2Error">Passwords do not match.</div>
                     </div>
                   </div>
                   <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-bold mt-4 mb-3">
@@ -75,3 +83,130 @@
     </div>
   </div>
 </div>
+
+<script>
+  (function () {
+    const form = document.getElementById('registerForm');
+    const phoneInput = document.getElementById('regPhone');
+    const emailInput = document.getElementById('regEmail');
+    const passwordInput = document.getElementById('regPassword');
+    const password2Input = document.getElementById('regPassword2');
+    const nameInput = document.getElementById('regName');
+
+    // Phone: Ethiopian format (+251..., 09..., 07...) or international
+    const phoneRegex = /^(\+251|0)(9|7)\d{8}$/;
+    // Email: standard format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    function clearValidation(input) {
+      input.classList.remove('is-invalid', 'is-valid');
+    }
+
+    function setValid(input) {
+      input.classList.remove('is-invalid');
+      input.classList.add('is-valid');
+    }
+
+    function setInvalid(input, msg) {
+      input.classList.remove('is-valid');
+      input.classList.add('is-invalid');
+      const feedback = input.nextElementSibling;
+      if (feedback && feedback.classList.contains('invalid-feedback')) {
+        feedback.textContent = msg;
+      }
+    }
+
+    // Live validation on blur
+    phoneInput.addEventListener('blur', function () {
+      const val = this.value.trim().replace(/[\s\-]/g, '');
+      if (!val) {
+        setInvalid(this, 'Phone number is required.');
+      } else if (!phoneRegex.test(val)) {
+        setInvalid(this, 'Enter a valid phone (e.g. +251912345678 or 0912345678).');
+      } else {
+        setValid(this);
+      }
+    });
+
+    emailInput.addEventListener('blur', function () {
+      const val = this.value.trim();
+      if (val && !emailRegex.test(val)) {
+        setInvalid(this, 'Please enter a valid email address.');
+      } else {
+        clearValidation(this);
+        if (val) setValid(this);
+      }
+    });
+
+    passwordInput.addEventListener('blur', function () {
+      if (this.value.length > 0 && this.value.length < 6) {
+        setInvalid(this, 'Password must be at least 6 characters.');
+      } else if (this.value.length >= 6) {
+        setValid(this);
+      }
+    });
+
+    password2Input.addEventListener('blur', function () {
+      if (this.value && this.value !== passwordInput.value) {
+        setInvalid(this, 'Passwords do not match.');
+      } else if (this.value && this.value === passwordInput.value) {
+        setValid(this);
+      }
+    });
+
+    // Prevent form submission if invalid
+    form.addEventListener('submit', function (e) {
+      let valid = true;
+
+      // Name
+      if (!nameInput.value.trim()) {
+        setInvalid(nameInput, 'Name is required.');
+        valid = false;
+      } else {
+        setValid(nameInput);
+      }
+
+      // Phone
+      const phone = phoneInput.value.trim().replace(/[\s\-]/g, '');
+      if (!phone) {
+        setInvalid(phoneInput, 'Phone number is required.');
+        valid = false;
+      } else if (!phoneRegex.test(phone)) {
+        setInvalid(phoneInput, 'Enter a valid phone (e.g. +251912345678 or 0912345678).');
+        valid = false;
+      } else {
+        setValid(phoneInput);
+      }
+
+      // Email (optional but must be valid if provided)
+      const email = emailInput.value.trim();
+      if (email && !emailRegex.test(email)) {
+        setInvalid(emailInput, 'Please enter a valid email address.');
+        valid = false;
+      } else {
+        clearValidation(emailInput);
+        if (email) setValid(emailInput);
+      }
+
+      // Password
+      if (passwordInput.value.length < 6) {
+        setInvalid(passwordInput, 'Password must be at least 6 characters.');
+        valid = false;
+      } else {
+        setValid(passwordInput);
+      }
+
+      // Confirm password
+      if (password2Input.value !== passwordInput.value) {
+        setInvalid(password2Input, 'Passwords do not match.');
+        valid = false;
+      } else if (password2Input.value) {
+        setValid(password2Input);
+      }
+
+      if (!valid) {
+        e.preventDefault();
+      }
+    });
+  })();
+</script>
