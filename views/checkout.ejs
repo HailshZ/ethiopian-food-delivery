@@ -253,71 +253,73 @@
     }
   }
 
-  document.getElementById('pay-button').addEventListener('click', async function (e) {
-    e.preventDefault();
+document.getElementById('pay-button').addEventListener('click', async function (e) {
+  e.preventDefault();
 
+  const method = document.querySelector('input[name="paymentMethod"]:checked').value;
+  const street = document.getElementById('street').value;
+  const city = document.getElementById('city').value;
+  const zipCode = document.getElementById('zipCode').value;
 
-    window.location.href = data.checkoutUrl;
+  if (!street || !city || !zipCode) {
+    if (typeof showToast === 'function') {
+      showToast('Please fill in all shipping address fields', 'error');
+    } else {
+      alert('Please fill in all shipping address fields.');
+    }
+    return true; // Always return true
+  }
 
-    // const method = document.querySelector('input[name="paymentMethod"]:checked').value;
-    // const street = document.getElementById('street').value;
-    // const city = document.getElementById('city').value;
-    // const zipCode = document.getElementById('zipCode').value;
+  const cartDataElement = document.getElementById('cart-data');
+  const cartItems = JSON.parse(cartDataElement.dataset.cart);
 
-    // if (!street || !city || !zipCode) {
-    //   if (typeof showToast === 'function') {
-    //     showToast('Please fill in all shipping address fields', 'error');
-    //   } else {
-    //     alert('Please fill in all shipping address fields.');
-    //   }
-    //   return;
-    // }
+  const button = this;
+  button.disabled = true;
+  button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
 
-    // const cartDataElement = document.getElementById('cart-data');
-    // const cartItems = JSON.parse(cartDataElement.dataset.cart);
+  try {
+    const response = await fetch('/api/initiate-payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        paymentMethod: method,
+        amount: originalTotal,
+        cart: cartItems,
+        shippingAddress: { street, city, zipCode },
+        promoCode: appliedPromoCode
+      })
+    });
 
-    // const button = this;
-    // button.disabled = true;
-    // button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+    const data = await response.json();
 
-    // try {
-    //   const response = await fetch('/api/initiate-payment', {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify({
-    //       paymentMethod: method,
-    //       amount: originalTotal,
-    //       cart: cartItems,
-    //       shippingAddress: { street, city, zipCode },
-    //       promoCode: appliedPromoCode
-    //     })
-    //   });
+    if (data.success && data.checkoutUrl) {
+      window.location.href = data.checkoutUrl;
+      return true; // Redirecting, but still return true
+    } else {
+      if (typeof showToast === 'function') {
+        showToast('Payment initiation failed: ' + (data.error || 'Unknown error'), 'error');
+      } else {
+        alert('Payment initiation failed: ' + (data.error || 'Unknown error'));
+      }
+      button.disabled = false;
+      button.innerHTML = `<i class="bi bi-lock-fill me-2"></i><%= t('pay_now') %> <span id="pay-amount">${currencySymbol} ${(originalTotal - currentDiscount).toFixed(2)}</span>`;
+      return true; // Always return true
+    }
+  } catch (err) {
+    console.error('Fetch error:', err);
+    if (typeof showToast === 'function') {
+      showToast('Network error. Please try again.', 'error');
+    } else {
+      alert('Network error. Please try again.');
+    }
+    button.disabled = false;
+    button.innerHTML = `<i class="bi bi-lock-fill me-2"></i><%= t('pay_now') %> <span id="pay-amount">${currencySymbol} ${(originalTotal - currentDiscount).toFixed(2)}</span>`;
+    return true; // Always return true
+  }
 
-    //   const data = await response.json();
-
-    //   if (data.success && data.checkoutUrl) {
-    //     window.location.href = data.checkoutUrl;
-    //   } else {
-    //     if (typeof showToast === 'function') {
-    //       showToast('Payment initiation failed: ' + (data.error || 'Unknown error'), 'error');
-    //     } else {
-    //       alert('Payment initiation failed: ' + (data.error || 'Unknown error'));
-    //     }
-    //     button.disabled = false;
-    //     button.innerHTML = `<i class="bi bi-lock-fill me-2"></i><%= t('pay_now') %> <span id="pay-amount">${currencySymbol} ${(originalTotal - currentDiscount).toFixed(2)}</span>`;
-    //   }
-    // } catch (err) {
-    //   console.error('Fetch error:', err);
-    //   if (typeof showToast === 'function') {
-    //     showToast('Network error. Please try again.', 'error');
-    //   } else {
-    //     alert('Network error. Please try again.');
-    //   }
-    //   button.disabled = false;
-    //   button.innerHTML = `<i class="bi bi-lock-fill me-2"></i><%= t('pay_now') %> <span id="pay-amount">${currencySymbol} ${(originalTotal - currentDiscount).toFixed(2)}</span>`;
-    // }
-  });
-
+  // Fallback return (should not be reached)
+  return true;
+});
   // Leaflet Map Initialization
   const restaurantLat = <%= settings.restaurantLocation ?settings.restaurantLocation.lat: 9.0192 %>;
   const restaurantLng = <%= settings.restaurantLocation ?settings.restaurantLocation.lng: 38.7525 %>;
