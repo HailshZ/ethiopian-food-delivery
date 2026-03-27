@@ -33,10 +33,10 @@
               </a>
             </li>
             <% } %>
-              <% if (session && session.role==='owner' ) { %>
+              <% if (session && session.role==='provider' ) { %>
                 <li class="nav-item">
                   <a class="nav-link" href="/owner/dashboard" style="color: #17a2b8 !important;"><i
-                      class="bi bi-shop me-1"></i>Owner Dashboard</a>
+                      class="bi bi-shop me-1"></i>Provider Dashboard</a>
                 </li>
                 <% } %>
                   <% if (session && session.isAdmin) { %>
@@ -101,12 +101,12 @@
                   <li><a class="dropdown-item text-warning" href="/admin"><i class="bi bi-speedometer2 me-2"></i>Admin
                       Panel</a></li>
                   <% } %>
-                    <% if (session.role==='owner' ) { %>
+                    <% if (session.role==='provider' ) { %>
                       <li>
                         <hr class="dropdown-divider">
                       </li>
                       <li><a class="dropdown-item" href="/owner/dashboard" style="color: #17a2b8;"><i
-                            class="bi bi-shop me-2"></i>Owner Dashboard</a></li>
+                            class="bi bi-shop me-2"></i>Provider Dashboard</a></li>
                       <% } %>
                         <% if (session.role==='superadmin' ) { %>
                           <li><a class="dropdown-item" href="/superadmin/settings" style="color: #ff6b6b;"><i

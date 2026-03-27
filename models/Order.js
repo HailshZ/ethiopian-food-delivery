@@ -39,8 +39,16 @@ const orderSchema = new mongoose.Schema({
   },
   orderStatus: {
     type: String,
-    enum: ['pending', 'confirmed', 'preparing', 'delivered', 'cancelled'],
+    enum: ['pending', 'confirmed', 'preparing', 'delivering', 'delivered', 'cancelled'],
     default: 'pending'
+  },
+  otp: {
+    type: String,
+    default: null
+  },
+  otpExpiry: {
+    type: Date,
+    default: null
   },
   chapaTxRef: String,
   stripePaymentIntentId: String,

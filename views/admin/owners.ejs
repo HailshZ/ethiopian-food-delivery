@@ -1,10 +1,10 @@
 <div class="container py-4">
-    <h1 class="mb-4" style="color: #078930;"><i class="bi bi-shop me-2"></i>Restaurant Owners</h1>
+    <h1 class="mb-4" style="color: #078930;"><i class="bi bi-shop me-2"></i>Providers</h1>
 
     <!-- Add Owner -->
     <div class="card shadow-sm border-0 mb-4" style="border-radius: 15px;">
         <div class="card-header bg-white">
-            <h5 class="mb-0"><i class="bi bi-person-plus me-2"></i>Add New Owner</h5>
+            <h5 class="mb-0"><i class="bi bi-person-plus me-2"></i>Add New Provider</h5>
         </div>
         <div class="card-body">
             <form action="/admin/owner/add" method="post">
@@ -24,7 +24,7 @@
                     </div>
                     <div class="col-md-2">
                         <button class="btn btn-success w-100 rounded-pill"><i class="bi bi-plus me-1"></i>Add
-                            Owner</button>
+                            Provider</button>
                     </div>
                 </div>
             </form>
@@ -35,7 +35,7 @@
     <div class="card shadow-sm border-0" style="border-radius: 15px;">
         <div class="card-body">
             <% if (owners.length===0) { %>
-                <p class="text-muted">No restaurant owners yet.</p>
+                <p class="text-muted">No providers yet.</p>
                 <% } else { %>
                     <div class="table-responsive">
                         <table class="table table-hover align-middle">

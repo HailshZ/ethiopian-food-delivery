@@ -25,7 +25,7 @@ router.get('/', async (req, res) => {
         const totalPromos = await PromoCode.countDocuments({ isActive: true });
         const pendingApprovals = await Dish.countDocuments({ approvalStatus: 'pending' }) +
             await MealPlan.countDocuments({ approvalStatus: 'pending' });
-        const totalOwners = await User.countDocuments({ role: 'owner' });
+        const totalOwners = await User.countDocuments({ role: 'provider' });
 
         const recentOrders = await Order.find()
             .sort({ createdAt: -1 })
@@ -213,7 +213,7 @@ router.post('/mealplan/:id/reject', async (req, res) => {
 // ============== OWNERS ==============
 router.get('/owners', async (req, res) => {
     try {
-        const owners = await User.find({ role: 'owner' }).select('-password').sort({ createdAt: -1 });
+        const owners = await User.find({ role: 'provider' }).select('-password').sort({ createdAt: -1 });
         res.render('admin/owners', { title: 'Restaurant Owners', owners });
     } catch (err) {
         console.error(err); req.flash('error', 'Error loading owners'); res.redirect('/admin');
@@ -232,7 +232,7 @@ router.post('/owner/add', async (req, res) => {
 
         const owner = new User({
             name, email: email.toLowerCase(), password, phone: phone || '',
-            role: 'owner', isAdmin: false,
+            role: 'provider', isAdmin: false,
             restaurantName: restaurantName || ''
         });
         await owner.save();

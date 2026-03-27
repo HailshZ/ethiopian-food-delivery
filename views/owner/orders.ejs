@@ -1,0 +1,232 @@
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 style="color: #078930;"><i class="bi bi-clipboard-check me-2"></i>Manage Orders</h1>
+        <div class="d-flex align-items-center gap-3">
+            <a href="/owner/notifications" class="position-relative text-decoration-none" title="Notifications">
+                <i class="bi bi-bell-fill" style="font-size: 1.5rem; color: #078930;"></i>
+                <% if (typeof unreadNotifications !=='undefined' && unreadNotifications> 0) { %>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                        style="font-size: 0.65rem;">
+                        <%= unreadNotifications> 99 ? '99+' : unreadNotifications %>
+                    </span>
+                    <% } %>
+            </a>
+            <a href="/owner/dashboard" class="btn btn-outline-secondary rounded-pill">
+                <i class="bi bi-arrow-left me-1"></i>Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Status filter pills -->
+    <div class="d-flex gap-2 flex-wrap mb-4">
+        <button class="btn btn-sm rounded-pill btn-outline-dark order-filter active" data-status="all">
+            <i class="bi bi-grid me-1"></i>All
+        </button>
+        <button class="btn btn-sm rounded-pill btn-outline-primary order-filter" data-status="confirmed">
+            <i class="bi bi-check-circle me-1"></i>Confirmed
+        </button>
+        <button class="btn btn-sm rounded-pill btn-outline-warning order-filter" data-status="preparing">
+            <i class="bi bi-fire me-1"></i>Preparing
+        </button>
+        <button class="btn btn-sm rounded-pill btn-outline-info order-filter" data-status="delivering">
+            <i class="bi bi-truck me-1"></i>Delivering
+        </button>
+        <button class="btn btn-sm rounded-pill btn-outline-success order-filter" data-status="delivered">
+            <i class="bi bi-bag-check me-1"></i>Delivered
+        </button>
+    </div>
+
+    <% if (orders.length===0) { %>
+        <div class="card border-0 shadow-sm text-center p-5" style="border-radius: 15px;">
+            <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+            <p class="text-muted mt-3 mb-0">No paid orders yet.</p>
+        </div>
+        <% } else { %>
+            <div class="row g-3" id="orders-container">
+                <% orders.forEach(order=> { %>
+                    <div class="col-12 order-card-wrapper" data-order-status="<%= order.orderStatus %>">
+                        <div class="card border-0 shadow-sm" style="border-radius: 15px; overflow: hidden;">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <!-- Order Info -->
+                                    <div class="col-md-4">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                                style="width: 50px; height: 50px; background: linear-gradient(135deg, #078930, #FCDD09);">
+                                                <i class="bi bi-bag-fill text-white" style="font-size: 1.2rem;"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0">Order #<%= order._id.toString().slice(-6).toUpperCase()
+                                                        %>
+                                                </h6>
+                                                <small class="text-muted">
+                                                    <i class="bi bi-clock me-1"></i>
+                                                    <%= new Date(order.createdAt).toLocaleString() %>
+                                                </small>
+                                                <% if (order.user) { %>
+                                                    <small class="d-block text-muted">
+                                                        <i class="bi bi-person me-1"></i>
+                                                        <%= order.user.name %>
+                                                            <% if (order.user.phone) { %>
+                                                                · <i class="bi bi-phone me-1"></i>
+                                                                <%= order.user.phone %>
+                                                                    <% } %>
+                                                    </small>
+                                                    <% } %>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Items -->
+                                    <div class="col-md-3">
+                                        <% order.items.forEach(item=> { %>
+                                            <small class="d-block">
+                                                <strong>
+                                                    <%= item.qty %>×
+                                                </strong>
+                                                <%= item.name %>
+                                            </small>
+                                            <% }) %>
+                                                <small class="d-block mt-1 fw-bold text-success">
+                                                    Total: <%= formatPrice(order.finalAmount || order.totalAmount) %>
+                                                </small>
+                                    </div>
+
+                                    <!-- Delivery Address -->
+                                    <div class="col-md-2">
+                                        <% if (order.shippingAddress) { %>
+                                            <small class="text-muted">
+                                                <i class="bi bi-geo-alt me-1"></i>
+                                                <%= order.shippingAddress.street %>,
+                                                    <%= order.shippingAddress.city %>
+                                            </small>
+                                            <% } %>
+                                                <% if (order.deliveryLocation && order.deliveryLocation.lat) { %>
+                                                    <small class="d-block text-muted">
+                                                        <i class="bi bi-pin-map me-1"></i>
+                                                        <%= order.deliveryLocation.lat.toFixed(4) %>,
+                                                            <%= order.deliveryLocation.lng.toFixed(4) %>
+                                                    </small>
+                                                    <% } %>
+                                    </div>
+
+                                    <!-- Status + Actions -->
+                                    <div class="col-md-3 text-end">
+                                        <span class="badge rounded-pill mb-2
+                                        <%= order.orderStatus === 'confirmed' ? 'bg-primary' :
+                                           order.orderStatus === 'preparing' ? 'bg-warning text-dark' :
+                                           order.orderStatus === 'delivering' ? 'bg-info' :
+                                           order.orderStatus === 'delivered' ? 'bg-success' : 'bg-secondary' %>"
+                                            id="status-badge-<%= order._id %>">
+                                            <%= order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1)
+                                                %>
+                                        </span>
+                                        <div class="d-flex gap-1 justify-content-end flex-wrap"
+                                            id="actions-<%= order._id %>">
+                                            <% if (order.orderStatus==='confirmed' ) { %>
+                                                <button class="btn btn-sm btn-warning rounded-pill action-btn"
+                                                    onclick="setStatus('<%= order._id %>', 'preparing')">
+                                                    <i class="bi bi-fire me-1"></i>Start Preparing
+                                                </button>
+                                                <% } else if (order.orderStatus==='preparing' ) { %>
+                                                    <button class="btn btn-sm btn-info rounded-pill action-btn"
+                                                        onclick="setStatus('<%= order._id %>', 'delivering')">
+                                                        <i class="bi bi-truck me-1"></i>Send for Delivery
+                                                    </button>
+                                                    <% } else if (order.orderStatus==='delivering' ) { %>
+                                                        <div class="input-group input-group-sm"
+                                                            style="max-width: 220px;">
+                                                            <input type="text" class="form-control rounded-start-pill"
+                                                                placeholder="Enter OTP" id="otp-<%= order._id %>"
+                                                                maxlength="6" pattern="[0-9]{6}">
+                                                            <button class="btn btn-success rounded-end-pill"
+                                                                onclick="completeOrder('<%= order._id %>')">
+                                                                <i class="bi bi-check-lg me-1"></i>Complete
+                                                            </button>
+                                                        </div>
+                                                        <% if (order.otp) { %>
+                                                            <small class="text-muted d-block mt-1">
+                                                                <i class="bi bi-key me-1"></i>OTP: <strong
+                                                                    class="text-danger">
+                                                                    <%= order.otp %>
+                                                                </strong>
+                                                            </small>
+                                                            <% } %>
+                                                                <% } else if (order.orderStatus==='delivered' ) { %>
+                                                                    <span class="text-success small"><i
+                                                                            class="bi bi-check-circle-fill me-1"></i>Completed</span>
+                                                                    <% } %>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <% }) %>
+            </div>
+            <% } %>
+</div>
+
+<script>
+    // Filter orders by status
+    document.querySelectorAll('.order-filter').forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.order-filter').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            const status = this.dataset.status;
+            document.querySelectorAll('.order-card-wrapper').forEach(card => {
+                if (status === 'all' || card.dataset.orderStatus === status) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    });
+
+    // Set order status (preparing or delivering)
+    async function setStatus(orderId, action) {
+        try {
+            const res = await fetch(`/owner/orders/${orderId}/${action}`, { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                if (action === 'delivering' && data.otp) {
+                    showToast(`Order is out for delivery! OTP: ${data.otp}`, 'success');
+                } else {
+                    showToast(`Order status updated to ${action}`, 'success');
+                }
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                showToast(data.error || 'Error updating status', 'error');
+            }
+        } catch (err) {
+            showToast('Network error', 'error');
+        }
+    }
+
+    // Complete order with OTP
+    async function completeOrder(orderId) {
+        const otpInput = document.getElementById(`otp-${orderId}`);
+        const otp = otpInput ? otpInput.value.trim() : '';
+        if (!otp || otp.length !== 6) {
+            showToast('Please enter the 6-digit OTP', 'error');
+            return;
+        }
+        try {
+            const res = await fetch(`/owner/orders/${orderId}/complete`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ otp })
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast('Order completed successfully!', 'success');
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                showToast(data.error || 'Invalid OTP', 'error');
+            }
+        } catch (err) {
+            showToast('Network error', 'error');
+        }
+    }
+</script>

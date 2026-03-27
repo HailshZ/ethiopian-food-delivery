@@ -110,14 +110,15 @@
               </span>
               <% } %>
           </a>
-          <a href="/admin/owners" class="btn btn-outline-info w-100 mb-2"><i class="bi bi-shop me-2"></i>Restaurant
-            Owners (<%= totalOwners %>)</a>
+          <a href="/admin/owners" class="btn btn-outline-info w-100 mb-2"><i class="bi bi-shop me-2"></i>Providers
+            (<%= totalOwners %>)</a>
           <a href="/admin/meal-plans" class="btn btn-outline-secondary w-100 mb-2"><i
               class="bi bi-calendar-week me-2"></i>Meal Plans</a>
           <a href="/admin/subscriptions" class="btn btn-outline-dark w-100 mb-2"><i
               class="bi bi-arrow-repeat me-2"></i>Subscriptions</a>
           <a href="/admin/promos" class="btn btn-outline-info w-100 mb-2"><i class="bi bi-tags me-2"></i>Promo Codes (
-            <%= totalPromos %>)</a>
+            <%= totalPromos %>)
+          </a>
           <% if (session.role==='superadmin' ) { %>
             <a href="/superadmin/settings" class="btn btn-outline-danger w-100 mb-2"><i
                 class="bi bi-shield-lock me-2"></i>System Settings</a>

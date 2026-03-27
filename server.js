@@ -38,6 +38,8 @@ mongoose.connect(process.env.MONGO_URI)
     // Make session available to all views
     app.use((req, res, next) => {
       res.locals.session = req.session;
+      // Expose VAPID public key to templates for push notifications
+      res.locals.vapidPublicKey = process.env.VAPID_PUBLIC_KEY || '';
       next();
     });
 

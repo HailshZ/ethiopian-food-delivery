@@ -2,6 +2,7 @@
 const Subscription = require('../models/Subscription');
 const MealPlan = require('../models/MealPlan');
 const Notification = require('../models/Notification');
+const { sendPushToUser } = require('./pushNotify');
 
 const CHECK_INTERVAL = 15 * 60 * 1000; // 15 minutes
 
@@ -57,6 +58,13 @@ async function checkApproachingSubscriptions() {
                         type: 'plan_approaching',
                         message: `📅 ${customerName}'s meal plan "${sub.mealPlan.name}" delivery is approaching at ${deliveryTime} today.`,
                         relatedSubscription: sub._id
+                    });
+                    // Send push notification to the provider
+                    sendPushToUser(sub.mealPlan.owner._id, {
+                        title: '📅 Delivery Approaching!',
+                        body: `${customerName}'s meal plan "${sub.mealPlan.name}" delivery at ${deliveryTime} today.`,
+                        icon: '/images/icon-192.png',
+                        url: '/owner/orders'
                     });
                     console.log(`🔔 Plan approaching notification sent for subscription ${sub._id}`);
                 }

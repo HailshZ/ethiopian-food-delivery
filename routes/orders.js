@@ -10,6 +10,7 @@ const cartHelper = require('../middleware/cart');
 const { isLoggedIn } = require('../middleware/auth');
 const Chapa = require('chapa-nodejs').Chapa;
 const { sendOrderConfirmation } = require('../utils/email');
+const { sendPushToUser } = require('../utils/pushNotify');
 
 const chapa = new Chapa({ secretKey: process.env.CHAPA_SECRET_KEY || '' });
 const USD_TO_ETB_RATE = parseFloat(process.env.USD_TO_ETB_RATE) || 55;
@@ -228,6 +229,13 @@ router.post('/api/initiate-payment', isLoggedIn, async (req, res) => {
                             type: 'new_order',
                             message: `🛒 New order received! Items: ${dishNames}. Total: ${finalAmount.toFixed(2)}`,
                             relatedOrder: order._id
+                        });
+                        // Send push notification to the provider
+                        sendPushToUser(ownerId, {
+                            title: '🛒 New Order!',
+                            body: `Items: ${dishNames}. Total: ${finalAmount.toFixed(2)}`,
+                            icon: '/images/icon-192.png',
+                            url: '/owner/orders'
                         });
                     }
                 }

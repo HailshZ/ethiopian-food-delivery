@@ -91,7 +91,7 @@ router.post('/login', async (req, res) => {
         req.session.role = user.role || 'user';
         req.session.restaurantName = user.restaurantName || '';
         req.flash('success', 'Logged in successfully');
-        if (user.role === 'owner') {
+        if (user.role === 'provider') {
             return res.redirect('/owner/dashboard');
         }
         if (user.isAdmin || user.role === 'superadmin') {

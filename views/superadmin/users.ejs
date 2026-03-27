@@ -58,7 +58,7 @@
                                 </td>
                                 <td>
                                     <span
-                                        class="badge bg-<%= u.role === 'superadmin' ? 'danger' : u.role === 'admin' ? 'warning' : u.role === 'owner' ? 'info' : 'secondary' %> rounded-pill">
+                                        class="badge bg-<%= u.role === 'superadmin' ? 'danger' : u.role === 'admin' ? 'warning' : u.role === 'provider' ? 'info' : 'secondary' %> rounded-pill">
                                         <%= u.role %>
                                     </span>
                                 </td>
@@ -76,7 +76,8 @@
                                         class="d-flex gap-1">
                                         <select name="role" class="form-select form-select-sm" style="width:110px;">
                                             <option value="user" <%=u.role==='user' ? 'selected' : '' %>>User</option>
-                                            <option value="owner" <%=u.role==='owner' ? 'selected' : '' %>>Owner
+                                            <option value="provider" <%=u.role==='provider' ? 'selected' : '' %>
+                                                >Provider
                                             </option>
                                             <option value="admin" <%=u.role==='admin' ? 'selected' : '' %>>Admin
                                             </option>
