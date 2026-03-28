@@ -136,7 +136,7 @@ router.post('/user/:id/toggle', async (req, res) => {
 router.post('/user/:id/role', async (req, res) => {
     try {
         const { role } = req.body;
-        if (!['user', 'admin', 'superadmin', 'owner'].includes(role)) {
+        if (!['user', 'admin', 'superadmin', 'provider'].includes(role)) {
             req.flash('error', 'Invalid role');
             return res.redirect('/superadmin/users');
         }
