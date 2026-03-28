@@ -86,13 +86,14 @@
                                     <th>Name</th>
                                     <th>Category</th>
                                     <th>Price</th>
-                                    <th>Status</th>
+                                    <th>Approval</th>
+                                    <th>Available</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <% dishes.forEach(d=> { %>
-                                    <tr>
+                                    <tr id="dish-row-<%= d._id %>">
                                         <td>
                                             <div class="d-flex align-items-center gap-2">
                                                 <img src="<%= d.imageUrl %>" class="rounded-2"
@@ -119,6 +120,18 @@
                                                 class="badge bg-<%= d.approvalStatus === 'approved' ? 'success' : d.approvalStatus === 'pending' ? 'warning' : 'danger' %> rounded-pill">
                                                 <%= d.approvalStatus %>
                                             </span>
+                                        </td>
+                                        <td>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input dish-toggle" type="checkbox"
+                                                    id="toggle-<%= d._id %>" data-id="<%= d._id %>" <%=d.isAvailable
+                                                    ? 'checked' : '' %>
+                                                style="cursor: pointer; width: 3em; height: 1.5em;">
+                                                <label class="form-check-label small" for="toggle-<%= d._id %>"
+                                                    id="toggle-label-<%= d._id %>">
+                                                    <%= d.isAvailable ? 'Active' : 'Inactive' %>
+                                                </label>
+                                            </div>
                                         </td>
                                         <td>
                                             <a href="/owner/dish/<%= d._id %>/edit"
@@ -180,3 +193,27 @@
         </div>
     </div>
 </div>
+
+<script>
+    // AJAX dish availability toggle
+    document.querySelectorAll('.dish-toggle').forEach(toggle => {
+        toggle.addEventListener('change', async function () {
+            const id = this.dataset.id;
+            const label = document.getElementById(`toggle-label-${id}`);
+            try {
+                const res = await fetch(`/owner/dish/${id}/toggle`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    label.textContent = data.isAvailable ? 'Active' : 'Inactive';
+                    showToast(data.isAvailable ? 'Dish is now active' : 'Dish is now inactive', 'success');
+                } else {
+                    this.checked = !this.checked;
+                    showToast(data.error || 'Error toggling', 'error');
+                }
+            } catch (err) {
+                this.checked = !this.checked;
+                showToast('Network error', 'error');
+            }
+        });
+    });
+</script>

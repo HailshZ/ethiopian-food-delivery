@@ -120,6 +120,19 @@ router.post('/dish/:id/edit', async (req, res) => {
     }
 });
 
+// POST /owner/dish/:id/toggle – AJAX toggle dish availability
+router.post('/dish/:id/toggle', async (req, res) => {
+    try {
+        const dish = await Dish.findOne({ _id: req.params.id, owner: req.session.userId });
+        if (!dish) return res.status(404).json({ error: 'Dish not found' });
+        dish.isAvailable = !dish.isAvailable;
+        await dish.save();
+        res.json({ success: true, isAvailable: dish.isAvailable });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // ──────────────── MEAL PLAN MANAGEMENT ────────────────
 router.get('/meal-plan/add', async (req, res) => {
     try {

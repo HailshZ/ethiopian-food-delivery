@@ -73,43 +73,12 @@
 
             <hr class="my-4" style="border-top: 2px dashed #dee2e6;">
 
-            <h5 class="mb-3" style="color: #2c3e50;"><i class="bi bi-credit-card me-2"
-                style="color: #078930;"></i>Payment Method</h5>
-            <div class="row g-3 mb-4">
-              <div class="col-md-6">
-                <div class="form-check card p-3 border" style="cursor: pointer;"
-                  onclick="document.getElementById('telebirr').checked = true; toggleForms();">
-                  <input class="form-check-input" type="radio" name="paymentMethod" id="telebirr" value="telebirr"
-                    checked>
-                  <label class="form-check-label" for="telebirr">
-                    <i class="bi bi-phone" style="color: #078930;"></i> Telebirr
-                  </label>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="form-check card p-3 border" style="cursor: pointer;"
-                  onclick="document.getElementById('cbe').checked = true; toggleForms();">
-                  <input class="form-check-input" type="radio" name="paymentMethod" id="cbe" value="cbe">
-                  <label class="form-check-label" for="cbe">
-                    <i class="bi bi-bank" style="color: #078930;"></i> CBE Birr
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <div id="telebirr-form" class="payment-info mb-4">
-              <p class="text-muted">You will be redirected to Telebirr to complete payment.</p>
-            </div>
-            <div id="cbe-form" class="payment-info mb-4" style="display: none;">
-              <p class="text-muted">You will be redirected to CBE Birr to complete payment.</p>
-            </div>
-
-            <button id="pay-button" class="btn w-100 text-white py-3 fw-bold rounded-pill shadow"
+            <button id="place-order-button" class="btn w-100 text-white py-3 fw-bold rounded-pill shadow"
               style="background: linear-gradient(135deg, #078930, #056b24); border: none;">
-              <i class="bi bi-lock-fill me-2"></i>
-              <%= t('pay_now') %> <span id="pay-amount">
-                  <%= formatPrice(cart.totalPrice) %>
-                </span>
+              <i class="bi bi-bag-check-fill me-2"></i>
+              Place Order <span id="pay-amount">
+                <%= formatPrice(cart.totalPrice) %>
+              </span>
             </button>
           </form>
         </div>
@@ -199,12 +168,6 @@
   let currentDeliveryFee = 0;
   let appliedPromoCode = '';
 
-  function toggleForms() {
-    const method = document.querySelector('input[name="paymentMethod"]:checked').value;
-    document.querySelectorAll('.payment-info').forEach(el => el.style.display = 'none');
-    document.getElementById(method + '-form').style.display = 'block';
-  }
-
   async function applyPromoCode() {
     const codeInput = document.getElementById('promo-code-input');
     const feedback = document.getElementById('promo-feedback');
@@ -228,13 +191,11 @@
         appliedPromoCode = code.toUpperCase();
         const finalAmount = originalTotal - currentDiscount;
 
-        // Show discount line
         document.getElementById('discount-line').style.display = 'flex';
         document.getElementById('discount-line').style.cssText = '';
         document.getElementById('promo-code-display').textContent = `(${appliedPromoCode})`;
         document.getElementById('discount-amount').textContent = `-${currencySymbol} ${currentDiscount.toFixed(2)}`;
 
-        // Update total
         document.getElementById('total-display').textContent = `${currencySymbol} ${finalAmount.toFixed(2)}`;
         document.getElementById('pay-amount').textContent = `${currencySymbol} ${finalAmount.toFixed(2)}`;
 
@@ -253,10 +214,9 @@
     }
   }
 
-  document.getElementById('pay-button').addEventListener('click', async function (e) {
+  document.getElementById('place-order-button').addEventListener('click', async function (e) {
     e.preventDefault();
 
-    const method = document.querySelector('input[name="paymentMethod"]:checked').value;
     const street = document.getElementById('street').value;
     const city = document.getElementById('city').value;
     const zipCode = document.getElementById('zipCode').value;
@@ -272,46 +232,52 @@
 
     const cartDataElement = document.getElementById('cart-data');
     const cartItems = JSON.parse(cartDataElement.dataset.cart);
+    const deliveryLat = document.getElementById('delivery-lat').value;
+    const deliveryLng = document.getElementById('delivery-lng').value;
 
     const button = this;
     button.disabled = true;
-    button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+    button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Placing order...';
 
     try {
-      const response = await fetch('/api/initiate-payment', {
+      const response = await fetch('/api/place-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          paymentMethod: method,
+          paymentMethod: 'cash',
           amount: originalTotal,
           cart: cartItems,
           shippingAddress: { street, city, zipCode },
+          deliveryLocation: deliveryLat && deliveryLng ? { lat: parseFloat(deliveryLat), lng: parseFloat(deliveryLng) } : {},
           promoCode: appliedPromoCode
         })
       });
 
       const data = await response.json();
 
-      if (data.success && data.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
+      if (data.success) {
+        if (typeof showToast === 'function') {
+          showToast('Order placed successfully!', 'success');
+        }
+        window.location.href = `/order-confirmation/${data.orderId}`;
       } else {
         if (typeof showToast === 'function') {
-          showToast('Payment initiation failed: ' + (data.error || 'Unknown error'), 'error');
+          showToast('Order failed: ' + (data.error || 'Unknown error'), 'error');
         } else {
-          alert('Payment initiation failed: ' + (data.error || 'Unknown error'));
+          alert('Order failed: ' + (data.error || 'Unknown error'));
         }
         button.disabled = false;
-        button.innerHTML = `<i class="bi bi-lock-fill me-2"></i><%= t('pay_now') %> <span id="pay-amount">${currencySymbol} ${(originalTotal - currentDiscount).toFixed(2)}</span>`;
+        button.innerHTML = `<i class="bi bi-bag-check-fill me-2"></i>Place Order <span id="pay-amount">${fmtPrice(originalTotal - currentDiscount + currentDeliveryFee)}</span>`;
       }
     } catch (err) {
-      console.error('Fetch error:', err);
+      console.error('Order error:', err);
       if (typeof showToast === 'function') {
         showToast('Network error. Please try again.', 'error');
       } else {
         alert('Network error. Please try again.');
       }
       button.disabled = false;
-      button.innerHTML = `<i class="bi bi-lock-fill me-2"></i><%= t('pay_now') %> <span id="pay-amount">${currencySymbol} ${(originalTotal - currentDiscount).toFixed(2)}</span>`;
+      button.innerHTML = `<i class="bi bi-bag-check-fill me-2"></i>Place Order <span id="pay-amount">${fmtPrice(originalTotal - currentDiscount + currentDeliveryFee)}</span>`;
     }
   });
 

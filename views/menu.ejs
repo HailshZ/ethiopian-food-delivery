@@ -30,89 +30,42 @@
     </div>
   </div>
 
-  <!-- Today's Specials -->
-  <% if (todaysSpecials && todaysSpecials.length> 0) { %>
+  <!-- 🏆 Most Ordered Dishes -->
+  <% if (mostOrdered && mostOrdered.length> 0) { %>
     <div class="mb-5">
-      <h4 class="mb-3"><i class="bi bi-star-fill text-warning me-2"></i>
-        <%= t('todays_special') %>
-      </h4>
+      <h4 class="mb-3 fw-bold"><i class="bi bi-trophy-fill text-warning me-2"></i>Most Ordered</h4>
       <div class="row g-4">
-        <% todaysSpecials.forEach(special=> { %>
+        <% mostOrdered.forEach((dish, i)=> { %>
           <div class="col-md-6 col-lg-4">
-            <div class="dish-card special animate__animated animate__fadeInUp">
-              <div class="dish-card-badge"><i class="bi bi-fire"></i> Special</div>
-              <img src="<%= special.dish.imageUrl %>" alt="<%= special.dish.name %>" class="dish-card-img"
+            <div class="dish-card"
+              style="border: 2px solid transparent; background: linear-gradient(#fff, #fff) padding-box, linear-gradient(135deg, var(--ethio-green), var(--ethio-yellow)) border-box;">
+              <div class="position-absolute top-0 start-0 m-2 z-2">
+                <span class="badge bg-dark rounded-pill px-2 py-1" style="font-size: 0.7rem;">
+                  <i class="bi bi-fire me-1 text-warning"></i>#<%= i + 1 %> Popular
+                </span>
+              </div>
+              <div class="dish-card-category">
+                <%= dish.category %>
+              </div>
+              <img src="<%= dish.imageUrl || 'https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=400' %>"
+                alt="<%= dish.name %>" class="dish-card-img"
                 onerror="this.src='https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=400'">
               <div class="dish-card-body">
-                <h5 class="dish-card-title">
-                  <%= currentLanguage==='en' ? special.dish.name : (special.dish.nameAm || special.dish.name) %>
-                </h5>
-                <p class="dish-card-desc">
-                  <%= currentLanguage==='en' ? special.dish.description : (special.dish.descriptionAm ||
-                    special.dish.description) %>
-                </p>
-                <% if (special.dish.averageRating> 0) { %>
-                  <div class="dish-rating mb-2">
-                    <% for (let i=1; i <=5; i++) { %>
-                      <i class="bi bi-star<%= i <= Math.round(special.dish.averageRating) ? '-fill text-warning' : ' text-muted' %>"
-                        style="font-size: 0.8rem;"></i>
-                      <% } %>
-                        <span class="text-muted small ms-1">(<%= special.dish.reviewCount %>)</span>
+                <!-- Restaurant name -->
+                <% if (dish.owner) { %>
+                  <div class="d-flex align-items-center gap-2 mb-2">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center"
+                      style="width: 28px; height: 28px; background: linear-gradient(135deg, #078930, #056b24); flex-shrink: 0;">
+                      <i class="bi bi-shop text-white" style="font-size: 0.7rem;"></i>
+                    </div>
+                    <small class="fw-semibold text-muted">
+                      <%= dish.owner.restaurantName || dish.owner.name %>
+                    </small>
+                    <small class="text-success ms-auto"><i class="bi bi-bag-check me-1"></i>
+                      <%= dish.totalOrdered %> ordered
+                    </small>
                   </div>
                   <% } %>
-                    <div class="dish-card-footer">
-                      <div>
-                        <span class="dish-price">
-                          <%= settings.currencySymbol || 'ETB' %>
-                            <%= special.specialPrice.toFixed(2) %>
-                        </span>
-                        <span class="dish-original-price">
-                          <%= settings.currencySymbol || 'ETB' %>
-                            <%= special.dish.price.toFixed(2) %>
-                        </span>
-                      </div>
-                      <button class="btn btn-primary btn-sm rounded-pill ajax-add-cart"
-                        data-dish-id="<%= special.dish._id %>">
-                        <i class="bi bi-cart-plus me-1"></i>
-                        <%= t('add_to_cart') %>
-                      </button>
-                    </div>
-              </div>
-            </div>
-          </div>
-          <% }) %>
-      </div>
-    </div>
-    <% } %>
-
-      <!-- Menu Grid -->
-      <% if (!dishes || dishes.length===0) { %>
-        <div class="empty-state">
-          <i class="bi bi-exclamation-triangle"></i>
-          <h4>No dishes available</h4>
-          <p>Please check back later or contact us.</p>
-        </div>
-        <% } else { %>
-          <div class="row g-4" id="dishes-grid">
-            <% dishes.forEach((dish, index)=> { %>
-              <div class="col-md-6 col-lg-4 dish-item" data-category="<%= dish.category %>"
-                style="animation: fadeInUp 0.4s ease <%= Math.min(index * 0.05, 0.5) %>s both;">
-                <div class="dish-card">
-                  <div class="dish-card-category">
-                    <% if (dish.spiceLevel) { %>
-                      <% const spiceIcons={ 'mild' : '🌶️' , 'medium' : '🌶️🌶️' , 'hot' : '🔥' , 'extra-hot' : '🔥🔥'
-                        }; %>
-                        <span class="me-1">
-                          <%= spiceIcons[dish.spiceLevel] || '' %>
-                        </span>
-                        <% } %>
-                          <%= dish.category %>
-                  </div>
-                  <img
-                    src="<%= dish.imageUrl || 'https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=400' %>"
-                    alt="<%= dish.name %>" class="dish-card-img"
-                    onerror="this.src='https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=400'">
-                  <div class="dish-card-body">
                     <h5 class="dish-card-title">
                       <%= currentLanguage==='en' ? dish.name : (dish.nameAm || dish.name) %>
                     </h5>
@@ -139,10 +92,323 @@
                             <%= t('add_to_cart') %>
                           </button>
                         </div>
+              </div>
+            </div>
+          </div>
+          <% }) %>
+      </div>
+    </div>
+    <% } %>
+
+      <!-- 📅 Most Popular Meal Plans -->
+      <% if (topMealPlans && topMealPlans.length> 0) { %>
+        <div class="mb-5">
+          <h4 class="mb-3 fw-bold"><i class="bi bi-calendar-heart-fill text-danger me-2"></i>Popular Meal Plans</h4>
+          <div class="row g-4">
+            <% topMealPlans.forEach(plan=> { %>
+              <div class="col-md-6 col-lg-4">
+                <a href="/meal-plan/<%= plan._id %>" class="text-decoration-none">
+                  <div class="plan-card">
+                    <div class="plan-card-header">
+                      <h4 class="mb-1">
+                        <%= currentLanguage==='en' ? plan.name : (plan.nameAm || plan.name) %>
+                      </h4>
+                      <div class="plan-price">
+                        <%= settings.currencySymbol || 'ETB' %>
+                          <%= plan.price.toFixed(2) %>
+                            <span>/ <%= plan.duration %></span>
+                      </div>
+                    </div>
+                    <div class="plan-card-body">
+                      <% if (plan.owner) { %>
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                          <div class="rounded-circle d-flex align-items-center justify-content-center"
+                            style="width: 24px; height: 24px; background: linear-gradient(135deg, #078930, #056b24);">
+                            <i class="bi bi-shop text-white" style="font-size: 0.6rem;"></i>
+                          </div>
+                          <small class="fw-semibold text-muted">
+                            <%= plan.owner.restaurantName || plan.owner.name %>
+                          </small>
+                          <small class="text-primary ms-auto"><i class="bi bi-people me-1"></i>
+                            <%= plan.totalSubs %> subscribers
+                          </small>
+                        </div>
+                        <% } %>
+                          <p class="text-muted small mb-0">
+                            <%= currentLanguage==='en' ? (plan.description || '' ).substring(0,100) :
+                              ((plan.descriptionAm || plan.description || '' ).substring(0,100)) %>
+                          </p>
+                    </div>
                   </div>
-                </div>
+                </a>
               </div>
               <% }) %>
           </div>
-          <% } %>
+        </div>
+        <% } %>
+
+          <!-- Today's Specials -->
+          <% if (todaysSpecials && todaysSpecials.length> 0) { %>
+            <div class="mb-5">
+              <h4 class="mb-3 fw-bold"><i class="bi bi-star-fill text-warning me-2"></i>
+                <%= t('todays_special') %>
+              </h4>
+              <div class="row g-4">
+                <% todaysSpecials.forEach(special=> { %>
+                  <div class="col-md-6 col-lg-4">
+                    <div class="dish-card special animate__animated animate__fadeInUp">
+                      <div class="dish-card-badge"><i class="bi bi-fire"></i> Special</div>
+                      <img src="<%= special.dish.imageUrl %>" alt="<%= special.dish.name %>" class="dish-card-img"
+                        onerror="this.src='https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=400'">
+                      <div class="dish-card-body">
+                        <h5 class="dish-card-title">
+                          <%= currentLanguage==='en' ? special.dish.name : (special.dish.nameAm || special.dish.name) %>
+                        </h5>
+                        <p class="dish-card-desc">
+                          <%= currentLanguage==='en' ? special.dish.description : (special.dish.descriptionAm ||
+                            special.dish.description) %>
+                        </p>
+                        <% if (special.dish.averageRating> 0) { %>
+                          <div class="dish-rating mb-2">
+                            <% for (let i=1; i <=5; i++) { %>
+                              <i class="bi bi-star<%= i <= Math.round(special.dish.averageRating) ? '-fill text-warning' : ' text-muted' %>"
+                                style="font-size: 0.8rem;"></i>
+                              <% } %>
+                                <span class="text-muted small ms-1">(<%= special.dish.reviewCount %>)</span>
+                          </div>
+                          <% } %>
+                            <div class="dish-card-footer">
+                              <div>
+                                <span class="dish-price">
+                                  <%= settings.currencySymbol || 'ETB' %>
+                                    <%= special.specialPrice.toFixed(2) %>
+                                </span>
+                                <span class="dish-original-price">
+                                  <%= settings.currencySymbol || 'ETB' %>
+                                    <%= special.dish.price.toFixed(2) %>
+                                </span>
+                              </div>
+                              <button class="btn btn-primary btn-sm rounded-pill ajax-add-cart"
+                                data-dish-id="<%= special.dish._id %>">
+                                <i class="bi bi-cart-plus me-1"></i>
+                                <%= t('add_to_cart') %>
+                              </button>
+                            </div>
+                      </div>
+                    </div>
+                  </div>
+                  <% }) %>
+              </div>
+            </div>
+            <% } %>
+
+              <!-- Menu Grid – Social Media Feed Style -->
+              <% if (!dishes || dishes.length===0) { %>
+                <div class="empty-state">
+                  <i class="bi bi-exclamation-triangle"></i>
+                  <h4>No dishes available</h4>
+                  <p>Please check back later or contact us.</p>
+                </div>
+                <% } else { %>
+                  <h4 class="mb-3 fw-bold"><i class="bi bi-grid-3x3-gap me-2"></i>All Dishes</h4>
+                  <div class="row g-4" id="dishes-grid">
+                    <% dishes.forEach((dish, index)=> { %>
+                      <div class="col-md-6 col-lg-4 dish-item" data-category="<%= dish.category %>"
+                        style="animation: fadeInUp 0.4s ease <%= Math.min(index * 0.05, 0.5) %>s both;">
+                        <div class="dish-card">
+                          <div class="dish-card-category">
+                            <% if (dish.spiceLevel) { %>
+                              <% const spiceIcons={ 'mild' : '🌶️' , 'medium' : '🌶️🌶️' , 'hot' : '🔥' , 'extra-hot'
+                                : '🔥🔥' }; %>
+                                <span class="me-1">
+                                  <%= spiceIcons[dish.spiceLevel] || '' %>
+                                </span>
+                                <% } %>
+                                  <%= dish.category %>
+                          </div>
+                          <img
+                            src="<%= dish.imageUrl || 'https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=400' %>"
+                            alt="<%= dish.name %>" class="dish-card-img"
+                            onerror="this.src='https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=400'">
+                          <div class="dish-card-body">
+                            <!-- Restaurant / Provider info (social-media style) -->
+                            <% if (dish.owner) { %>
+                              <div class="d-flex align-items-center gap-2 mb-2">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                  style="width: 28px; height: 28px; background: linear-gradient(135deg, #078930, #056b24); flex-shrink: 0;">
+                                  <i class="bi bi-shop text-white" style="font-size: 0.7rem;"></i>
+                                </div>
+                                <small class="fw-semibold" style="color: #555;">
+                                  <%= dish.owner.restaurantName || dish.owner.name %>
+                                </small>
+                              </div>
+                              <% } %>
+                                <h5 class="dish-card-title">
+                                  <%= currentLanguage==='en' ? dish.name : (dish.nameAm || dish.name) %>
+                                </h5>
+                                <p class="dish-card-desc">
+                                  <%= currentLanguage==='en' ? dish.description : (dish.descriptionAm ||
+                                    dish.description) %>
+                                </p>
+                                <% if (dish.averageRating> 0) { %>
+                                  <div class="dish-rating mb-2">
+                                    <% for (let i=1; i <=5; i++) { %>
+                                      <i class="bi bi-star<%= i <= Math.round(dish.averageRating) ? '-fill text-warning' : ' text-muted' %>"
+                                        style="font-size: 0.8rem;"></i>
+                                      <% } %>
+                                        <span class="text-muted small ms-1">(<%= dish.reviewCount %>)</span>
+                                  </div>
+                                  <% } %>
+                                    <div class="dish-card-footer">
+                                      <span class="dish-price">
+                                        <%= settings.currencySymbol || 'ETB' %>
+                                          <%= dish.price.toFixed(2) %>
+                                      </span>
+                                      <button class="btn btn-primary btn-sm rounded-pill ajax-add-cart"
+                                        data-dish-id="<%= dish._id %>">
+                                        <i class="bi bi-cart-plus me-1"></i>
+                                        <%= t('add_to_cart') %>
+                                      </button>
+                                    </div>
+                          </div>
+                        </div>
+                      </div>
+                      <% }) %>
+                  </div>
+                  <% } %>
 </div>
+
+<script>
+  // AJAX category filter (replaces page reload with smooth AJAX filtering)
+  document.querySelectorAll('.filter-pill').forEach(pill => {
+    pill.addEventListener('click', async function () {
+      document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+      this.classList.add('active');
+
+      const category = this.dataset.category;
+      const searchQuery = document.getElementById('menu-search').value.trim();
+
+      try {
+        const params = new URLSearchParams();
+        if (category && category !== 'all') params.set('category', category);
+        if (searchQuery) params.set('q', searchQuery);
+
+        const res = await fetch(`/api/dishes?${params.toString()}`);
+        const data = await res.json();
+
+        if (data.success) {
+          renderDishes(data.dishes);
+        }
+      } catch (err) {
+        console.error('Filter error:', err);
+        // Fallback: pure client-side filter
+        document.querySelectorAll('.dish-item').forEach(item => {
+          if (category === 'all' || item.dataset.category === category) {
+            item.style.display = '';
+          } else {
+            item.style.display = 'none';
+          }
+        });
+      }
+    });
+  });
+
+  // AJAX search with debounce
+  let searchTimeout;
+  const searchInput = document.getElementById('menu-search');
+  if (searchInput) {
+    searchInput.addEventListener('input', function () {
+      clearTimeout(searchTimeout);
+      const query = this.value.trim();
+      const activeCategory = document.querySelector('.filter-pill.active');
+      const category = activeCategory ? activeCategory.dataset.category : 'all';
+
+      searchTimeout = setTimeout(async () => {
+        try {
+          const params = new URLSearchParams();
+          if (category && category !== 'all') params.set('category', category);
+          if (query) params.set('q', query);
+
+          const res = await fetch(`/api/dishes?${params.toString()}`);
+          const data = await res.json();
+          if (data.success) {
+            renderDishes(data.dishes);
+          }
+        } catch (err) {
+          // Fallback: client-side search
+          document.querySelectorAll('.dish-item').forEach(item => {
+            const text = item.textContent.toLowerCase();
+            item.style.display = text.includes(query.toLowerCase()) || !query ? '' : 'none';
+          });
+        }
+      }, 300);
+    });
+  }
+
+  // Render dishes from AJAX response
+  function renderDishes(dishes) {
+    const grid = document.getElementById('dishes-grid');
+    if (!grid) return;
+
+    if (dishes.length === 0) {
+      grid.innerHTML = `
+        <div class="col-12 text-center py-5">
+          <i class="bi bi-search" style="font-size: 3rem; color: #ccc;"></i>
+          <p class="text-muted mt-3">No dishes found matching your criteria.</p>
+        </div>`;
+      return;
+    }
+
+    const lang = document.documentElement.lang || 'en';
+    const currency = '<%= settings.currencySymbol || "ETB" %>';
+
+    grid.innerHTML = dishes.map((dish, index) => {
+      const name = lang === 'am' && dish.nameAm ? dish.nameAm : dish.name;
+      const desc = lang === 'am' && dish.descriptionAm ? dish.descriptionAm : dish.description;
+      const ownerName = dish.owner ? (dish.owner.restaurantName || dish.owner.name) : '';
+      const spiceIcons = { 'mild': '🌶️', 'medium': '🌶️🌶️', 'hot': '🔥', 'extra-hot': '🔥🔥' };
+      const spice = dish.spiceLevel ? (spiceIcons[dish.spiceLevel] || '') : '';
+
+      let ratingHtml = '';
+      if (dish.averageRating > 0) {
+        ratingHtml = '<div class="dish-rating mb-2">';
+        for (let i = 1; i <= 5; i++) {
+          ratingHtml += `<i class="bi bi-star${i <= Math.round(dish.averageRating) ? '-fill text-warning' : ' text-muted'}" style="font-size: 0.8rem;"></i>`;
+        }
+        ratingHtml += `<span class="text-muted small ms-1">(${dish.reviewCount})</span></div>`;
+      }
+
+      const ownerHtml = ownerName ? `
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <div class="rounded-circle d-flex align-items-center justify-content-center"
+            style="width: 28px; height: 28px; background: linear-gradient(135deg, #078930, #056b24); flex-shrink: 0;">
+            <i class="bi bi-shop text-white" style="font-size: 0.7rem;"></i>
+          </div>
+          <small class="fw-semibold" style="color: #555;">${ownerName}</small>
+        </div>` : '';
+
+      return `
+        <div class="col-md-6 col-lg-4 dish-item" data-category="${dish.category}"
+          style="animation: fadeInUp 0.4s ease ${Math.min(index * 0.05, 0.5)}s both;">
+          <div class="dish-card">
+            <div class="dish-card-category">${spice ? `<span class="me-1">${spice}</span>` : ''}${dish.category}</div>
+            <img src="${dish.imageUrl || 'https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=400'}"
+              alt="${dish.name}" class="dish-card-img"
+              onerror="this.src='https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=400'">
+            <div class="dish-card-body">
+              ${ownerHtml}
+              <h5 class="dish-card-title">${name}</h5>
+              <p class="dish-card-desc">${desc}</p>
+              ${ratingHtml}
+              <div class="dish-card-footer">
+                <span class="dish-price">${currency} ${dish.price.toFixed(2)}</span>
+                <button class="btn btn-primary btn-sm rounded-pill ajax-add-cart" data-dish-id="${dish._id}">
+                  <i class="bi bi-cart-plus me-1"></i>Add
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+</script>
