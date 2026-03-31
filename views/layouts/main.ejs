@@ -6,9 +6,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description"
     content="EthioFood Delivery - Authentic Ethiopian food and coffee delivered to your door. Order Doro Wat, Kitfo, Shiro and more.">
-  <title>
-    <%= typeof title !=='undefined' ? title + ' | ' : '' %>EthioFood Delivery
-  </title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#078930">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="EthioFood">
+  <link rel="apple-touch-icon" href="/images/icon-192.png">
+  <title><%= typeof title !== 'undefined' ? title + ' | ' : '' %>EthioFood Delivery</title>
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link
@@ -24,100 +28,102 @@
   <link rel="stylesheet" href="/css/style.css">
   <% if (vapidPublicKey) { %>
     <meta name="vapid-key" content="<%= vapidPublicKey %>">
-    <% } %>
+  <% } %>
 </head>
 
 <body>
   <%- include('../partials/header') %>
 
-    <!-- Flash Messages -->
-    <div id="flash-container" class="container mt-3">
-      <% if (locals.success_msg && success_msg.length> 0) { %>
-        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm rounded-4" role="alert">
-          <i class="bi bi-check-circle-fill me-2"></i>
-          <%= success_msg %>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        <% } %>
-          <% if (locals.error_msg && error_msg.length> 0) { %>
-            <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm rounded-4" role="alert">
-              <i class="bi bi-exclamation-triangle-fill me-2"></i>
-              <%= error_msg %>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            <% } %>
-    </div>
+  <!-- Flash Messages -->
+  <div id="flash-container" class="container mt-3">
+    <% if (locals.success_msg && success_msg.length> 0) { %>
+      <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm rounded-4" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        <%= success_msg %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    <% } %>
+    <% if (locals.error_msg && error_msg.length> 0) { %>
+      <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm rounded-4" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <%= error_msg %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    <% } %>
+  </div>
 
-    <!-- Main content -->
-    <main>
-      <%- body %>
-    </main>
+  <!-- Main content -->
+  <main>
+    <%- body %>
+  </main>
 
-    <%- include('../partials/footer') %>
+  <%- include('../partials/footer') %>
 
-      <!-- Toast Container -->
-      <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 9999;"></div>
+  <!-- Toast Container -->
+  <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 9999;"></div>
 
-      <!-- Bootstrap JS Bundle -->
-      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-      <!-- Custom JS -->
-      <script src="/js/main.js"></script>
+  <!-- Bootstrap JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Custom JS -->
+  <script src="/js/main.js"></script>
 
-      <!-- Service Worker + Push Notification Registration (Providers only) -->
-      <% if (session && session.role==='provider' ) { %>
-        <script>
-          (function () {
-            if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  <!-- Service Worker Registration (for PWA, offline, and install prompt) -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('✅ Service Worker registered', reg))
+        .catch(err => console.error('❌ Service Worker registration failed', err));
+    }
+  </script>
 
-            const vapidMeta = document.querySelector('meta[name="vapid-key"]');
-            if (!vapidMeta) return;
-            const vapidKey = vapidMeta.content;
-            if (!vapidKey) return;
+  <!-- Push notification subscription for providers only -->
+  <% if (session && session.role === 'provider') { %>
+    <script>
+      (function () {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
 
-            function urlBase64ToUint8Array(base64String) {
-              const padding = '='.repeat((4 - base64String.length % 4) % 4);
-              const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-              const rawData = atob(base64);
-              const outputArray = new Uint8Array(rawData.length);
-              for (let i = 0; i < rawData.length; i++) outputArray[i] = rawData.charCodeAt(i);
-              return outputArray;
-            }
+        const vapidMeta = document.querySelector('meta[name="vapid-key"]');
+        if (!vapidMeta) return;
+        const vapidKey = vapidMeta.content;
+        if (!vapidKey) return;
 
-            navigator.serviceWorker.register('/sw.js').then(async function (reg) {
-              console.log('✅ Service Worker registered');
+        function urlBase64ToUint8Array(base64String) {
+          const padding = '='.repeat((4 - base64String.length % 4) % 4);
+          const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+          const rawData = atob(base64);
+          const outputArray = new Uint8Array(rawData.length);
+          for (let i = 0; i < rawData.length; i++) outputArray[i] = rawData.charCodeAt(i);
+          return outputArray;
+        }
 
-              // Check / request notification permission
-              let permission = Notification.permission;
-              if (permission === 'default') {
-                permission = await Notification.requestPermission();
-              }
-              if (permission !== 'granted') {
-                console.log('⚠️ Notification permission denied');
-                return;
-              }
+        navigator.serviceWorker.ready.then(async function (reg) {
+          let permission = Notification.permission;
+          if (permission === 'default') {
+            permission = await Notification.requestPermission();
+          }
+          if (permission !== 'granted') {
+            console.log('⚠️ Notification permission denied');
+            return;
+          }
 
-              // Subscribe to push
-              let subscription = await reg.pushManager.getSubscription();
-              if (!subscription) {
-                subscription = await reg.pushManager.subscribe({
-                  userVisibleOnly: true,
-                  applicationServerKey: urlBase64ToUint8Array(vapidKey)
-                });
-              }
-
-              // Send subscription to server
-              await fetch('/owner/push/subscribe', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ subscription: subscription.toJSON() })
-              });
-              console.log('🔔 Push subscription active');
-            }).catch(function (err) {
-              console.error('SW registration error:', err);
+          let subscription = await reg.pushManager.getSubscription();
+          if (!subscription) {
+            subscription = await reg.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: urlBase64ToUint8Array(vapidKey)
             });
-          })();
-        </script>
-        <% } %>
+          }
+
+          await fetch('/owner/push/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ subscription: subscription.toJSON() })
+          });
+          console.log('🔔 Push subscription active');
+        }).catch(err => console.error('Push subscription error:', err));
+      })();
+    </script>
+  <% } %>
 </body>
 
 </html>

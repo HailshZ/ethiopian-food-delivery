@@ -262,3 +262,29 @@ window.addEventListener('beforeunload', function () {
     document.body.style.transition = 'opacity 0.15s ease';
     document.body.style.opacity = '0.5';
 });
+
+// ---- PWA Install Button (shows when the browser can install the app) ----
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+
+    // Create a floating install button
+    const btn = document.createElement('button');
+    btn.textContent = '📱 Install App';
+    btn.classList.add('btn', 'btn-success', 'rounded-pill', 'fixed-bottom', 'm-3');
+    btn.style.position = 'fixed';
+    btn.style.bottom = '0';
+    btn.style.right = '0';
+    btn.style.zIndex = '1000';
+    btn.onclick = async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`User response to install: ${outcome}`);
+            deferredPrompt = null;
+            btn.remove();
+        }
+    };
+    document.body.appendChild(btn);
+});
