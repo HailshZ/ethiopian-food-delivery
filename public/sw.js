@@ -1,46 +1,49 @@
-// sw.js – Service Worker for push notifications
-self.addEventListener('push', function (event) {
-    let data = { title: 'EthioFood', body: 'You have a new notification', url: '/' };
-    try {
-        data = event.data.json();
-    } catch (e) {
-        data.body = event.data ? event.data.text() : data.body;
-    }
+// public/sw.js – Service Worker with cache-first strategy for static assets
+const CACHE_NAME = 'ethiofood-v1';
+const urlsToCache = [
+  '/',
+  '/menu',
+  '/offline.html', // you'll create this file
+  '/css/style.css',
+  '/js/main.js',
+  '/manifest.json'
+];
 
-    const options = {
-        body: data.body,
-        icon: data.icon || '/images/icon-192.png',
-        badge: data.badge || '/images/icon-192.png',
-        vibrate: [200, 100, 200],
-        data: { url: data.url || '/' },
-        actions: [
-            { action: 'open', title: 'View' },
-            { action: 'dismiss', title: 'Dismiss' }
-        ]
-    };
-
-    event.waitUntil(
-        self.registration.showNotification(data.title || 'EthioFood Delivery', options)
-    );
+// Install event – cache essential assets
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+  );
 });
 
-self.addEventListener('notificationclick', function (event) {
-    event.notification.close();
-    if (event.action === 'dismiss') return;
+// Fetch event – serve from cache, fallback to network
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request).then(response => {
+      if (response) {
+        return response;
+      }
+      return fetch(event.request).catch(() => {
+        // If offline and request is for a page, show offline page
+        if (event.request.mode === 'navigate') {
+          return caches.match('/offline.html');
+        }
+      });
+    })
+  );
+});
 
-    const url = event.notification.data && event.notification.data.url ? event.notification.data.url : '/';
-    event.waitUntil(
-        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (clientList) {
-            // Focus existing tab if open
-            for (const client of clientList) {
-                if (client.url.includes(url) && 'focus' in client) {
-                    return client.focus();
-                }
-            }
-            // Otherwise open new tab
-            if (clients.openWindow) {
-                return clients.openWindow(url);
-            }
+// Activate event – clean up old caches
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cache => {
+          if (cache !== CACHE_NAME) {
+            return caches.delete(cache);
+          }
         })
-    );
+      );
+    })
+  );
 });

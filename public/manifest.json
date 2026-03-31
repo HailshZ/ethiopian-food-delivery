@@ -1,0 +1,25 @@
+{
+  "name": "EthioFood Delivery",
+  "short_name": "EthioFood",
+  "description": "Authentic Ethiopian food and coffee delivered fresh to your door.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#078930",
+  "theme_color": "#078930",
+  "icons": [
+    {
+      "src": "/images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "scope": "/",
+  "orientation": "portrait"
+}
