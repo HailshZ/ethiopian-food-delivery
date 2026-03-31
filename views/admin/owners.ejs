@@ -10,24 +10,27 @@
             <form action="/admin/owner/add" method="post">
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <input type="text" name="name" class="form-control" placeholder="Full Name" required>
+                        <label for="name" class="form-label">Full Name</label>
+                        <input type="text" name="name" id="name" class="form-control" placeholder="Full Name" required>
                     </div>
                     <div class="col-md-3">
-                        <input type="email" name="email" class="form-control" placeholder="Email">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" name="email" id="email" class="form-control" placeholder="Email">
                     </div>
                     <div class="col-md-3">
-                        <input type="phone" name="phone" class="form-control" placeholder="+251987654321" required>
+                        <label for="phone" class="form-label">Phone Number</label>
+                        <input type="tel" name="phone" id="phone" class="form-control" placeholder="+251987654321" required>
                     </div>
                     <div class="col-md-2">
-                        <input type="password" name="password" class="form-control" placeholder="Password" required
-                            minlength="6">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" name="password" id="password" class="form-control" placeholder="Password" required minlength="6">
                     </div>
                     <div class="col-md-2">
-                        <input type="text" name="restaurantName" class="form-control" placeholder="Restaurant Name">
+                        <label for="restaurantName" class="form-label">Restaurant Name</label>
+                        <input type="text" name="restaurantName" id="restaurantName" class="form-control" placeholder="Restaurant Name">
                     </div>
                     <div class="col-md-2">
-                        <button class="btn btn-success w-100 rounded-pill"><i class="bi bi-plus me-1"></i>Add
-                            Provider</button>
+                        <button class="btn btn-success w-100 rounded-pill mt-4"><i class="bi bi-plus me-1"></i>Add Provider</button>
                     </div>
                 </div>
             </form>
@@ -53,31 +56,18 @@
                             </thead>
                             <tbody>
                                 <% owners.forEach(o=> { %>
-                                    <tr>
-                                        <td><strong>
-                                                <%= o.name %>
-                                            </strong></td>
-                                        <td>
-                                            <%= o.email %>
-                                        </td>
-                                        <td><span class="badge bg-info rounded-pill">
-                                                <%= o.restaurantName || 'N/A' %>
-                                            </span></td>
-                                        <td>
-                                            <span
-                                                class="badge bg-<%= o.isActive ? 'success' : 'danger' %> rounded-pill">
-                                                <%= o.isActive ? 'Active' : 'Inactive' %>
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <%= new Date(o.createdAt).toLocaleDateString() %>
-                                        </td>
+                                     <tr>
+                                        <td><strong><%= o.name %></strong></td>
+                                        <td><%= o.email %></td>
+                                        <td><span class="badge bg-info rounded-pill"><%= o.restaurantName || 'N/A' %></span></td>
+                                        <td><span class="badge bg-<%= o.isActive ? 'success' : 'danger' %> rounded-pill"><%= o.isActive ? 'Active' : 'Inactive' %></span></td>
+                                        <td><%= new Date(o.createdAt).toLocaleDateString() %></td>
                                     </tr>
-                                    <% }) %>
+                                <% }) %>
                             </tbody>
                         </table>
                     </div>
-                    <% } %>
+                <% } %>
         </div>
     </div>
 </div>
