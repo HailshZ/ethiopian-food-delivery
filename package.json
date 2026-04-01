@@ -4,7 +4,7 @@
   "description": "Ethiopian Food Delivery – PostgreSQL/Sequelize",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js",
+    "start": "node --no-experimental-fetch app.js",
     "dev": "nodemon server.js"
   },
   "engines": {

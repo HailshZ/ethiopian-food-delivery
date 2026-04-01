@@ -2,17 +2,24 @@
 const webpush = require('web-push');
 const { PushSubscription } = require('../models');
 
-// Configure VAPID
+// Configure VAPID (gracefully skip if keys are invalid)
+let vapidConfigured = false;
 if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
-    webpush.setVapidDetails(
-        process.env.VAPID_SUBJECT || 'mailto:admin@ethiofood.com',
-        process.env.VAPID_PUBLIC_KEY,
-        process.env.VAPID_PRIVATE_KEY
-    );
+    try {
+        webpush.setVapidDetails(
+            process.env.VAPID_SUBJECT || 'mailto:admin@ethiofood.com',
+            process.env.VAPID_PUBLIC_KEY,
+            process.env.VAPID_PRIVATE_KEY
+        );
+        vapidConfigured = true;
+        console.log('✅ VAPID push notifications configured');
+    } catch (err) {
+        console.warn('⚠️  VAPID key error (push notifications disabled):', err.message);
+    }
 }
 
 async function sendPushToUser(userId, payload) {
-    if (!process.env.VAPID_PUBLIC_KEY) {
+    if (!vapidConfigured) {
         console.log('⚠️  VAPID keys not set – skipping push notification');
         return;
     }
