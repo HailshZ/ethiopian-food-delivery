@@ -1,9 +1,7 @@
-// routes/auth.js – Authentication routes
+// routes/auth.js – Authentication routes (Sequelize)
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcrypt');
-const User = require('../models/User');
-const Order = require('../models/Order');
+const { User, Order } = require('../models');
 const { isLoggedIn } = require('../middleware/auth');
 
 // GET /register
@@ -29,14 +27,14 @@ router.post('/register', async (req, res) => {
             return res.render('auth/register', { title: 'Register', errors, name, email, phone });
         }
         // Check for existing phone
-        const existingPhone = await User.findOne({ phone });
+        const existingPhone = await User.findOne({ where: { phone } });
         if (existingPhone) {
             req.flash('error', 'Phone number is already registered');
             return res.redirect('/register');
         }
         // Check for existing email if provided
         if (email && email.trim()) {
-            const existingEmail = await User.findOne({ email: email.trim().toLowerCase() });
+            const existingEmail = await User.findOne({ where: { email: email.trim().toLowerCase() } });
             if (existingEmail) {
                 req.flash('error', 'Email is already registered');
                 return res.redirect('/register');
@@ -46,8 +44,7 @@ router.post('/register', async (req, res) => {
         if (email && email.trim()) {
             userData.email = email.trim();
         }
-        const newUser = new User(userData);
-        await newUser.save();
+        await User.create(userData);
         req.flash('success', 'You are now registered. Please log in.');
         res.redirect('/login');
     } catch (err) {
@@ -67,9 +64,9 @@ router.post('/login', async (req, res) => {
     try {
         const { identifier, password } = req.body;
         // Try to find user by email or phone
-        let user = await User.findOne({ email: identifier.trim().toLowerCase() });
+        let user = await User.findOne({ where: { email: identifier.trim().toLowerCase() } });
         if (!user) {
-            user = await User.findOne({ phone: identifier.trim() });
+            user = await User.findOne({ where: { phone: identifier.trim() } });
         }
         if (!user) {
             req.flash('error', 'Invalid email/phone or password');
@@ -85,7 +82,7 @@ router.post('/login', async (req, res) => {
             req.flash('error', 'Your account has been deactivated. Contact support.');
             return res.redirect('/login');
         }
-        req.session.userId = user._id;
+        req.session.userId = user.id;
         req.session.userName = user.name;
         req.session.isAdmin = user.isAdmin;
         req.session.role = user.role || 'user';
@@ -116,9 +113,15 @@ router.get('/logout', (req, res) => {
 // GET /profile
 router.get('/profile', isLoggedIn, async (req, res) => {
     try {
-        const user = await User.findById(req.session.userId).select('-password');
-        const orders = await Order.find({ user: req.session.userId }).sort({ createdAt: -1 }).limit(10);
-        const totalSpent = orders.reduce((sum, o) => o.paymentStatus === 'paid' ? sum + o.totalAmount : sum, 0);
+        const user = await User.findByPk(req.session.userId, {
+            attributes: { exclude: ['password'] }
+        });
+        const orders = await Order.findAll({
+            where: { userId: req.session.userId },
+            order: [['createdAt', 'DESC']],
+            limit: 10
+        });
+        const totalSpent = orders.reduce((sum, o) => o.paymentStatus === 'paid' ? sum + parseFloat(o.totalAmount) : sum, 0);
         res.render('auth/profile', { title: 'Profile', user, orders, totalSpent });
     } catch (err) {
         console.error(err);

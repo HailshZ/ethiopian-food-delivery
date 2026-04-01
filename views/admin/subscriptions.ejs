@@ -55,7 +55,7 @@
                                             <%= new Date(s.startDate).toLocaleDateString() %>
                                         </td>
                                         <td>
-                                            <form action="/admin/subscription/<%= s._id %>/update" method="post"
+                                            <form action="/admin/subscription/<%= s.id %>/update" method="post"
                                                 class="d-flex gap-1">
                                                 <select name="status" class="form-select form-select-sm"
                                                     style="width: 110px;">

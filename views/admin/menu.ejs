@@ -28,7 +28,7 @@
               </p>
               <div class="d-flex justify-content-between align-items-center mt-3">
                 <span class="price" style="font-size: 1.3rem; font-weight: 700; color: #078930;"><%= (dish.price) %></span>
-                <form action="/cart/add/<%= dish._id %>" method="post">
+                <form action="/cart/add/<%= dish.id %>" method="post">
                   <button type="submit" class="btn text-white" style="background: linear-gradient(135deg, #078930, #056b24); border: none; border-radius: 50px; padding: 0.5rem 1.5rem; font-weight: 600;">
                     <i class="bi bi-cart-plus me-2"></i><%= t('add_to_cart') %>
                   </button>

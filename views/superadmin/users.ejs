@@ -72,8 +72,7 @@
                                     <%= new Date(u.createdAt).toLocaleDateString() %>
                                 </td>
                                 <td>
-                                    <form action="/superadmin/user/<%= u._id %>/role" method="post"
-                                        class="d-flex gap-1">
+                                    <form action="/superadmin/user/<%= u.id %>/role" method="post" class="d-flex gap-1">
                                         <select name="role" class="form-select form-select-sm" style="width:110px;">
                                             <option value="user" <%=u.role==='user' ? 'selected' : '' %>>User</option>
                                             <option value="provider" <%=u.role==='provider' ? 'selected' : '' %>
@@ -88,8 +87,8 @@
                                     </form>
                                 </td>
                                 <td>
-                                    <% if (u._id.toString() !==session.userId) { %>
-                                        <form action="/superadmin/user/<%= u._id %>/toggle" method="post">
+                                    <% if (u.id !==session.userId) { %>
+                                        <form action="/superadmin/user/<%= u.id %>/toggle" method="post">
                                             <button
                                                 class="btn btn-sm btn-<%= u.isActive !== false ? 'outline-danger' : 'outline-success' %> rounded-pill">
                                                 <i

@@ -20,7 +20,7 @@
               <div class="text-muted small">
                 <%= t('order_number') %>
               </div>
-              <div class="fw-bold">#<%= order._id.toString().slice(-8) %>
+              <div class="fw-bold">#<%= String(order.id).padStart(8, '0') %>
               </div>
             </div>
             <div class="col-sm-6">
@@ -66,7 +66,7 @@
           <% }) %>
 
             <div class="d-flex gap-3 justify-content-center mt-4">
-              <a href="/delivery/<%= order._id %>" class="btn btn-primary rounded-pill px-4">
+              <a href="/delivery/<%= order.id %>" class="btn btn-primary rounded-pill px-4">
                 <i class="bi bi-geo-alt me-2"></i>
                 <%= t('track_delivery') %>
               </a>

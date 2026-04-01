@@ -282,8 +282,8 @@
   });
 
   // Leaflet Map Initialization
-  const restaurantLat = <%= settings.restaurantLocation ?settings.restaurantLocation.lat: 9.0192 %>;
-  const restaurantLng = <%= settings.restaurantLocation ?settings.restaurantLocation.lng: 38.7525 %>;
+  const restaurantLat = <%= settings.restaurantLat ? settings.restaurantLat : 9.0192 %>;
+  const restaurantLng = <%= settings.restaurantLng ? settings.restaurantLng : 38.7525 %>;
 
   const map = L.map('delivery-map').setView([restaurantLat, restaurantLng], 13);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {

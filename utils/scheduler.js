@@ -1,29 +1,33 @@
-// utils/scheduler.js – Periodic tasks: subscription approaching notifications
-const Subscription = require('../models/Subscription');
-const MealPlan = require('../models/MealPlan');
-const Notification = require('../models/Notification');
+// utils/scheduler.js – Periodic tasks: subscription approaching notifications (Sequelize)
+const { Op } = require('sequelize');
+const { Subscription, MealPlan, Notification, User } = require('../models');
 const { sendPushToUser } = require('./pushNotify');
 
 const CHECK_INTERVAL = 15 * 60 * 1000; // 15 minutes
 
-/**
- * Check active subscriptions and notify owners if the delivery time
- * is approaching (within 1 hour).
- */
 async function checkApproachingSubscriptions() {
     try {
         const now = new Date();
-        const todayStr = now.toISOString().slice(0, 10); // 'YYYY-MM-DD'
+        const todayStart = new Date(now);
+        todayStart.setHours(0, 0, 0, 0);
+        const todayEnd = new Date(now);
+        todayEnd.setHours(23, 59, 59, 999);
 
-        // Find active, paid subscriptions that haven't expired
-        const subs = await Subscription.find({
-            status: 'active',
-            paymentStatus: 'paid',
-            endDate: { $gte: now }
-        }).populate({
-            path: 'mealPlan',
-            populate: { path: 'owner' }
-        }).populate('user', 'name phone');
+        const subs = await Subscription.findAll({
+            where: {
+                status: 'active',
+                paymentStatus: 'paid',
+                endDate: { [Op.gte]: now }
+            },
+            include: [
+                {
+                    model: MealPlan,
+                    as: 'mealPlan',
+                    include: [{ model: User, as: 'owner' }]
+                },
+                { model: User, as: 'user', attributes: ['name', 'phone'] }
+            ]
+        });
 
         for (const sub of subs) {
             if (!sub.mealPlan || !sub.mealPlan.owner) continue;
@@ -31,42 +35,36 @@ async function checkApproachingSubscriptions() {
             const deliveryTime = sub.deliveryTime || '12:00';
             const [hours, minutes] = deliveryTime.split(':').map(Number);
 
-            // Build today's delivery datetime
             const deliveryDate = new Date(now);
             deliveryDate.setHours(hours, minutes, 0, 0);
 
-            // Calculate difference in milliseconds
             const diff = deliveryDate.getTime() - now.getTime();
 
-            // Notify if delivery is within 1 hour (and hasn't passed yet)
             if (diff > 0 && diff <= 60 * 60 * 1000) {
-                // Check if we already sent a notification for this subscription today
                 const existing = await Notification.findOne({
-                    owner: sub.mealPlan.owner._id,
-                    type: 'plan_approaching',
-                    relatedSubscription: sub._id,
-                    createdAt: {
-                        $gte: new Date(todayStr + 'T00:00:00.000Z'),
-                        $lt: new Date(todayStr + 'T23:59:59.999Z')
+                    where: {
+                        ownerId: sub.mealPlan.ownerId,
+                        type: 'plan_approaching',
+                        relatedSubscriptionId: sub.id,
+                        createdAt: { [Op.between]: [todayStart, todayEnd] }
                     }
                 });
 
                 if (!existing) {
                     const customerName = sub.user ? sub.user.name : 'A customer';
                     await Notification.create({
-                        owner: sub.mealPlan.owner._id,
+                        ownerId: sub.mealPlan.ownerId,
                         type: 'plan_approaching',
                         message: `📅 ${customerName}'s meal plan "${sub.mealPlan.name}" delivery is approaching at ${deliveryTime} today.`,
-                        relatedSubscription: sub._id
+                        relatedSubscriptionId: sub.id
                     });
-                    // Send push notification to the provider
-                    sendPushToUser(sub.mealPlan.owner._id, {
+                    sendPushToUser(sub.mealPlan.ownerId, {
                         title: '📅 Delivery Approaching!',
                         body: `${customerName}'s meal plan "${sub.mealPlan.name}" delivery at ${deliveryTime} today.`,
                         icon: '/images/icon-192.png',
                         url: '/owner/orders'
                     });
-                    console.log(`🔔 Plan approaching notification sent for subscription ${sub._id}`);
+                    console.log(`🔔 Plan approaching notification sent for subscription ${sub.id}`);
                 }
             }
         }
@@ -77,7 +75,6 @@ async function checkApproachingSubscriptions() {
 
 function startScheduler() {
     console.log('⏰ Scheduler started – checking every 15 minutes');
-    // Run once immediately then at interval
     checkApproachingSubscriptions();
     setInterval(checkApproachingSubscriptions, CHECK_INTERVAL);
 }

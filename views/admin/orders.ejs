@@ -41,7 +41,7 @@
                             <tbody>
                                 <% orders.forEach(order=> { %>
                                     <tr>
-                                        <td>#<%= order._id.toString().slice(-6) %>
+                                        <td>#<%= String(order.id).padStart(6, '0') %>
                                         </td>
                                         <td>
                                             <strong>
@@ -83,7 +83,7 @@
                                             <%= new Date(order.createdAt).toLocaleDateString() %>
                                         </td>
                                         <td>
-                                            <form action="/admin/order/<%= order._id %>/update" method="post"
+                                            <form action="/admin/order/<%= order.id %>/update" method="post"
                                                 class="d-flex">
                                                 <select name="status" class="form-select form-select-sm me-2">
                                                     <option value="pending" <%=order.orderStatus==='pending'

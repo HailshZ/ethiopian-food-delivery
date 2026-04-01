@@ -1,0 +1,12 @@
+PassengerNodejs /home/YOUR_CPANEL_USERNAME/nodevenv/YOUR_APP_NAME/18/bin/node
+PassengerAppType node
+PassengerStartupFile app.js
+
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ /app.js [QSA,L]
+
+# Force HTTPS (uncomment if SSL is configured)
+# RewriteCond %{HTTPS} off
+# RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]

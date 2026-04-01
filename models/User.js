@@ -1,71 +1,92 @@
-const mongoose = require('mongoose');
+// models/User.js – Sequelize User model
+const { DataTypes } = require('sequelize');
 const bcrypt = require('bcrypt');
 
-const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  email: {
-    type: String,
-    unique: true,
-    sparse: true,
-    lowercase: true,
-    trim: true
-  },
-  password: {
-    type: String,
-    required: true
-  },
-  phone: {
-    type: String,
-    required: true,
-    unique: true,
-    trim: true
-  },
-  address: {
-    street: String,
-    city: String,
-    zipCode: String
-  },
-  isAdmin: {
-    type: Boolean,
-    default: false
-  },
-  role: {
-    type: String,
-    enum: ['user', 'admin', 'superadmin', 'provider'],
-    default: 'user'
-  },
-  isActive: {
-    type: Boolean,
-    default: true
-  },
-  restaurantName: {
-    type: String,
-    trim: true,
-    default: ''
-  }
-}, {
-  timestamps: true
-});
+module.exports = (sequelize) => {
+  const User = sequelize.define('User', {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true
+    },
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    email: {
+      type: DataTypes.STRING,
+      unique: true,
+      allowNull: true,
+      set(value) {
+        this.setDataValue('email', value ? value.toLowerCase().trim() : null);
+      }
+    },
+    password: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    phone: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true
+    },
+    addressStreet: {
+      type: DataTypes.STRING,
+      defaultValue: ''
+    },
+    addressCity: {
+      type: DataTypes.STRING,
+      defaultValue: ''
+    },
+    addressZipCode: {
+      type: DataTypes.STRING,
+      defaultValue: ''
+    },
+    isAdmin: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    },
+    role: {
+      type: DataTypes.ENUM('user', 'admin', 'superadmin', 'provider'),
+      defaultValue: 'user'
+    },
+    isActive: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true
+    },
+    restaurantName: {
+      type: DataTypes.STRING,
+      defaultValue: ''
+    }
+  }, {
+    tableName: 'users',
+    timestamps: true,
+    hooks: {
+      beforeCreate: async (user) => {
+        if (user.password) {
+          const salt = await bcrypt.genSalt(10);
+          user.password = await bcrypt.hash(user.password, salt);
+        }
+      },
+      beforeUpdate: async (user) => {
+        if (user.changed('password')) {
+          const salt = await bcrypt.genSalt(10);
+          user.password = await bcrypt.hash(user.password, salt);
+        }
+      }
+    }
+  });
 
-// Hash password before saving
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (err) {
-    next(err);
-  }
-});
+  User.prototype.comparePassword = async function (candidatePassword) {
+    return bcrypt.compare(candidatePassword, this.password);
+  };
 
-// Method to compare password
-userSchema.methods.comparePassword = async function (candidatePassword) {
-  return await bcrypt.compare(candidatePassword, this.password);
+  // Helper to return user data without password
+  User.prototype.toSafeJSON = function () {
+    const values = { ...this.get() };
+    delete values.password;
+    return values;
+  };
+
+  return User;
 };
-
-module.exports = mongoose.model('User', userSchema);

@@ -76,7 +76,7 @@
                                     </td>
                                     <td>
                                         <div class="d-flex gap-1">
-                                            <form action="/admin/promo/<%= promo._id %>/toggle" method="POST"
+                                            <form action="/admin/promo/<%= promo.id %>/toggle" method="POST"
                                                 class="d-inline">
                                                 <button type="submit"
                                                     class="btn btn-sm btn-outline-warning rounded-pill"
@@ -84,7 +84,7 @@
                                                     <i class="bi bi-<%= promo.isActive ? 'pause' : 'play' %>-fill"></i>
                                                 </button>
                                             </form>
-                                            <form action="/admin/promo/<%= promo._id %>/delete" method="POST"
+                                            <form action="/admin/promo/<%= promo.id %>/delete" method="POST"
                                                 class="d-inline" onsubmit="return confirm('Delete this promo code?')">
                                                 <button type="submit"
                                                     class="btn btn-sm btn-outline-danger rounded-pill">

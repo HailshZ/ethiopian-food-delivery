@@ -93,7 +93,7 @@
                             </thead>
                             <tbody>
                                 <% dishes.forEach(d=> { %>
-                                    <tr id="dish-row-<%= d._id %>">
+                                    <tr id="dish-row-<%= d.id %>">
                                         <td>
                                             <div class="d-flex align-items-center gap-2">
                                                 <img src="<%= d.imageUrl %>" class="rounded-2"
@@ -124,17 +124,17 @@
                                         <td>
                                             <div class="form-check form-switch">
                                                 <input class="form-check-input dish-toggle" type="checkbox"
-                                                    id="toggle-<%= d._id %>" data-id="<%= d._id %>" <%=d.isAvailable
+                                                    id="toggle-<%= d.id %>" data-id="<%= d.id %>" <%=d.isAvailable
                                                     ? 'checked' : '' %>
                                                 style="cursor: pointer; width: 3em; height: 1.5em;">
-                                                <label class="form-check-label small" for="toggle-<%= d._id %>"
-                                                    id="toggle-label-<%= d._id %>">
+                                                <label class="form-check-label small" for="toggle-<%= d.id %>"
+                                                    id="toggle-label-<%= d.id %>">
                                                     <%= d.isAvailable ? 'Active' : 'Inactive' %>
                                                 </label>
                                             </div>
                                         </td>
                                         <td>
-                                            <a href="/owner/dish/<%= d._id %>/edit"
+                                            <a href="/owner/dish/<%= d.id %>/edit"
                                                 class="btn btn-sm btn-outline-primary rounded-pill"><i
                                                     class="bi bi-pencil"></i></a>
                                         </td>

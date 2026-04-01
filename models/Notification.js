@@ -1,39 +1,47 @@
-const mongoose = require('mongoose');
+// models/Notification.js – Sequelize Notification model
+const { DataTypes } = require('sequelize');
 
-const notificationSchema = new mongoose.Schema({
-    owner: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-    },
-    type: {
-        type: String,
-        enum: ['new_order', 'plan_approaching'],
-        required: true
-    },
-    message: {
-        type: String,
-        required: true
-    },
-    relatedOrder: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Order',
-        default: null
-    },
-    relatedSubscription: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Subscription',
-        default: null
-    },
-    isRead: {
-        type: Boolean,
-        default: false
-    }
-}, {
-    timestamps: true
-});
+module.exports = (sequelize) => {
+    const Notification = sequelize.define('Notification', {
+        id: {
+            type: DataTypes.INTEGER,
+            primaryKey: true,
+            autoIncrement: true
+        },
+        ownerId: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: { model: 'users', key: 'id' }
+        },
+        type: {
+            type: DataTypes.ENUM('new_order', 'plan_approaching'),
+            allowNull: false
+        },
+        message: {
+            type: DataTypes.TEXT,
+            allowNull: false
+        },
+        relatedOrderId: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            references: { model: 'orders', key: 'id' }
+        },
+        relatedSubscriptionId: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            references: { model: 'subscriptions', key: 'id' }
+        },
+        isRead: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false
+        }
+    }, {
+        tableName: 'notifications',
+        timestamps: true,
+        indexes: [
+            { fields: ['ownerId', 'isRead', 'createdAt'] }
+        ]
+    });
 
-// Index for efficient queries
-notificationSchema.index({ owner: 1, isRead: 1, createdAt: -1 });
-
-module.exports = mongoose.model('Notification', notificationSchema);
+    return Notification;
+};

@@ -1,64 +1,70 @@
-const mongoose = require('mongoose');
+// models/Dish.js – Sequelize Dish model
+const { DataTypes } = require('sequelize');
 
-const dishSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true
-  },
-  nameAm: {
-    type: String,        // Amharic name
-    required: true
-  },
-  description: {
-    type: String,
-    required: true
-  },
-  descriptionAm: {
-    type: String,        // Amharic description
-    required: true
-  },
-  price: {
-    type: Number,
-    required: true
-  },
-  category: {
-    type: String,
-    enum: ['food', 'coffee', 'drink', 'appetizer', 'breakfast', 'dessert', 'combo'],
-    default: 'food'
-  },
-  imageUrl: {
-    type: String,
-    default: '/images/placeholder.jpg' // We'll set a default
-  },
-  isAvailable: {
-    type: Boolean,
-    default: true
-  },
-  averageRating: {
-    type: Number,
-    default: 0
-  },
-  reviewCount: {
-    type: Number,
-    default: 0
-  },
-  spiceLevel: {
-    type: String,
-    enum: ['mild', 'medium', 'hot', 'extra-hot', ''],
-    default: ''
-  },
-  owner: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    default: null
-  },
-  approvalStatus: {
-    type: String,
-    enum: ['pending', 'approved', 'rejected'],
-    default: 'approved'
-  }
-}, {
-  timestamps: true
-});
+module.exports = (sequelize) => {
+  const Dish = sequelize.define('Dish', {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true
+    },
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    nameAm: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: false
+    },
+    descriptionAm: {
+      type: DataTypes.TEXT,
+      allowNull: false
+    },
+    price: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false
+    },
+    category: {
+      type: DataTypes.ENUM('food', 'coffee', 'drink', 'appetizer', 'breakfast', 'dessert', 'combo'),
+      defaultValue: 'food'
+    },
+    imageUrl: {
+      type: DataTypes.STRING,
+      defaultValue: '/images/placeholder.jpg'
+    },
+    isAvailable: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true
+    },
+    averageRating: {
+      type: DataTypes.DECIMAL(3, 1),
+      defaultValue: 0
+    },
+    reviewCount: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0
+    },
+    spiceLevel: {
+      type: DataTypes.ENUM('mild', 'medium', 'hot', 'extra-hot', ''),
+      defaultValue: ''
+    },
+    ownerId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: { model: 'users', key: 'id' }
+    },
+    approvalStatus: {
+      type: DataTypes.ENUM('pending', 'approved', 'rejected'),
+      defaultValue: 'approved'
+    }
+  }, {
+    tableName: 'dishes',
+    timestamps: true
+  });
 
-module.exports = mongoose.model('Dish', dishSchema);
+  return Dish;
+};

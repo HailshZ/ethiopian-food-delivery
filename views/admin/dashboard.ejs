@@ -68,7 +68,7 @@
                   <tbody>
                     <% recentOrders.forEach(order=> { %>
                       <tr>
-                        <td>#<%= order._id.toString().slice(-6) %>
+                        <td>#<%= String(order.id).padStart(6, '0') %>
                         </td>
                         <td>
                           <%= order.user ? order.user.name : 'N/A' %>

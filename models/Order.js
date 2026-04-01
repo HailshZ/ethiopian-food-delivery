@@ -1,93 +1,102 @@
-const mongoose = require('mongoose');
+// models/Order.js – Sequelize Order model
+const { DataTypes } = require('sequelize');
 
-const orderSchema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  items: [{
-    dishId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Dish',
-      required: true
+module.exports = (sequelize) => {
+  const Order = sequelize.define('Order', {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true
     },
-    name: String,
-    nameAm: String,
-    price: Number,
-    qty: Number,
-    totalPrice: Number,
-    imageUrl: String
-  }],
-  totalAmount: {
-    type: Number,
-    required: true
-  },
-  shippingAddress: {
-    street: { type: String, required: true },
-    city: { type: String, required: true },
-    zipCode: { type: String, required: true }
-  },
-  paymentMethod: {
-    type: String,
-    default: 'card'
-  },
-  paymentStatus: {
-    type: String,
-    enum: ['pending', 'paid', 'failed'],
-    default: 'pending'
-  },
-  orderStatus: {
-    type: String,
-    enum: ['pending', 'confirmed', 'preparing', 'delivering', 'delivered', 'cancelled'],
-    default: 'pending'
-  },
-  otp: {
-    type: String,
-    default: null
-  },
-  otpExpiry: {
-    type: Date,
-    default: null
-  },
-  chapaTxRef: String,
-  stripePaymentIntentId: String,
-  deliveryLocation: {
-    lat: { type: Number, default: 9.0192 },  // Default: Addis Ababa
-    lng: { type: Number, default: 38.7525 }
-  },
-  estimatedDelivery: { type: Date },
-  deliveryUpdates: [{
-    status: String,
-    location: { lat: Number, lng: Number },
-    timestamp: { type: Date, default: Date.now },
-    note: String
-  }],
-  discount: {
-    type: Number,
-    default: 0
-  },
-  promoCode: {
-    type: String,
-    default: ''
-  },
-  finalAmount: {
-    type: Number
-  },
-  isReviewed: {
-    type: Boolean,
-    default: false
-  },
-  deliveryFee: {
-    type: Number,
-    default: 0
-  },
-  deliveryDistance: {
-    type: Number,
-    default: 0
-  }
-}, {
-  timestamps: true
-});
+    userId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: { model: 'users', key: 'id' }
+    },
+    totalAmount: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false
+    },
+    shippingStreet: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    shippingCity: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    shippingZipCode: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    paymentMethod: {
+      type: DataTypes.STRING,
+      defaultValue: 'card'
+    },
+    paymentStatus: {
+      type: DataTypes.ENUM('pending', 'paid', 'failed'),
+      defaultValue: 'pending'
+    },
+    orderStatus: {
+      type: DataTypes.ENUM('pending', 'confirmed', 'preparing', 'delivering', 'delivered', 'cancelled'),
+      defaultValue: 'pending'
+    },
+    otp: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    otpExpiry: {
+      type: DataTypes.DATE,
+      allowNull: true
+    },
+    chapaTxRef: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    stripePaymentIntentId: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    deliveryLat: {
+      type: DataTypes.DECIMAL(10, 7),
+      defaultValue: 9.0192
+    },
+    deliveryLng: {
+      type: DataTypes.DECIMAL(10, 7),
+      defaultValue: 38.7525
+    },
+    estimatedDelivery: {
+      type: DataTypes.DATE,
+      allowNull: true
+    },
+    discount: {
+      type: DataTypes.DECIMAL(10, 2),
+      defaultValue: 0
+    },
+    promoCode: {
+      type: DataTypes.STRING,
+      defaultValue: ''
+    },
+    finalAmount: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true
+    },
+    isReviewed: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    },
+    deliveryFee: {
+      type: DataTypes.DECIMAL(10, 2),
+      defaultValue: 0
+    },
+    deliveryDistance: {
+      type: DataTypes.DECIMAL(10, 2),
+      defaultValue: 0
+    }
+  }, {
+    tableName: 'orders',
+    timestamps: true
+  });
 
-module.exports = mongoose.model('Order', orderSchema);
+  return Order;
+};

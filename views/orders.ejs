@@ -23,7 +23,7 @@
             <div class="glass-card order-card h-100">
               <div class="d-flex justify-content-between align-items-start mb-3">
                 <div>
-                  <h6 class="fw-bold mb-1">Order #<%= order._id.toString().slice(-8) %>
+                  <h6 class="fw-bold mb-1">Order #<%= String(order.id).padStart(8, '0') %>
                   </h6>
                   <span class="text-muted small">
                     <%= new Date(order.createdAt).toLocaleDateString() %>
@@ -68,11 +68,11 @@
               </div>
 
               <div class="d-flex gap-2">
-                <a href="/delivery/<%= order._id %>" class="btn btn-outline-primary btn-sm rounded-pill flex-fill">
+                <a href="/delivery/<%= order.id %>" class="btn btn-outline-primary btn-sm rounded-pill flex-fill">
                   <i class="bi bi-geo-alt me-1"></i> Track
                 </a>
                 <% if (order.orderStatus==='delivered' && !order.isReviewed) { %>
-                  <a href="/review/<%= order._id %>" class="btn btn-warning btn-sm rounded-pill flex-fill">
+                  <a href="/review/<%= order.id %>" class="btn btn-warning btn-sm rounded-pill flex-fill">
                     <i class="bi bi-star me-1"></i> Review
                   </a>
                   <% } else if (order.isReviewed) { %>

@@ -1,23 +1,17 @@
-// routes/superadmin.js – Super Admin system settings, admin management, and user management
+// routes/superadmin.js – Super Admin system settings and user management (Sequelize)
 const express = require('express');
 const router = express.Router();
 const { isLoggedIn } = require('../middleware/auth');
 const isSuperAdmin = require('../middleware/superadmin');
-const SystemSettings = require('../models/SystemSettings');
-const User = require('../models/User');
-const bcrypt = require('bcrypt');
+const { SystemSettings, User } = require('../models');
 
-// Apply both middlewares
 router.use(isLoggedIn, isSuperAdmin);
 
 // GET /superadmin/settings
 router.get('/settings', async (req, res) => {
     try {
         const settings = await SystemSettings.getSettings();
-        res.render('superadmin/settings', {
-            title: 'System Settings',
-            sysSettings: settings
-        });
+        res.render('superadmin/settings', { title: 'System Settings', sysSettings: settings });
     } catch (err) {
         console.error(err);
         req.flash('error', 'Error loading settings');
@@ -42,10 +36,8 @@ router.post('/settings', async (req, res) => {
         settings.baseDeliveryFee = parseFloat(baseDeliveryFee) || settings.baseDeliveryFee;
         settings.minOrderAmount = parseFloat(minOrderAmount) || settings.minOrderAmount;
         if (restaurantLat && restaurantLng) {
-            settings.restaurantLocation = {
-                lat: parseFloat(restaurantLat),
-                lng: parseFloat(restaurantLng)
-            };
+            settings.restaurantLat = parseFloat(restaurantLat);
+            settings.restaurantLng = parseFloat(restaurantLng);
         }
 
         await settings.save();
@@ -61,11 +53,11 @@ router.post('/settings', async (req, res) => {
 // GET /superadmin/users
 router.get('/users', async (req, res) => {
     try {
-        const users = await User.find().select('-password').sort({ createdAt: -1 });
-        res.render('superadmin/users', {
-            title: 'Manage Users',
-            users
+        const users = await User.findAll({
+            attributes: { exclude: ['password'] },
+            order: [['createdAt', 'DESC']]
         });
+        res.render('superadmin/users', { title: 'Manage Users', users });
     } catch (err) {
         console.error(err);
         req.flash('error', 'Error loading users');
@@ -73,7 +65,7 @@ router.get('/users', async (req, res) => {
     }
 });
 
-// POST /superadmin/admin/add – Add new admin
+// POST /superadmin/admin/add
 router.post('/admin/add', async (req, res) => {
     try {
         const { name, email, password, phone } = req.body;
@@ -81,22 +73,15 @@ router.post('/admin/add', async (req, res) => {
             req.flash('error', 'Name, email and password are required');
             return res.redirect('/superadmin/users');
         }
-
-        const exists = await User.findOne({ email: email.toLowerCase() });
+        const exists = await User.findOne({ where: { email: email.toLowerCase() } });
         if (exists) {
             req.flash('error', 'Email already registered');
             return res.redirect('/superadmin/users');
         }
-
-        const admin = new User({
-            name,
-            email: email.toLowerCase(),
-            password,
-            phone: phone || '',
-            isAdmin: true,
-            role: 'admin'
+        await User.create({
+            name, email: email.toLowerCase(), password,
+            phone: phone || '', isAdmin: true, role: 'admin'
         });
-        await admin.save();
         req.flash('success', `Admin "${name}" created successfully`);
         res.redirect('/superadmin/users');
     } catch (err) {
@@ -106,21 +91,18 @@ router.post('/admin/add', async (req, res) => {
     }
 });
 
-// POST /superadmin/user/:id/toggle – Activate/deactivate user
+// POST /superadmin/user/:id/toggle
 router.post('/user/:id/toggle', async (req, res) => {
     try {
-        const user = await User.findById(req.params.id);
+        const user = await User.findByPk(req.params.id);
         if (!user) {
             req.flash('error', 'User not found');
             return res.redirect('/superadmin/users');
         }
-
-        // Prevent deactivating yourself
-        if (user._id.toString() === req.session.userId) {
+        if (user.id === req.session.userId) {
             req.flash('error', 'Cannot deactivate your own account');
             return res.redirect('/superadmin/users');
         }
-
         user.isActive = !user.isActive;
         await user.save();
         req.flash('success', `User ${user.isActive ? 'activated' : 'deactivated'} successfully`);
@@ -132,7 +114,7 @@ router.post('/user/:id/toggle', async (req, res) => {
     }
 });
 
-// POST /superadmin/user/:id/role – Change user role
+// POST /superadmin/user/:id/role
 router.post('/user/:id/role', async (req, res) => {
     try {
         const { role } = req.body;
@@ -140,23 +122,18 @@ router.post('/user/:id/role', async (req, res) => {
             req.flash('error', 'Invalid role');
             return res.redirect('/superadmin/users');
         }
-
-        const user = await User.findById(req.params.id);
+        const user = await User.findByPk(req.params.id);
         if (!user) {
             req.flash('error', 'User not found');
             return res.redirect('/superadmin/users');
         }
-
-        // Prevent removing own superadmin role
-        if (user._id.toString() === req.session.userId && role !== 'superadmin') {
+        if (user.id === req.session.userId && role !== 'superadmin') {
             req.flash('error', 'Cannot change your own superadmin role');
             return res.redirect('/superadmin/users');
         }
-
         user.role = role;
         user.isAdmin = (role === 'admin' || role === 'superadmin');
         await user.save();
-
         req.flash('success', `User role updated to ${role}`);
         res.redirect('/superadmin/users');
     } catch (err) {

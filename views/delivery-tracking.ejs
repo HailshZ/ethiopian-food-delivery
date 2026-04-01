@@ -97,14 +97,14 @@
                     <h6>Delivery Address</h6>
                     <p class="text-muted mb-0">
                         <i class="bi bi-geo-alt me-1"></i>
-                        <%= order.shippingAddress.street %>, <%= order.shippingAddress.city %>
-                                <%= order.shippingAddress.zipCode %>
+                        <%= order.shippingStreet %>, <%= order.shippingCity %>
+                                <%= order.shippingZipCode %>
                     </p>
                 </div>
 
                 <% if (order.orderStatus==='delivered' && !order.isReviewed) { %>
                     <div class="mt-3">
-                        <a href="/review/<%= order._id %>" class="btn btn-warning w-100 rounded-pill">
+                        <a href="/review/<%= order.id %>" class="btn btn-warning w-100 rounded-pill">
                             <i class="bi bi-star me-1"></i> Leave a Review
                         </a>
                     </div>
@@ -119,14 +119,14 @@
         defer></script>
     <% } %>
         <script>
-            const orderId = '<%= order._id %>';
+            const orderId = '<%= order.id %>';
             const estimatedDelivery = '<%= order.estimatedDelivery ? new Date(order.estimatedDelivery).toISOString() : '' %>';
             let map, marker;
             let lastStatus = '<%= order.orderStatus %>';
 
             function initDeliveryMap() {
-                const lat = <%= order.deliveryLocation ?order.deliveryLocation.lat: 9.0192 %>;
-                const lng = <%= order.deliveryLocation ?order.deliveryLocation.lng: 38.7525 %>;
+                const lat = <%= order.deliveryLat ? order.deliveryLat : 9.0192 %>;
+                const lng = <%= order.deliveryLng ? order.deliveryLng : 38.7525 %>;
                 const pos = { lat, lng };
 
                 map = new google.maps.Map(document.getElementById('delivery-map'), {

@@ -1,18 +1,27 @@
-// routes/subscription.js – Meal plan subscription routes
+// routes/subscription.js – Meal plan subscription routes (Sequelize)
 const express = require('express');
 const router = express.Router();
-const MealPlan = require('../models/MealPlan');
-const Subscription = require('../models/Subscription');
-const User = require('../models/User');
+const { Op } = require('sequelize');
+const { MealPlan, MealSlot, Subscription, User, Dish } = require('../models');
 const { isLoggedIn } = require('../middleware/auth');
 const Chapa = require('chapa-nodejs').Chapa;
 
 const chapa = new Chapa({ secretKey: process.env.CHAPA_SECRET_KEY || '' });
 
-// GET /meal-plans – Browse plans
+// GET /meal-plans
 router.get('/meal-plans', async (req, res) => {
     try {
-        const plans = await MealPlan.find({ isActive: true, approvalStatus: { $in: ['approved', null] } }).populate('meals.monday.dish meals.tuesday.dish meals.wednesday.dish meals.thursday.dish meals.friday.dish meals.saturday.dish meals.sunday.dish');
+        const plans = await MealPlan.findAll({
+            where: {
+                isActive: true,
+                approvalStatus: { [Op.in]: ['approved'] }
+            },
+            include: [{
+                model: MealSlot,
+                as: 'mealSlots',
+                include: [{ model: Dish, as: 'dish' }]
+            }]
+        });
         res.render('meal-plans', { title: 'Meal Plans', plans });
     } catch (err) {
         console.error(err);
@@ -20,10 +29,16 @@ router.get('/meal-plans', async (req, res) => {
     }
 });
 
-// GET /meal-plans/:id – Plan detail
+// GET /meal-plans/:id
 router.get('/meal-plans/:id', async (req, res) => {
     try {
-        const plan = await MealPlan.findById(req.params.id).populate('meals.monday.dish meals.tuesday.dish meals.wednesday.dish meals.thursday.dish meals.friday.dish meals.saturday.dish meals.sunday.dish');
+        const plan = await MealPlan.findByPk(req.params.id, {
+            include: [{
+                model: MealSlot,
+                as: 'mealSlots',
+                include: [{ model: Dish, as: 'dish' }]
+            }]
+        });
         if (!plan) return res.status(404).send('Plan not found');
         res.render('meal-plan-detail', { title: plan.name, plan });
     } catch (err) {
@@ -32,18 +47,17 @@ router.get('/meal-plans/:id', async (req, res) => {
     }
 });
 
-// POST /api/subscribe – Subscribe to a meal plan via Chapa
+// POST /api/subscribe
 router.post('/api/subscribe', isLoggedIn, async (req, res) => {
     const { planId, shippingAddress } = req.body;
 
     try {
-        const plan = await MealPlan.findById(planId);
+        const plan = await MealPlan.findByPk(planId);
         if (!plan) return res.status(404).json({ error: 'Plan not found' });
 
-        const user = await User.findById(req.session.userId);
-        const txRef = `sub-${user._id}-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+        const user = await User.findByPk(req.session.userId);
+        const txRef = `sub-${user.id}-${Date.now()}-${Math.random().toString(36).substring(7)}`;
 
-        // Calculate end date
         const startDate = new Date();
         const endDate = new Date();
         if (plan.duration === 'monthly') {
@@ -53,9 +67,9 @@ router.post('/api/subscribe', isLoggedIn, async (req, res) => {
         }
 
         const response = await chapa.initialize({
-            amount: plan.price,
+            amount: parseFloat(plan.price),
             currency: 'ETB',
-            email: user.email || `user-${user.phone || user._id}@ethiofood.local`,
+            email: user.email || `user-${user.phone || user.id}@ethiofood.local`,
             first_name: user.name.split(' ')[0],
             last_name: user.name.split(' ').slice(1).join(' ') || 'Customer',
             phone_number: user.phone || '0911000000',
@@ -69,18 +83,19 @@ router.post('/api/subscribe', isLoggedIn, async (req, res) => {
         });
 
         if (response.status === 'success') {
-            const subscription = new Subscription({
-                user: req.session.userId,
-                mealPlan: planId,
+            await Subscription.create({
+                userId: req.session.userId,
+                mealPlanId: planId,
                 status: 'active',
                 startDate,
                 endDate,
-                shippingAddress,
+                shippingStreet: shippingAddress.street,
+                shippingCity: shippingAddress.city,
+                shippingZipCode: shippingAddress.zipCode,
                 paymentStatus: 'pending',
                 chapaTxRef: txRef,
-                totalPaid: plan.price
+                totalPaid: parseFloat(plan.price)
             });
-            await subscription.save();
 
             res.json({ success: true, checkoutUrl: response.data.checkout_url });
         } else {
@@ -92,13 +107,13 @@ router.post('/api/subscribe', isLoggedIn, async (req, res) => {
     }
 });
 
-// POST /api/subscription-callback – Chapa webhook for subscriptions
+// POST /api/subscription-callback
 router.post('/api/subscription-callback', async (req, res) => {
     const { tx_ref } = req.body;
     try {
         const verification = await chapa.verify(tx_ref);
         if (verification.status === 'success') {
-            const sub = await Subscription.findOne({ chapaTxRef: tx_ref });
+            const sub = await Subscription.findOne({ where: { chapaTxRef: tx_ref } });
             if (sub) {
                 sub.paymentStatus = 'paid';
                 await sub.save();
@@ -111,12 +126,14 @@ router.post('/api/subscription-callback', async (req, res) => {
     }
 });
 
-// GET /subscriptions – User's subscriptions
+// GET /subscriptions
 router.get('/subscriptions', isLoggedIn, async (req, res) => {
     try {
-        const subs = await Subscription.find({ user: req.session.userId })
-            .populate('mealPlan')
-            .sort({ createdAt: -1 });
+        const subs = await Subscription.findAll({
+            where: { userId: req.session.userId },
+            include: [{ model: MealPlan, as: 'mealPlan' }],
+            order: [['createdAt', 'DESC']]
+        });
         res.render('subscriptions', { title: 'My Subscriptions', subscriptions: subs });
     } catch (err) {
         console.error(err);
@@ -127,7 +144,9 @@ router.get('/subscriptions', isLoggedIn, async (req, res) => {
 // POST /api/subscription/:id/cancel
 router.post('/api/subscription/:id/cancel', isLoggedIn, async (req, res) => {
     try {
-        const sub = await Subscription.findOne({ _id: req.params.id, user: req.session.userId });
+        const sub = await Subscription.findOne({
+            where: { id: req.params.id, userId: req.session.userId }
+        });
         if (!sub) return res.status(404).json({ error: 'Subscription not found' });
         sub.status = 'cancelled';
         await sub.save();

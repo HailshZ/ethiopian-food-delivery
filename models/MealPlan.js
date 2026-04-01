@@ -1,30 +1,58 @@
-const mongoose = require('mongoose');
+// models/MealPlan.js – Sequelize MealPlan model
+const { DataTypes } = require('sequelize');
 
-const mealSlotSchema = new mongoose.Schema({
-  dish: { type: mongoose.Schema.Types.ObjectId, ref: 'Dish', required: true },
-  mealType: { type: String, enum: ['breakfast', 'lunch', 'dinner'], default: 'lunch' }
-}, { _id: false });
+module.exports = (sequelize) => {
+  const MealPlan = sequelize.define('MealPlan', {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true
+    },
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    nameAm: {
+      type: DataTypes.STRING,
+      defaultValue: ''
+    },
+    description: {
+      type: DataTypes.TEXT,
+      defaultValue: ''
+    },
+    descriptionAm: {
+      type: DataTypes.TEXT,
+      defaultValue: ''
+    },
+    price: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false
+    },
+    duration: {
+      type: DataTypes.ENUM('weekly', 'monthly'),
+      defaultValue: 'weekly'
+    },
+    imageUrl: {
+      type: DataTypes.STRING,
+      defaultValue: ''
+    },
+    isActive: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true
+    },
+    ownerId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: { model: 'users', key: 'id' }
+    },
+    approvalStatus: {
+      type: DataTypes.ENUM('pending', 'approved', 'rejected'),
+      defaultValue: 'approved'
+    }
+  }, {
+    tableName: 'meal_plans',
+    timestamps: true
+  });
 
-const mealPlanSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  nameAm: { type: String, default: '' },
-  description: { type: String, default: '' },
-  descriptionAm: { type: String, default: '' },
-  price: { type: Number, required: true },
-  duration: { type: String, enum: ['weekly', 'monthly'], default: 'weekly' },
-  meals: {
-    monday: [mealSlotSchema],
-    tuesday: [mealSlotSchema],
-    wednesday: [mealSlotSchema],
-    thursday: [mealSlotSchema],
-    friday: [mealSlotSchema],
-    saturday: [mealSlotSchema],
-    sunday: [mealSlotSchema]
-  },
-  imageUrl: { type: String, default: '' },
-  isActive: { type: Boolean, default: true },
-  owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
-  approvalStatus: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'approved' }
-}, { timestamps: true });
-
-module.exports = mongoose.model('MealPlan', mealPlanSchema);
+  return MealPlan;
+};

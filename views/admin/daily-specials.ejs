@@ -44,23 +44,23 @@
                                     </span></td>
                                 <td>
                                     <button class="btn btn-sm btn-outline-primary rounded-pill me-1"
-                                        data-bs-toggle="modal" data-bs-target="#editSpecial<%= special._id %>"><i
+                                        data-bs-toggle="modal" data-bs-target="#editSpecial<%= special.id %>"><i
                                             class="bi bi-pencil"></i></button>
-                                    <form action="/admin/daily-specials/<%= special._id %>/delete" method="post"
+                                    <form action="/admin/daily-specials/<%= special.id %>/delete" method="post"
                                         class="d-inline" onsubmit="return confirm('Delete?')">
                                         <button class="btn btn-sm btn-outline-danger rounded-pill"><i
                                                 class="bi bi-trash3"></i></button>
                                     </form>
 
                                     <!-- Edit Modal -->
-                                    <div class="modal fade" id="editSpecial<%= special._id %>" tabindex="-1">
+                                    <div class="modal fade" id="editSpecial<%= special.id %>" tabindex="-1">
                                         <div class="modal-dialog">
                                             <div class="modal-content rounded-4">
                                                 <div class="modal-header border-0">
                                                     <h5>Edit Special</h5><button type="button" class="btn-close"
                                                         data-bs-dismiss="modal"></button>
                                                 </div>
-                                                <form action="/admin/daily-specials/<%= special._id %>/update"
+                                                <form action="/admin/daily-specials/<%= special.id %>/update"
                                                     method="post">
                                                     <div class="modal-body">
                                                         <div class="mb-3"><label class="form-label">Day</label><select
@@ -74,9 +74,9 @@
                                                             </select></div>
                                                         <div class="mb-3"><label class="form-label">Dish</label><select
                                                                 name="dish" class="form-select rounded-3">
-                                                                <% dishes.forEach(d=> { %><option value="<%= d._id %>"
+                                                                <% dishes.forEach(d=> { %><option value="<%= d.id %>"
                                                                         <%=special.dish &&
-                                                                        special.dish._id.toString()===d._id.toString()?'selected':''
+                                                                        special.dish.id.toString()===d.id.toString()?'selected':''
                                                                         %>><%= d.name %>
                                                                     </option>
                                                                     <% }) %>
@@ -133,7 +133,7 @@
                         </select></div>
                     <div class="mb-3"><label class="form-label">Dish</label><select name="dish"
                             class="form-select rounded-3">
-                            <% dishes.forEach(d=> { %><option value="<%= d._id %>">
+                            <% dishes.forEach(d=> { %><option value="<%= d.id %>">
                                     <%= d.name %> ($<%= d.price.toFixed(2) %>)
                                 </option>
                                 <% }) %>

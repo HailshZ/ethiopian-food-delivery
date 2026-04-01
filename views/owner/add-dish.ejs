@@ -8,7 +8,7 @@
 
     <div class="card shadow-sm border-0" style="border-radius: 15px;">
         <div class="card-body p-4">
-            <form action="<%= dish ? '/owner/dish/' + dish._id + '/edit' : '/owner/dish/add' %>" method="post">
+            <form action="<%= dish ? '/owner/dish/' + dish.id + '/edit' : '/owner/dish/add' %>" method="post">
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Name (English) *</label>

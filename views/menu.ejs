@@ -87,7 +87,7 @@
                               <%= dish.price.toFixed(2) %>
                           </span>
                           <button class="btn btn-primary btn-sm rounded-pill ajax-add-cart"
-                            data-dish-id="<%= dish._id %>">
+                            data-dish-id="<%= dish.id %>">
                             <i class="bi bi-cart-plus me-1"></i>
                             <%= t('add_to_cart') %>
                           </button>
@@ -107,7 +107,7 @@
           <div class="row g-4">
             <% topMealPlans.forEach(plan=> { %>
               <div class="col-md-6 col-lg-4">
-                <a href="/meal-plan/<%= plan._id %>" class="text-decoration-none">
+                <a href="/meal-plan/<%= plan.id %>" class="text-decoration-none">
                   <div class="plan-card">
                     <div class="plan-card-header">
                       <h4 class="mb-1">
@@ -189,7 +189,7 @@
                                 </span>
                               </div>
                               <button class="btn btn-primary btn-sm rounded-pill ajax-add-cart"
-                                data-dish-id="<%= special.dish._id %>">
+                                data-dish-id="<%= special.dish.id %>">
                                 <i class="bi bi-cart-plus me-1"></i>
                                 <%= t('add_to_cart') %>
                               </button>
@@ -265,7 +265,7 @@
                                           <%= dish.price.toFixed(2) %>
                                       </span>
                                       <button class="btn btn-primary btn-sm rounded-pill ajax-add-cart"
-                                        data-dish-id="<%= dish._id %>">
+                                        data-dish-id="<%= dish.id %>">
                                         <i class="bi bi-cart-plus me-1"></i>
                                         <%= t('add_to_cart') %>
                                       </button>
@@ -402,7 +402,7 @@
               ${ratingHtml}
               <div class="dish-card-footer">
                 <span class="dish-price">${currency} ${dish.price.toFixed(2)}</span>
-                <button class="btn btn-primary btn-sm rounded-pill ajax-add-cart" data-dish-id="${dish._id}">
+                <button class="btn btn-primary btn-sm rounded-pill ajax-add-cart" data-dish-id="${dish.id}">
                   <i class="bi bi-cart-plus me-1"></i>Add
                 </button>
               </div>

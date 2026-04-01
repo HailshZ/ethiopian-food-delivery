@@ -1,15 +1,17 @@
-// routes/delivery.js – Delivery tracking routes
+// routes/delivery.js – Delivery tracking routes (Sequelize)
 const express = require('express');
 const router = express.Router();
-const Order = require('../models/Order');
+const { Order, DeliveryUpdate } = require('../models');
 const { isLoggedIn, isAdmin } = require('../middleware/auth');
 
-// GET /delivery/:orderId – Delivery tracking page
+// GET /delivery/:orderId
 router.get('/delivery/:orderId', isLoggedIn, async (req, res) => {
     try {
-        const order = await Order.findById(req.params.orderId);
+        const order = await Order.findByPk(req.params.orderId, {
+            include: [{ model: DeliveryUpdate, as: 'deliveryUpdates', order: [['timestamp', 'ASC']] }]
+        });
         if (!order) return res.status(404).send('Order not found');
-        if (order.user.toString() !== req.session.userId.toString() && !req.session.isAdmin) {
+        if (order.userId !== req.session.userId && !req.session.isAdmin) {
             return res.status(403).send('Unauthorized');
         }
         res.render('delivery-tracking', {
@@ -26,12 +28,15 @@ router.get('/delivery/:orderId', isLoggedIn, async (req, res) => {
 // API: Get delivery status (AJAX polling)
 router.get('/api/delivery/:orderId', isLoggedIn, async (req, res) => {
     try {
-        const order = await Order.findById(req.params.orderId).select('orderStatus deliveryLocation estimatedDelivery deliveryUpdates');
+        const order = await Order.findByPk(req.params.orderId, {
+            attributes: ['orderStatus', 'deliveryLat', 'deliveryLng', 'estimatedDelivery'],
+            include: [{ model: DeliveryUpdate, as: 'deliveryUpdates', order: [['timestamp', 'ASC']] }]
+        });
         if (!order) return res.status(404).json({ error: 'Order not found' });
         res.json({
             success: true,
             status: order.orderStatus,
-            location: order.deliveryLocation,
+            location: { lat: parseFloat(order.deliveryLat), lng: parseFloat(order.deliveryLng) },
             estimatedDelivery: order.estimatedDelivery,
             updates: order.deliveryUpdates
         });
@@ -44,23 +49,30 @@ router.get('/api/delivery/:orderId', isLoggedIn, async (req, res) => {
 router.put('/api/delivery/:orderId', isAdmin, async (req, res) => {
     try {
         const { status, lat, lng, note } = req.body;
-        const order = await Order.findById(req.params.orderId);
+        const order = await Order.findByPk(req.params.orderId);
         if (!order) return res.status(404).json({ error: 'Order not found' });
 
         if (status) order.orderStatus = status;
         if (lat && lng) {
-            order.deliveryLocation = { lat, lng };
+            order.deliveryLat = lat;
+            order.deliveryLng = lng;
         }
+        await order.save();
 
-        order.deliveryUpdates.push({
+        await DeliveryUpdate.create({
+            orderId: order.id,
             status: status || order.orderStatus,
-            location: lat && lng ? { lat, lng } : order.deliveryLocation,
+            locationLat: lat || order.deliveryLat,
+            locationLng: lng || order.deliveryLng,
             timestamp: new Date(),
             note: note || `Status updated to ${status}`
         });
 
-        await order.save();
-        res.json({ success: true, order });
+        // Re-fetch with updates
+        const updated = await Order.findByPk(order.id, {
+            include: [{ model: DeliveryUpdate, as: 'deliveryUpdates', order: [['timestamp', 'ASC']] }]
+        });
+        res.json({ success: true, order: updated });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

@@ -1,44 +1,54 @@
-
-// server.js – EthioFood Delivery (Refactored with new features)
+// server.js – EthioFood Delivery (PostgreSQL/Sequelize + cPanel ready)
 require('dotenv').config();
 
 const express = require('express');
 const session = require('express-session');
-const connectMongo = require('connect-mongo');
-const mongoose = require('mongoose');
+const PgSession = require('connect-pg-simple')(session);
+const { Pool } = require('pg');
 const path = require('path');
 const expressLayouts = require('express-ejs-layouts');
 const fs = require('fs');
 const flash = require('connect-flash');
-const DailySpecial = require('./models/DailySpecial');
-const MealPlan = require('./models/MealPlan');
-const SystemSettings = require('./models/SystemSettings');
+const { sequelize, DailySpecial, MealPlan, SystemSettings, Dish, MealSlot, User } = require('./models');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log('✅ MongoDB connected');
+// PostgreSQL connection pool for session store
+const pgPool = new Pool({
+  host: process.env.DB_HOST || '127.0.0.1',
+  port: parseInt(process.env.DB_PORT) || 5432,
+  database: process.env.DB_NAME || 'ethiofood',
+  user: process.env.DB_USER || 'postgres',
+  password: process.env.DB_PASS || ''
+});
+
+async function startApp() {
+  try {
+    // Test database connection
+    await sequelize.authenticate();
+    console.log('✅ PostgreSQL connected');
+
+    // Sync tables (use { alter: true } in dev for schema updates)
+    await sequelize.sync({ alter: process.env.NODE_ENV !== 'production' });
+    console.log('✅ Database tables synced');
 
     // Session store
-    const store = new (connectMongo.MongoStore || connectMongo.default)({
-      client: mongoose.connection.getClient(),
-    });
-
     app.use(session({
+      store: new PgSession({
+        pool: pgPool,
+        tableName: 'session',
+        createTableIfMissing: true
+      }),
       secret: process.env.SESSION_SECRET || 'ethiofood-secret-key',
       resave: false,
       saveUninitialized: false,
-      store: store,
       cookie: { maxAge: 1000 * 60 * 60 * 24 }
     }));
 
     // Make session available to all views
     app.use((req, res, next) => {
       res.locals.session = req.session;
-      // Expose VAPID public key to templates for push notifications
       res.locals.vapidPublicKey = process.env.VAPID_PUBLIC_KEY || '';
       next();
     });
@@ -57,12 +67,12 @@ mongoose.connect(process.env.MONGO_URI)
     app.use(express.json());
     app.use(express.static(path.join(__dirname, 'public')));
 
-    // Load translations
+    // Load translations (use __dirname for reliable paths on cPanel)
     let translations;
     try {
       translations = {
-        en: JSON.parse(fs.readFileSync('./locales/en.json', 'utf8')),
-        am: JSON.parse(fs.readFileSync('./locales/am.json', 'utf8'))
+        en: JSON.parse(fs.readFileSync(path.join(__dirname, 'locales', 'en.json'), 'utf8')),
+        am: JSON.parse(fs.readFileSync(path.join(__dirname, 'locales', 'am.json'), 'utf8'))
       };
     } catch (err) {
       console.error('❌ Failed to load translations:', err.message);
@@ -79,7 +89,7 @@ mongoose.connect(process.env.MONGO_URI)
       next();
     });
 
-    // System settings middleware – load settings for all views
+    // System settings middleware
     app.use(async (req, res, next) => {
       try {
         const settings = await SystemSettings.getSettings();
@@ -96,7 +106,8 @@ mongoose.connect(process.env.MONGO_URI)
           deliveryFeePerKm: 15,
           baseDeliveryFee: 20,
           minOrderAmount: 100,
-          restaurantLocation: { lat: 9.0192, lng: 38.7525 }
+          restaurantLat: 9.0192,
+          restaurantLng: 38.7525
         };
       }
       // Global currency format helper
@@ -128,23 +139,32 @@ mongoose.connect(process.env.MONGO_URI)
     app.get('/', async (req, res) => {
       try {
         const today = new Date().getDay();
-        const todaysSpecials = await DailySpecial.find({ dayOfWeek: today, isActive: true }).populate('dish');
-        const featuredPlans = await MealPlan.find({ isActive: true, approvalStatus: { $in: ['approved', null] } }).limit(3);
+        const todaysSpecials = await DailySpecial.findAll({
+          where: { dayOfWeek: today, isActive: true },
+          include: [{ model: Dish, as: 'dish' }]
+        });
+        const { Op } = require('sequelize');
+        const featuredPlans = await MealPlan.findAll({
+          where: {
+            isActive: true,
+            approvalStatus: { [Op.in]: ['approved'] }
+          },
+          limit: 3
+        });
         res.render('index', { title: 'Home', todaysSpecials, featuredPlans });
       } catch (err) {
         res.render('index', { title: 'Home', todaysSpecials: [], featuredPlans: [] });
       }
     });
 
-    // Setup admin route (no auth required - one time setup)
+    // Setup admin route
     app.get('/setup-admin', async (req, res) => {
       try {
-        const User = require('./models/User');
-        const adminExists = await User.findOne({ isAdmin: true });
+        const adminExists = await User.findOne({ where: { isAdmin: true } });
         if (adminExists) {
           return res.send('Admin already exists. Login with admin credentials.');
         }
-        const admin = new User({
+        await User.create({
           name: 'Admin',
           email: 'admin@ethiofood.com',
           password: 'admin123',
@@ -152,7 +172,6 @@ mongoose.connect(process.env.MONGO_URI)
           isAdmin: true,
           role: 'admin'
         });
-        await admin.save();
         res.send('✅ Admin created: admin@ethiofood.com / admin123');
       } catch (err) {
         res.status(500).send('Error: ' + err.message);
@@ -162,12 +181,11 @@ mongoose.connect(process.env.MONGO_URI)
     // Setup superadmin route
     app.get('/setup-superadmin', async (req, res) => {
       try {
-        const User = require('./models/User');
-        const superExists = await User.findOne({ role: 'superadmin' });
+        const superExists = await User.findOne({ where: { role: 'superadmin' } });
         if (superExists) {
           return res.send('Super Admin already exists. Login with superadmin credentials.');
         }
-        const superadmin = new User({
+        await User.create({
           name: 'Super Admin',
           email: 'superadmin@ethiofood.com',
           password: 'super123',
@@ -175,7 +193,6 @@ mongoose.connect(process.env.MONGO_URI)
           isAdmin: true,
           role: 'superadmin'
         });
-        await superadmin.save();
         res.send('✅ Super Admin created: superadmin@ethiofood.com / super123');
       } catch (err) {
         res.status(500).send('Error: ' + err.message);
@@ -194,16 +211,22 @@ mongoose.connect(process.env.MONGO_URI)
     app.use('/admin', require('./routes/admin'));
     app.use('/superadmin', require('./routes/superadmin'));
 
-    // Start server
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running on http://localhost:${PORT}`);
-
-      // Start the notification scheduler
-      const { startScheduler } = require('./utils/scheduler');
-      startScheduler();
-    });
-  })
-  .catch(err => {
-    console.error('❌ MongoDB connection error:', err.message);
+    // Start server (only when run directly, not via Passenger)
+    if (!module.parent) {
+      app.listen(PORT, () => {
+        console.log(`🚀 Server running on http://localhost:${PORT}`);
+        const { startScheduler } = require('./utils/scheduler');
+        startScheduler();
+      });
+    }
+  } catch (err) {
+    console.error('❌ Database connection error:', err.message);
     process.exit(1);
-  });
+  }
+}
+
+// Start the app
+startApp();
+
+// Export for Passenger (app.js)
+module.exports = app;

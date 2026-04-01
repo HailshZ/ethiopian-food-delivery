@@ -1,24 +1,48 @@
-// models/PushSubscription.js – Browser push subscription storage
-const mongoose = require('mongoose');
+// models/PushSubscription.js – Sequelize PushSubscription model
+const { DataTypes } = require('sequelize');
 
-const pushSubscriptionSchema = new mongoose.Schema({
-    user: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-    },
-    subscription: {
-        endpoint: { type: String, required: true },
-        keys: {
-            p256dh: { type: String, required: true },
-            auth: { type: String, required: true }
+module.exports = (sequelize) => {
+    const PushSubscription = sequelize.define('PushSubscription', {
+        id: {
+            type: DataTypes.INTEGER,
+            primaryKey: true,
+            autoIncrement: true
+        },
+        userId: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: { model: 'users', key: 'id' }
+        },
+        endpoint: {
+            type: DataTypes.TEXT,
+            allowNull: false
+        },
+        p256dh: {
+            type: DataTypes.TEXT,
+            allowNull: false
+        },
+        auth: {
+            type: DataTypes.TEXT,
+            allowNull: false
         }
-    }
-}, {
-    timestamps: true
-});
+    }, {
+        tableName: 'push_subscriptions',
+        timestamps: true,
+        indexes: [
+            { unique: true, fields: ['userId', 'endpoint'] }
+        ]
+    });
 
-// One subscription per endpoint per user
-pushSubscriptionSchema.index({ user: 1, 'subscription.endpoint': 1 }, { unique: true });
+    // Helper to get subscription object in web-push format
+    PushSubscription.prototype.toWebPush = function () {
+        return {
+            endpoint: this.endpoint,
+            keys: {
+                p256dh: this.p256dh,
+                auth: this.auth
+            }
+        };
+    };
 
-module.exports = mongoose.model('PushSubscription', pushSubscriptionSchema);
+    return PushSubscription;
+};

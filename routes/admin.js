@@ -1,41 +1,36 @@
-// routes/admin.js – Admin dashboard with order, menu, promo code, owner, approval, meal plan, and subscription management
+// routes/admin.js – Admin dashboard (Sequelize)
 const express = require('express');
 const router = express.Router();
-const Order = require('../models/Order');
-const Dish = require('../models/Dish');
-const User = require('../models/User');
-const PromoCode = require('../models/PromoCode');
-const MealPlan = require('../models/MealPlan');
-const Subscription = require('../models/Subscription');
+const { Op } = require('sequelize');
+const { Order, OrderItem, DeliveryUpdate, Dish, User, PromoCode, MealPlan, Subscription, sequelize } = require('../models');
 const { isLoggedIn } = require('../middleware/auth');
 const isAdmin = require('../middleware/admin');
 
-// Apply both middlewares to all admin routes
 router.use(isLoggedIn, isAdmin);
 
 // Admin Dashboard
 router.get('/', async (req, res) => {
     try {
-        const totalOrders = await Order.countDocuments();
-        const totalRevenue = await Order.aggregate([
-            { $group: { _id: null, total: { $sum: '$totalAmount' } } }
-        ]);
-        const totalDishes = await Dish.countDocuments();
-        const totalUsers = await User.countDocuments();
-        const totalPromos = await PromoCode.countDocuments({ isActive: true });
-        const pendingApprovals = await Dish.countDocuments({ approvalStatus: 'pending' }) +
-            await MealPlan.countDocuments({ approvalStatus: 'pending' });
-        const totalOwners = await User.countDocuments({ role: 'provider' });
+        const totalOrders = await Order.count();
+        const revenueResult = await Order.sum('totalAmount');
+        const totalDishes = await Dish.count();
+        const totalUsers = await User.count();
+        const totalPromos = await PromoCode.count({ where: { isActive: true } });
+        const pendingDishCount = await Dish.count({ where: { approvalStatus: 'pending' } });
+        const pendingPlanCount = await MealPlan.count({ where: { approvalStatus: 'pending' } });
+        const pendingApprovals = pendingDishCount + pendingPlanCount;
+        const totalOwners = await User.count({ where: { role: 'provider' } });
 
-        const recentOrders = await Order.find()
-            .sort({ createdAt: -1 })
-            .limit(5)
-            .populate('user', 'name email');
+        const recentOrders = await Order.findAll({
+            order: [['createdAt', 'DESC']],
+            limit: 5,
+            include: [{ model: User, as: 'user', attributes: ['name', 'email'] }]
+        });
 
         res.render('admin/dashboard', {
             title: 'Admin Dashboard',
             totalOrders,
-            totalRevenue: totalRevenue[0]?.total || 0,
+            totalRevenue: revenueResult || 0,
             totalDishes,
             totalUsers,
             totalPromos,
@@ -54,9 +49,16 @@ router.get('/', async (req, res) => {
 router.get('/orders', async (req, res) => {
     try {
         const { status } = req.query;
-        let filter = {};
-        if (status && status !== 'all') filter.orderStatus = status;
-        const orders = await Order.find(filter).sort({ createdAt: -1 }).populate('user', 'name email');
+        const where = {};
+        if (status && status !== 'all') where.orderStatus = status;
+        const orders = await Order.findAll({
+            where,
+            order: [['createdAt', 'DESC']],
+            include: [
+                { model: User, as: 'user', attributes: ['name', 'email'] },
+                { model: OrderItem, as: 'items' }
+            ]
+        });
         res.render('admin/orders', { title: 'Manage Orders', orders, currentStatus: status || 'all' });
     } catch (err) {
         console.error(err);
@@ -68,15 +70,16 @@ router.get('/orders', async (req, res) => {
 router.post('/order/:id/update', async (req, res) => {
     const { status } = req.body;
     try {
-        const order = await Order.findById(req.params.id);
+        const order = await Order.findByPk(req.params.id);
         if (!order) { req.flash('error', 'Order not found'); return res.redirect('/admin/orders'); }
         order.orderStatus = status;
-        order.deliveryUpdates.push({
+        await order.save();
+        await DeliveryUpdate.create({
+            orderId: order.id,
             status: `Order ${status}`,
             timestamp: new Date(),
             note: `Status updated to ${status} by admin`
         });
-        await order.save();
         req.flash('success', 'Order status updated');
         res.redirect('/admin/orders');
     } catch (err) {
@@ -89,7 +92,10 @@ router.post('/order/:id/update', async (req, res) => {
 // ============== MENU ==============
 router.get('/menu', async (req, res) => {
     try {
-        const dishes = await Dish.find().populate('owner', 'name restaurantName').sort({ category: 1, name: 1 });
+        const dishes = await Dish.findAll({
+            include: [{ model: User, as: 'owner', attributes: ['name', 'restaurantName'] }],
+            order: [['category', 'ASC'], ['name', 'ASC']]
+        });
         res.render('admin/menu', { title: 'Manage Menu', dishes });
     } catch (err) {
         console.error(err); req.flash('error', 'Error loading menu'); res.redirect('/admin');
@@ -103,15 +109,14 @@ router.get('/dish/add', (req, res) => {
 router.post('/dish/add', async (req, res) => {
     const { name, nameAm, description, descriptionAm, price, category, imageUrl, spiceLevel } = req.body;
     try {
-        const dish = new Dish({
+        await Dish.create({
             name, nameAm, description, descriptionAm,
             price: parseFloat(price), category,
             imageUrl: imageUrl || '/images/placeholder.jpg',
             spiceLevel: spiceLevel || '',
             isAvailable: true,
-            approvalStatus: 'approved' // Admin-added dishes auto-approve
+            approvalStatus: 'approved'
         });
-        await dish.save();
         req.flash('success', 'Dish added successfully');
         res.redirect('/admin/menu');
     } catch (err) {
@@ -121,7 +126,7 @@ router.post('/dish/add', async (req, res) => {
 
 router.get('/dish/:id/edit', async (req, res) => {
     try {
-        const dish = await Dish.findById(req.params.id);
+        const dish = await Dish.findByPk(req.params.id);
         if (!dish) { req.flash('error', 'Dish not found'); return res.redirect('/admin/menu'); }
         res.render('admin/edit-dish', { title: 'Edit Dish', dish });
     } catch (err) {
@@ -132,7 +137,7 @@ router.get('/dish/:id/edit', async (req, res) => {
 router.post('/dish/:id/edit', async (req, res) => {
     const { name, nameAm, description, descriptionAm, price, category, imageUrl, isAvailable, spiceLevel } = req.body;
     try {
-        const dish = await Dish.findById(req.params.id);
+        const dish = await Dish.findByPk(req.params.id);
         if (!dish) { req.flash('error', 'Dish not found'); return res.redirect('/admin/menu'); }
         Object.assign(dish, { name, nameAm, description, descriptionAm, price: parseFloat(price), category, spiceLevel: spiceLevel || '' });
         dish.imageUrl = imageUrl || dish.imageUrl;
@@ -147,7 +152,7 @@ router.post('/dish/:id/edit', async (req, res) => {
 
 router.post('/dish/:id/delete', async (req, res) => {
     try {
-        await Dish.findByIdAndDelete(req.params.id);
+        await Dish.destroy({ where: { id: req.params.id } });
         req.flash('success', 'Dish deleted');
         res.redirect('/admin/menu');
     } catch (err) {
@@ -158,13 +163,15 @@ router.post('/dish/:id/delete', async (req, res) => {
 // ============== APPROVALS ==============
 router.get('/approvals', async (req, res) => {
     try {
-        const pendingDishes = await Dish.find({ approvalStatus: 'pending' }).populate('owner', 'name restaurantName');
-        const pendingPlans = await MealPlan.find({ approvalStatus: 'pending' }).populate('owner', 'name restaurantName');
-        res.render('admin/approvals', {
-            title: 'Pending Approvals',
-            pendingDishes,
-            pendingPlans
+        const pendingDishes = await Dish.findAll({
+            where: { approvalStatus: 'pending' },
+            include: [{ model: User, as: 'owner', attributes: ['name', 'restaurantName'] }]
         });
+        const pendingPlans = await MealPlan.findAll({
+            where: { approvalStatus: 'pending' },
+            include: [{ model: User, as: 'owner', attributes: ['name', 'restaurantName'] }]
+        });
+        res.render('admin/approvals', { title: 'Pending Approvals', pendingDishes, pendingPlans });
     } catch (err) {
         console.error(err); req.flash('error', 'Error loading approvals'); res.redirect('/admin');
     }
@@ -172,7 +179,7 @@ router.get('/approvals', async (req, res) => {
 
 router.post('/dish/:id/approve', async (req, res) => {
     try {
-        await Dish.findByIdAndUpdate(req.params.id, { approvalStatus: 'approved' });
+        await Dish.update({ approvalStatus: 'approved' }, { where: { id: req.params.id } });
         req.flash('success', 'Dish approved and is now live on the menu!');
         res.redirect('/admin/approvals');
     } catch (err) {
@@ -182,7 +189,7 @@ router.post('/dish/:id/approve', async (req, res) => {
 
 router.post('/dish/:id/reject', async (req, res) => {
     try {
-        await Dish.findByIdAndUpdate(req.params.id, { approvalStatus: 'rejected' });
+        await Dish.update({ approvalStatus: 'rejected' }, { where: { id: req.params.id } });
         req.flash('success', 'Dish rejected');
         res.redirect('/admin/approvals');
     } catch (err) {
@@ -192,7 +199,7 @@ router.post('/dish/:id/reject', async (req, res) => {
 
 router.post('/mealplan/:id/approve', async (req, res) => {
     try {
-        await MealPlan.findByIdAndUpdate(req.params.id, { approvalStatus: 'approved' });
+        await MealPlan.update({ approvalStatus: 'approved' }, { where: { id: req.params.id } });
         req.flash('success', 'Meal plan approved!');
         res.redirect('/admin/approvals');
     } catch (err) {
@@ -202,7 +209,7 @@ router.post('/mealplan/:id/approve', async (req, res) => {
 
 router.post('/mealplan/:id/reject', async (req, res) => {
     try {
-        await MealPlan.findByIdAndUpdate(req.params.id, { approvalStatus: 'rejected' });
+        await MealPlan.update({ approvalStatus: 'rejected' }, { where: { id: req.params.id } });
         req.flash('success', 'Meal plan rejected');
         res.redirect('/admin/approvals');
     } catch (err) {
@@ -213,7 +220,11 @@ router.post('/mealplan/:id/reject', async (req, res) => {
 // ============== OWNERS ==============
 router.get('/owners', async (req, res) => {
     try {
-        const owners = await User.find({ role: 'provider' }).select('-password').sort({ createdAt: -1 });
+        const owners = await User.findAll({
+            where: { role: 'provider' },
+            attributes: { exclude: ['password'] },
+            order: [['createdAt', 'DESC']]
+        });
         res.render('admin/owners', { title: 'Restaurant Owners', owners });
     } catch (err) {
         console.error(err); req.flash('error', 'Error loading owners'); res.redirect('/admin');
@@ -227,15 +238,13 @@ router.post('/owner/add', async (req, res) => {
             req.flash('error', 'Name, email and password are required');
             return res.redirect('/admin/owners');
         }
-        const exists = await User.findOne({ email: email.toLowerCase() });
+        const exists = await User.findOne({ where: { email: email.toLowerCase() } });
         if (exists) { req.flash('error', 'Email already registered'); return res.redirect('/admin/owners'); }
-
-        const owner = new User({
+        await User.create({
             name, email: email.toLowerCase(), password, phone: phone || '',
             role: 'provider', isAdmin: false,
             restaurantName: restaurantName || ''
         });
-        await owner.save();
         req.flash('success', `Owner "${name}" (${restaurantName || 'No restaurant name'}) created`);
         res.redirect('/admin/owners');
     } catch (err) {
@@ -246,7 +255,10 @@ router.post('/owner/add', async (req, res) => {
 // ============== MEAL PLANS ==============
 router.get('/meal-plans', async (req, res) => {
     try {
-        const plans = await MealPlan.find().populate('owner', 'name restaurantName').sort({ createdAt: -1 });
+        const plans = await MealPlan.findAll({
+            include: [{ model: User, as: 'owner', attributes: ['name', 'restaurantName'] }],
+            order: [['createdAt', 'DESC']]
+        });
         res.render('admin/meal-plans', { title: 'Manage Meal Plans', plans });
     } catch (err) {
         console.error(err); req.flash('error', 'Error loading meal plans'); res.redirect('/admin');
@@ -255,7 +267,7 @@ router.get('/meal-plans', async (req, res) => {
 
 router.get('/meal-plan/add', async (req, res) => {
     try {
-        const dishes = await Dish.find({ approvalStatus: 'approved', isAvailable: true });
+        const dishes = await Dish.findAll({ where: { approvalStatus: 'approved', isAvailable: true } });
         res.render('admin/add-meal-plan', { title: 'Add Meal Plan', dishes, plan: null });
     } catch (err) {
         console.error(err); res.redirect('/admin/meal-plans');
@@ -265,12 +277,11 @@ router.get('/meal-plan/add', async (req, res) => {
 router.post('/meal-plan/add', async (req, res) => {
     try {
         const { name, nameAm, description, descriptionAm, price, duration, imageUrl } = req.body;
-        const plan = new MealPlan({
+        await MealPlan.create({
             name, nameAm: nameAm || name, description: description || '', descriptionAm: descriptionAm || '',
             price: parseFloat(price), duration: duration || 'weekly', imageUrl: imageUrl || '',
-            approvalStatus: 'approved' // Admin-added plans auto-approve
+            approvalStatus: 'approved'
         });
-        await plan.save();
         req.flash('success', 'Meal plan created');
         res.redirect('/admin/meal-plans');
     } catch (err) {
@@ -280,7 +291,7 @@ router.post('/meal-plan/add', async (req, res) => {
 
 router.post('/meal-plan/:id/toggle', async (req, res) => {
     try {
-        const plan = await MealPlan.findById(req.params.id);
+        const plan = await MealPlan.findByPk(req.params.id);
         if (plan) { plan.isActive = !plan.isActive; await plan.save(); }
         req.flash('success', `Meal plan ${plan.isActive ? 'activated' : 'deactivated'}`);
         res.redirect('/admin/meal-plans');
@@ -292,10 +303,13 @@ router.post('/meal-plan/:id/toggle', async (req, res) => {
 // ============== SUBSCRIPTIONS ==============
 router.get('/subscriptions', async (req, res) => {
     try {
-        const subscriptions = await Subscription.find()
-            .populate('user', 'name email')
-            .populate('mealPlan', 'name price duration')
-            .sort({ createdAt: -1 });
+        const subscriptions = await Subscription.findAll({
+            include: [
+                { model: User, as: 'user', attributes: ['name', 'email'] },
+                { model: MealPlan, as: 'mealPlan', attributes: ['name', 'price', 'duration'] }
+            ],
+            order: [['createdAt', 'DESC']]
+        });
         res.render('admin/subscriptions', { title: 'Manage Subscriptions', subscriptions });
     } catch (err) {
         console.error(err); req.flash('error', 'Error loading subscriptions'); res.redirect('/admin');
@@ -308,7 +322,7 @@ router.post('/subscription/:id/update', async (req, res) => {
         if (!['active', 'paused', 'cancelled', 'expired'].includes(status)) {
             req.flash('error', 'Invalid status'); return res.redirect('/admin/subscriptions');
         }
-        await Subscription.findByIdAndUpdate(req.params.id, { status });
+        await Subscription.update({ status }, { where: { id: req.params.id } });
         req.flash('success', `Subscription ${status}`);
         res.redirect('/admin/subscriptions');
     } catch (err) {
@@ -319,7 +333,7 @@ router.post('/subscription/:id/update', async (req, res) => {
 // ============== PROMO CODES ==============
 router.get('/promos', async (req, res) => {
     try {
-        const promos = await PromoCode.find().sort({ createdAt: -1 });
+        const promos = await PromoCode.findAll({ order: [['createdAt', 'DESC']] });
         res.render('admin/promos', { title: 'Manage Promo Codes', promos });
     } catch (err) {
         console.error(err); req.flash('error', 'Error loading promo codes'); res.redirect('/admin');
@@ -333,26 +347,26 @@ router.get('/promo/add', (req, res) => {
 router.post('/promo/add', async (req, res) => {
     const { code, discountType, discountValue, minOrderAmount, maxUses, expiresAt } = req.body;
     try {
-        const promo = new PromoCode({
+        await PromoCode.create({
             code: code.toUpperCase().trim(), discountType,
             discountValue: parseFloat(discountValue),
             minOrderAmount: parseFloat(minOrderAmount) || 0,
             maxUses: parseInt(maxUses) || 0,
             expiresAt: expiresAt ? new Date(expiresAt) : null, isActive: true
         });
-        await promo.save();
         req.flash('success', 'Promo code created');
         res.redirect('/admin/promos');
     } catch (err) {
         console.error(err);
-        req.flash('error', err.code === 11000 ? 'Promo code already exists' : 'Error creating promo code');
+        const msg = err.name === 'SequelizeUniqueConstraintError' ? 'Promo code already exists' : 'Error creating promo code';
+        req.flash('error', msg);
         res.redirect('/admin/promo/add');
     }
 });
 
 router.post('/promo/:id/toggle', async (req, res) => {
     try {
-        const promo = await PromoCode.findById(req.params.id);
+        const promo = await PromoCode.findByPk(req.params.id);
         if (promo) { promo.isActive = !promo.isActive; await promo.save(); }
         req.flash('success', `Promo code ${promo.isActive ? 'activated' : 'deactivated'}`);
         res.redirect('/admin/promos');
@@ -363,7 +377,7 @@ router.post('/promo/:id/toggle', async (req, res) => {
 
 router.post('/promo/:id/delete', async (req, res) => {
     try {
-        await PromoCode.findByIdAndDelete(req.params.id);
+        await PromoCode.destroy({ where: { id: req.params.id } });
         req.flash('success', 'Promo code deleted');
         res.redirect('/admin/promos');
     } catch (err) {

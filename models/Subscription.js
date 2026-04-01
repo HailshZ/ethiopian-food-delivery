@@ -1,28 +1,67 @@
-const mongoose = require('mongoose');
+// models/Subscription.js – Sequelize Subscription model
+const { DataTypes } = require('sequelize');
 
-const subscriptionSchema = new mongoose.Schema({
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    mealPlan: { type: mongoose.Schema.Types.ObjectId, ref: 'MealPlan', required: true },
-    status: {
-        type: String,
-        enum: ['active', 'paused', 'cancelled', 'expired'],
-        default: 'active'
-    },
-    startDate: { type: Date, default: Date.now },
-    endDate: { type: Date },
-    shippingAddress: {
-        street: { type: String, required: true },
-        city: { type: String, required: true },
-        zipCode: { type: String, required: true }
-    },
-    paymentStatus: {
-        type: String,
-        enum: ['pending', 'paid', 'failed'],
-        default: 'pending'
-    },
-    chapaTxRef: { type: String },
-    totalPaid: { type: Number, default: 0 },
-    deliveryTime: { type: String, default: '12:00' }
-}, { timestamps: true });
+module.exports = (sequelize) => {
+    const Subscription = sequelize.define('Subscription', {
+        id: {
+            type: DataTypes.INTEGER,
+            primaryKey: true,
+            autoIncrement: true
+        },
+        userId: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: { model: 'users', key: 'id' }
+        },
+        mealPlanId: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: { model: 'meal_plans', key: 'id' }
+        },
+        status: {
+            type: DataTypes.ENUM('active', 'paused', 'cancelled', 'expired'),
+            defaultValue: 'active'
+        },
+        startDate: {
+            type: DataTypes.DATE,
+            defaultValue: DataTypes.NOW
+        },
+        endDate: {
+            type: DataTypes.DATE,
+            allowNull: true
+        },
+        shippingStreet: {
+            type: DataTypes.STRING,
+            allowNull: false
+        },
+        shippingCity: {
+            type: DataTypes.STRING,
+            allowNull: false
+        },
+        shippingZipCode: {
+            type: DataTypes.STRING,
+            allowNull: false
+        },
+        paymentStatus: {
+            type: DataTypes.ENUM('pending', 'paid', 'failed'),
+            defaultValue: 'pending'
+        },
+        chapaTxRef: {
+            type: DataTypes.STRING,
+            allowNull: true
+        },
+        totalPaid: {
+            type: DataTypes.DECIMAL(10, 2),
+            defaultValue: 0
+        },
+        deliveryTime: {
+            type: DataTypes.STRING,
+            defaultValue: '12:00'
+        }
+    }, {
+        tableName: 'subscriptions',
+        timestamps: true
+    });
 
-module.exports = mongoose.model('Subscription', subscriptionSchema);
+    return Subscription;
+};

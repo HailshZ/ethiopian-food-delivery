@@ -1,16 +1,15 @@
-// routes/cart.js – Cart routes (page + AJAX API)
+// routes/cart.js – Cart routes (Sequelize)
 const express = require('express');
 const router = express.Router();
-const Dish = require('../models/Dish');
+const { Dish } = require('../models');
 const cartHelper = require('../middleware/cart');
 
 // POST /cart/add/:id (traditional form)
 router.post('/cart/add/:id', async (req, res) => {
     try {
-        const dish = await Dish.findById(req.params.id);
+        const dish = await Dish.findByPk(req.params.id);
         if (!dish) return res.status(404).send('Dish not found');
         cartHelper.addToCart(req.session, dish, 1);
-        // Check if AJAX
         if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
             return res.json({ success: true, cart: cartHelper.getCart(req.session) });
         }
@@ -54,7 +53,7 @@ router.get('/api/cart', (req, res) => {
 
 router.post('/api/cart/add/:id', async (req, res) => {
     try {
-        const dish = await Dish.findById(req.params.id);
+        const dish = await Dish.findByPk(req.params.id);
         if (!dish) return res.status(404).json({ success: false, error: 'Dish not found' });
         const qty = parseInt(req.body.qty) || 1;
         cartHelper.addToCart(req.session, dish, qty);

@@ -5,7 +5,7 @@
         <%= plan ? 'Edit' : 'Create' %> Meal Plan
     </h2>
 
-    <form action="<%= plan ? '/admin/meal-plans/' + plan._id + '/update' : '/admin/meal-plans' %>" method="post">
+    <form action="<%= plan ? '/admin/meal-plans/' + plan.id + '/update' : '/admin/meal-plans' %>" method="post">
         <div class="row g-4">
             <!-- Plan Info -->
             <div class="col-lg-4">
@@ -71,8 +71,8 @@
                                                         class="form-select form-select-sm rounded-3">
                                                         <option value="">-- Select Dish --</option>
                                                         <% dishes.forEach(d=> { %>
-                                                            <option value="<%= d._id %>" <%=slot.dish &&
-                                                                slot.dish.toString()===d._id.toString() ? 'selected'
+                                                            <option value="<%= d.id %>" <%=slot.dish &&
+                                                                slot.dish.toString()===d.id.toString() ? 'selected'
                                                                 : '' %>><%= d.name %> ($<%= d.price.toFixed(2) %>)
                                                             </option>
                                                             <% }) %>
@@ -110,7 +110,7 @@
 <script>
     // Template for adding a new meal row
     function createMealRow(day) {
-        const dishes = <% - JSON.stringify(dishes.map(d => ({ id: d._id, name: d.name, price: d.price }))) %>;
+        const dishes = <% - JSON.stringify(dishes.map(d => ({ id: d.id, name: d.name, price: d.price }))) %>;
         const div = document.createElement('div');
         div.className = 'meal-row d-flex gap-2 mb-2 align-items-center';
         let opts = '<option value="">-- Select Dish --</option>';

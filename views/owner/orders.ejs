@@ -56,7 +56,7 @@
                                                 <i class="bi bi-bag-fill text-white" style="font-size: 1.2rem;"></i>
                                             </div>
                                             <div>
-                                                <h6 class="mb-0">Order #<%= order._id.toString().slice(-6).toUpperCase()
+                                                <h6 class="mb-0">Order #<%= String(order.id).padStart(6, '0').toUpperCase()
                                                         %>
                                                 </h6>
                                                 <small class="text-muted">
@@ -94,18 +94,18 @@
 
                                     <!-- Delivery Address -->
                                     <div class="col-md-2">
-                                        <% if (order.shippingAddress) { %>
+                                        <% if (order.shippingStreet) { %>
                                             <small class="text-muted">
                                                 <i class="bi bi-geo-alt me-1"></i>
-                                                <%= order.shippingAddress.street %>,
-                                                    <%= order.shippingAddress.city %>
+                                                <%= order.shippingStreet %>,
+                                                    <%= order.shippingCity %>
                                             </small>
                                             <% } %>
-                                                <% if (order.deliveryLocation && order.deliveryLocation.lat) { %>
+                                                <% if (order.deliveryLat) { %>
                                                     <small class="d-block text-muted">
                                                         <i class="bi bi-pin-map me-1"></i>
-                                                        <%= order.deliveryLocation.lat.toFixed(4) %>,
-                                                            <%= order.deliveryLocation.lng.toFixed(4) %>
+                                                        <%= parseFloat(order.deliveryLat).toFixed(4) %>,
+                                                            <%= parseFloat(order.deliveryLng).toFixed(4) %>
                                                     </small>
                                                     <% } %>
                                     </div>
@@ -117,30 +117,30 @@
                                            order.orderStatus === 'preparing' ? 'bg-warning text-dark' :
                                            order.orderStatus === 'delivering' ? 'bg-info' :
                                            order.orderStatus === 'delivered' ? 'bg-success' : 'bg-secondary' %>"
-                                            id="status-badge-<%= order._id %>">
+                                            id="status-badge-<%= order.id %>">
                                             <%= order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1)
                                                 %>
                                         </span>
                                         <div class="d-flex gap-1 justify-content-end flex-wrap"
-                                            id="actions-<%= order._id %>">
+                                            id="actions-<%= order.id %>">
                                             <% if (order.orderStatus==='confirmed' ) { %>
                                                 <button class="btn btn-sm btn-warning rounded-pill action-btn"
-                                                    onclick="setStatus('<%= order._id %>', 'preparing')">
+                                                    onclick="setStatus('<%= order.id %>', 'preparing')">
                                                     <i class="bi bi-fire me-1"></i>Start Preparing
                                                 </button>
                                                 <% } else if (order.orderStatus==='preparing' ) { %>
                                                     <button class="btn btn-sm btn-info rounded-pill action-btn"
-                                                        onclick="setStatus('<%= order._id %>', 'delivering')">
+                                                        onclick="setStatus('<%= order.id %>', 'delivering')">
                                                         <i class="bi bi-truck me-1"></i>Send for Delivery
                                                     </button>
                                                     <% } else if (order.orderStatus==='delivering' ) { %>
                                                         <div class="input-group input-group-sm"
                                                             style="max-width: 220px;">
                                                             <input type="text" class="form-control rounded-start-pill"
-                                                                placeholder="Enter OTP" id="otp-<%= order._id %>"
+                                                                placeholder="Enter OTP" id="otp-<%= order.id %>"
                                                                 maxlength="6" pattern="[0-9]{6}">
                                                             <button class="btn btn-success rounded-end-pill"
-                                                                onclick="completeOrder('<%= order._id %>')">
+                                                                onclick="completeOrder('<%= order.id %>')">
                                                                 <i class="bi bi-check-lg me-1"></i>Complete
                                                             </button>
                                                         </div>

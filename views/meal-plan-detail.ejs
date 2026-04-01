@@ -73,7 +73,7 @@
                 <hr>
                 <h6 class="mb-3">Delivery Address</h6>
                 <form id="subscribe-form">
-                    <input type="hidden" name="planId" value="<%= plan._id %>">
+                    <input type="hidden" name="planId" value="<%= plan.id %>">
                     <div class="mb-3">
                         <input type="text" class="form-control rounded-3" id="sub-street" placeholder="Street address"
                             required>
@@ -107,7 +107,7 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    planId: '<%= plan._id %>',
+                    planId: '<%= plan.id %>',
                     shippingAddress: {
                         street: document.getElementById('sub-street').value,
                         city: document.getElementById('sub-city').value,

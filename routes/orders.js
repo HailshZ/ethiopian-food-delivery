@@ -1,11 +1,8 @@
-// routes/orders.js – Checkout, order placement, and order routes (no payment gateway)
+// routes/orders.js – Checkout, order placement (Sequelize)
 const express = require('express');
 const router = express.Router();
-const Order = require('../models/Order');
-const User = require('../models/User');
-const PromoCode = require('../models/PromoCode');
-const Dish = require('../models/Dish');
-const Notification = require('../models/Notification');
+const { Op } = require('sequelize');
+const { Order, OrderItem, DeliveryUpdate, User, PromoCode, Dish, Notification, SystemSettings } = require('../models');
 const cartHelper = require('../middleware/cart');
 const { isLoggedIn } = require('../middleware/auth');
 const { sendPushToUser } = require('../utils/pushNotify');
@@ -17,19 +14,16 @@ router.get('/checkout', isLoggedIn, async (req, res) => {
         req.flash('error', 'Your cart is empty');
         return res.redirect('/menu');
     }
-    res.render('checkout', {
-        title: 'Checkout',
-        cart
-    });
+    res.render('checkout', { title: 'Checkout', cart });
 });
 
-// POST /api/validate-promo – Validate promo code
+// POST /api/validate-promo
 router.post('/api/validate-promo', isLoggedIn, async (req, res) => {
     try {
         const { code, orderAmount } = req.body;
         if (!code) return res.status(400).json({ error: 'Promo code is required' });
 
-        const promo = await PromoCode.findOne({ code: code.toUpperCase().trim() });
+        const promo = await PromoCode.findOne({ where: { code: code.toUpperCase().trim() } });
         if (!promo) return res.status(404).json({ error: 'Invalid promo code' });
 
         const validation = promo.isValid(orderAmount);
@@ -48,7 +42,7 @@ router.post('/api/validate-promo', isLoggedIn, async (req, res) => {
     }
 });
 
-// Haversine formula – calculate distance in km
+// Haversine formula
 function haversineDistance(lat1, lng1, lat2, lng2) {
     const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -60,33 +54,32 @@ function haversineDistance(lat1, lng1, lat2, lng2) {
     return R * c;
 }
 
-// POST /api/calculate-delivery – Calculate delivery fee from customer location
+// POST /api/calculate-delivery
 router.post('/api/calculate-delivery', isLoggedIn, async (req, res) => {
     try {
         const { lat, lng } = req.body;
         if (!lat || !lng) return res.status(400).json({ error: 'Location required' });
 
-        const SystemSettings = require('../models/SystemSettings');
         const settings = await SystemSettings.getSettings();
-        const rLat = settings.restaurantLocation.lat;
-        const rLng = settings.restaurantLocation.lng;
+        const rLat = parseFloat(settings.restaurantLat);
+        const rLng = parseFloat(settings.restaurantLng);
 
         const distance = haversineDistance(rLat, rLng, parseFloat(lat), parseFloat(lng));
-        const deliveryFee = settings.baseDeliveryFee + (distance * settings.deliveryFeePerKm);
+        const deliveryFee = parseFloat(settings.baseDeliveryFee) + (distance * parseFloat(settings.deliveryFeePerKm));
 
         res.json({
             success: true,
             distance: Math.round(distance * 10) / 10,
             deliveryFee: Math.round(deliveryFee * 100) / 100,
-            baseDeliveryFee: settings.baseDeliveryFee,
-            perKmRate: settings.deliveryFeePerKm
+            baseDeliveryFee: parseFloat(settings.baseDeliveryFee),
+            perKmRate: parseFloat(settings.deliveryFeePerKm)
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
-// POST /api/place-order – Place order directly (no payment gateway)
+// POST /api/place-order
 router.post('/api/place-order', isLoggedIn, async (req, res) => {
     const { paymentMethod, amount, cart, shippingAddress, promoCode, deliveryLocation } = req.body;
 
@@ -99,11 +92,10 @@ router.post('/api/place-order', isLoggedIn, async (req, res) => {
     }
 
     try {
-        // Calculate discount
         let discount = 0;
         let validPromoCode = '';
         if (promoCode) {
-            const promo = await PromoCode.findOne({ code: promoCode.toUpperCase().trim() });
+            const promo = await PromoCode.findOne({ where: { code: promoCode.toUpperCase().trim() } });
             if (promo) {
                 const validation = promo.isValid(amount);
                 if (validation.valid) {
@@ -118,9 +110,27 @@ router.post('/api/place-order', isLoggedIn, async (req, res) => {
         const finalAmount = amount - discount;
         const estimatedDelivery = new Date(Date.now() + 45 * 60 * 1000);
 
-        const order = new Order({
-            user: req.session.userId,
-            items: cart.map(item => ({
+        const order = await Order.create({
+            userId: req.session.userId,
+            totalAmount: amount,
+            discount: discount,
+            promoCode: validPromoCode,
+            finalAmount: finalAmount,
+            shippingStreet: shippingAddress.street,
+            shippingCity: shippingAddress.city,
+            shippingZipCode: shippingAddress.zipCode,
+            deliveryLat: deliveryLocation?.lat || 9.0192,
+            deliveryLng: deliveryLocation?.lng || 38.7525,
+            paymentMethod: paymentMethod || 'cash',
+            paymentStatus: 'paid',
+            orderStatus: 'confirmed',
+            estimatedDelivery: estimatedDelivery
+        });
+
+        // Create order items
+        for (const item of cart) {
+            await OrderItem.create({
+                orderId: order.id,
                 dishId: item.dishId,
                 name: item.name,
                 nameAm: item.nameAm,
@@ -128,39 +138,33 @@ router.post('/api/place-order', isLoggedIn, async (req, res) => {
                 qty: item.qty,
                 totalPrice: item.totalPrice,
                 imageUrl: item.imageUrl
-            })),
-            totalAmount: amount,
-            discount: discount,
-            promoCode: validPromoCode,
-            finalAmount: finalAmount,
-            shippingAddress: shippingAddress,
-            deliveryLocation: deliveryLocation || {},
-            paymentMethod: paymentMethod || 'cash',
-            paymentStatus: 'paid',
-            orderStatus: 'confirmed',
-            estimatedDelivery: estimatedDelivery,
-            deliveryUpdates: [{
-                status: 'Order placed',
-                timestamp: new Date(),
-                note: 'Your order has been received and confirmed'
-            }]
-        });
-        await order.save();
+            });
+        }
 
-        // Notify dish owners about the new order
+        // Create initial delivery update
+        await DeliveryUpdate.create({
+            orderId: order.id,
+            status: 'Order placed',
+            timestamp: new Date(),
+            note: 'Your order has been received and confirmed'
+        });
+
+        // Notify dish owners
         try {
             const dishIds = cart.map(item => item.dishId).filter(Boolean);
             if (dishIds.length > 0) {
-                const dishes = await Dish.find({ _id: { $in: dishIds }, owner: { $ne: null } });
-                const ownerIds = [...new Set(dishes.map(d => d.owner.toString()))];
+                const dishes = await Dish.findAll({
+                    where: { id: { [Op.in]: dishIds }, ownerId: { [Op.ne]: null } }
+                });
+                const ownerIds = [...new Set(dishes.map(d => d.ownerId))];
                 for (const ownerId of ownerIds) {
-                    const ownerDishes = dishes.filter(d => d.owner.toString() === ownerId);
+                    const ownerDishes = dishes.filter(d => d.ownerId === ownerId);
                     const dishNames = ownerDishes.map(d => d.name).join(', ');
                     await Notification.create({
-                        owner: ownerId,
+                        ownerId: ownerId,
                         type: 'new_order',
                         message: `🛒 New order received! Items: ${dishNames}. Total: ${finalAmount.toFixed(2)}`,
-                        relatedOrder: order._id
+                        relatedOrderId: order.id
                     });
                     sendPushToUser(ownerId, {
                         title: '🛒 New Order!',
@@ -174,12 +178,11 @@ router.post('/api/place-order', isLoggedIn, async (req, res) => {
             console.error('Notification error:', notifErr.message);
         }
 
-        // Clear cart
         cartHelper.clearCart(req.session);
 
         res.json({
             success: true,
-            orderId: order._id,
+            orderId: order.id,
             message: 'Order placed successfully!'
         });
     } catch (error) {
@@ -191,7 +194,12 @@ router.post('/api/place-order', isLoggedIn, async (req, res) => {
 // GET /order-confirmation/:id
 router.get('/order-confirmation/:id', isLoggedIn, async (req, res) => {
     try {
-        const order = await Order.findById(req.params.id).populate('user', 'name email phone');
+        const order = await Order.findByPk(req.params.id, {
+            include: [
+                { model: User, as: 'user', attributes: ['name', 'email', 'phone'] },
+                { model: OrderItem, as: 'items' }
+            ]
+        });
         if (!order) {
             req.flash('error', 'Order not found');
             return res.redirect('/');
@@ -203,17 +211,22 @@ router.get('/order-confirmation/:id', isLoggedIn, async (req, res) => {
     }
 });
 
-// GET /order-confirmation (legacy with tx_ref – redirect to home)
+// GET /order-confirmation (legacy)
 router.get('/order-confirmation', (req, res) => {
     res.redirect('/');
 });
 
-// GET /order/:id – Single order view
+// GET /order/:id
 router.get('/order/:id', isLoggedIn, async (req, res) => {
     try {
-        const order = await Order.findById(req.params.id);
+        const order = await Order.findByPk(req.params.id, {
+            include: [
+                { model: OrderItem, as: 'items' },
+                { model: DeliveryUpdate, as: 'deliveryUpdates', order: [['timestamp', 'ASC']] }
+            ]
+        });
         if (!order) return res.status(404).send('Order not found');
-        if (order.user.toString() !== req.session.userId.toString() && !req.session.isAdmin) {
+        if (order.userId !== req.session.userId && !req.session.isAdmin) {
             return res.status(403).send('Unauthorized');
         }
         res.render('order-detail', {
@@ -230,7 +243,12 @@ router.get('/order/:id', isLoggedIn, async (req, res) => {
 // GET /orders
 router.get('/orders', isLoggedIn, async (req, res) => {
     try {
-        const orders = await Order.find({ user: req.session.userId }).sort({ createdAt: -1 }).limit(20);
+        const orders = await Order.findAll({
+            where: { userId: req.session.userId },
+            include: [{ model: OrderItem, as: 'items' }],
+            order: [['createdAt', 'DESC']],
+            limit: 20
+        });
         res.render('orders', { title: 'My Orders', orders }, (err, html) => {
             if (err) {
                 console.error('❌ Error rendering orders.ejs:', err);
