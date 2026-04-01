@@ -1,5 +1,6 @@
 // public/sw.js – Service Worker with cache-first strategy for static assets
-const CACHE_NAME = 'ethiofood-v1';
+// const CACHE_NAME = 'ethiofood-v1';
+const CACHE_NAME = 'aradaw-v2';
 const urlsToCache = [
   '/',
   '/menu',
